@@ -1,0 +1,244 @@
+/**
+ * Vue Router 配置
+ */
+import { createRouter, createWebHistory } from 'vue-router'
+import { getToken } from '@/utils/storage'
+import { message } from 'ant-design-vue'
+
+/**
+ * 路由配置
+ */
+const routes = [
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/login/index.vue'),
+    meta: { title: '登录', requiresAuth: false }
+  },
+  {
+    path: '/',
+    component: () => import('@/layouts/BasicLayout.vue'),
+    redirect: '/dashboard',
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        component: () => import('@/views/dashboard/index.vue'),
+        meta: { title: '首页', icon: 'HomeOutlined' }
+      },
+      // 用户管理
+      {
+        path: 'users',
+        name: 'UserManagement',
+        meta: { title: '用户管理', icon: 'UserOutlined', permission: 'user:list' },
+        children: [
+          {
+            path: 'list',
+            name: 'UserList',
+            component: () => import('@/views/user/list.vue'),
+            meta: { title: '用户列表', permission: 'user:list' }
+          },
+          {
+            path: 'organizations',
+            name: 'OrganizationList',
+            component: () => import('@/views/user/organization.vue'),
+            meta: { title: '组织机构', permission: 'organization:list' }
+          },
+          {
+            path: 'research-groups',
+            name: 'ResearchGroupList',
+            component: () => import('@/views/user/research-group.vue'),
+            meta: { title: '课题组', permission: 'research_group:list' }
+          }
+        ]
+      },
+      // 设备租赁管理
+      {
+        path: 'equipment',
+        name: 'EquipmentManagement',
+        meta: { title: '设备租赁', icon: 'ExperimentOutlined', permission: 'equipment_reservation:list' },
+        children: [
+          {
+            path: 'reservations',
+            name: 'EquipmentReservationList',
+            component: () => import('@/views/equipment/reservation-list.vue'),
+            meta: { title: '租赁订单', permission: 'equipment_reservation:list' }
+          },
+          {
+            path: 'list',
+            name: 'EquipmentList',
+            component: () => import('@/views/equipment/equipment-list.vue'),
+            meta: { title: '设备管理', permission: 'equipment:list' }
+          }
+        ]
+      },
+      // 系统管理
+      {
+        path: 'system',
+        name: 'SystemManagement',
+        meta: { title: '系统管理', icon: 'SettingOutlined', permission: 'administrator:list' },
+        children: [
+          {
+            path: 'administrators',
+            name: 'AdministratorList',
+            component: () => import('@/views/system/administrator-list.vue'),
+            meta: { title: '管理员管理', permission: 'administrator:list' }
+          },
+          {
+            path: 'roles',
+            name: 'RoleList',
+            component: () => import('@/views/system/role-list.vue'),
+            meta: { title: '角色管理', permission: 'role:list' }
+          }
+        ]
+      },
+      // 配置管理
+      {
+        path: 'config',
+        name: 'ConfigManagement',
+        meta: { title: '配置管理', icon: 'ToolOutlined', permission: 'handler:list' },
+        children: [
+          {
+            path: 'handlers',
+            name: 'HandlerList',
+            component: () => import('@/views/config/handler.vue'),
+            meta: { title: '负责人管理', permission: 'handler:list' }
+          },
+          {
+            path: 'environment-types',
+            name: 'EnvironmentTypeList',
+            component: () => import('@/views/config/environment-type.vue'),
+            meta: { title: '环境类型', permission: 'environment_type:list' }
+          },
+          {
+            path: 'animal-types',
+            name: 'AnimalTypeList',
+            component: () => import('@/views/config/animal-type.vue'),
+            meta: { title: '动物类型', permission: 'animal_type:list' }
+          }
+        ]
+      },
+      // 笼位租赁管理
+      {
+        path: 'cage',
+        name: 'CageManagement',
+        meta: { title: '笼位租赁', icon: 'HomeOutlined', permission: 'cage_reservation:list' },
+        children: [
+          {
+            path: 'reservations',
+            name: 'CageReservationList',
+            component: () => import('@/views/cage/reservation-list.vue'),
+            meta: { title: '租赁订单', permission: 'cage_reservation:list' }
+          },
+          {
+            path: 'cages',
+            name: 'CageList',
+            component: () => import('@/views/cage/cage-list.vue'),
+            meta: { title: '笼位管理', permission: 'cage:list' }
+          },
+          {
+            path: 'purposes',
+            name: 'CagePurposeList',
+            component: () => import('@/views/cage/purpose.vue'),
+            meta: { title: '用途管理', permission: 'cage_purpose:list' }
+          },
+          {
+            path: 'time-slots',
+            name: 'CageTimeSlotList',
+            component: () => import('@/views/cage/time-slot.vue'),
+            meta: { title: '时间段管理', permission: 'cage_time_slot:list' }
+          }
+        ]
+      },
+      // 实验代操作管理
+      {
+        path: 'experiment',
+        name: 'ExperimentManagement',
+        meta: { title: '实验代操作', icon: 'ExperimentOutlined', permission: 'experiment_operation:list' },
+        children: [
+          {
+            path: 'operations',
+            name: 'ExperimentOperationList',
+            component: () => import('@/views/experiment/operation-list.vue'),
+            meta: { title: '代操作订单', permission: 'experiment_operation:list' }
+          },
+          {
+            path: 'operation-contents',
+            name: 'OperationContentList',
+            component: () => import('@/views/experiment/operation-content.vue'),
+            meta: { title: '操作内容管理', permission: 'operation_content:list' }
+          },
+          {
+            path: 'time-slots',
+            name: 'ExperimentTimeSlotList',
+            component: () => import('@/views/experiment/time-slot.vue'),
+            meta: { title: '时间段管理', permission: 'experiment_time_slot:list' }
+          }
+        ]
+      },
+      // 内容管理
+      {
+        path: 'content',
+        name: 'ContentManagement',
+        meta: { title: '内容管理', icon: 'FileTextOutlined', permission: 'case:list' },
+        children: [
+          {
+            path: 'cases',
+            name: 'CaseList',
+            component: () => import('@/views/content/case-list.vue'),
+            meta: { title: '案例管理', permission: 'case:list' }
+          },
+          {
+            path: 'company-info',
+            name: 'CompanyInfo',
+            component: () => import('@/views/content/company-info.vue'),
+            meta: { title: '公司信息', permission: 'company_info:view' }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/404.vue'),
+    meta: { title: '404' }
+  }
+]
+
+/**
+ * 创建路由实例
+ */
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+})
+
+/**
+ * 路由守卫
+ */
+router.beforeEach((to, from, next) => {
+  // 设置页面标题
+  document.title = to.meta.title ? `${to.meta.title} - 艾力默管理端` : '艾力默管理端'
+
+  // 检查是否需要登录
+  if (to.meta.requiresAuth !== false) {
+    const token = getToken()
+    if (!token) {
+      message.warning('请先登录')
+      next({ path: '/login', query: { redirect: to.fullPath } })
+      return
+    }
+  }
+
+  // 如果已登录访问登录页，跳转到首页
+  if (to.path === '/login' && getToken()) {
+    next({ path: '/' })
+    return
+  }
+
+  next()
+})
+
+export default router
