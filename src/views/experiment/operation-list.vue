@@ -1,7 +1,7 @@
 <template>
   <div class="experiment-operation-list-container">
     <!-- 搜索表单 -->
-    <a-card class="search-form" :bodyStyle="{ paddingBottom: 0 }">
+    <div class="search-form">
       <a-form layout="inline" :model="searchForm">
         <a-form-item label="用户姓名">
           <a-input
@@ -75,7 +75,7 @@
           </a-space>
         </a-form-item>
       </a-form>
-    </a-card>
+    </div>
 
     <!-- 操作栏 -->
     <div class="action-bar">
