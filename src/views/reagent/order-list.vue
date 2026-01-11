@@ -432,7 +432,6 @@ const pagination = reactive({
  * 表格列配置
  */
 const columns = [
-  { title: 'ID', dataIndex: 'id', width: 80, fixed: 'left' },
   { title: '试剂名称', dataIndex: 'name', width: 150 },
   { title: '品牌', dataIndex: ['brand', 'name'], width: 120 },
   { title: '规格', dataIndex: ['specification', 'name'], width: 100 },

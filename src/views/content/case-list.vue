@@ -192,7 +192,6 @@ const pagination = reactive({
 })
 
 const columns = [
-  { title: 'ID', dataIndex: 'id', width: 80 },
   { title: '项目名称', dataIndex: 'projectName', width: 200 },
   {
     title: '项目概述',

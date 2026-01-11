@@ -117,7 +117,6 @@ const loading = ref(false)
 const tableData = ref([])
 
 const columns = [
-  { title: 'ID', dataIndex: 'id', width: 80 },
   { title: '时间段', key: 'displayTime', width: 150 },
   { title: '开始时间', dataIndex: 'startTime', width: 120 },
   { title: '结束时间', dataIndex: 'endTime', width: 120 },

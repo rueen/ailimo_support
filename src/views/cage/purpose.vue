@@ -1,3 +1,10 @@
+<!--
+ * @Author: diaochan
+ * @Date: 2026-01-09 16:28:50
+ * @LastEditors: diaochan
+ * @LastEditTime: 2026-01-11 20:25:40
+ * @Description: 
+-->
 <template>
   <SimpleConfigManager
     title="笼位用途管理"
@@ -8,7 +15,6 @@
       delete: deleteCagePurpose
     }"
     :columns="[
-      { title: 'ID', dataIndex: 'id', width: 80 },
       { title: '用途名称', dataIndex: 'name', width: 200 },
       { title: '创建时间', dataIndex: 'created_at', width: 180 },
       { title: '操作', key: 'action', fixed: 'right', width: 200 }

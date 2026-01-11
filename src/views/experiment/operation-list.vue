@@ -413,7 +413,6 @@ const pagination = reactive({
 })
 
 const columns = [
-  { title: 'ID', dataIndex: 'id', width: 80, fixed: 'left' },
   { title: '用户姓名', dataIndex: ['user', 'name'], width: 120 },
   { title: '联系电话', dataIndex: ['user', 'phone'], width: 130 },
   { title: '操作内容', dataIndex: ['operationContent', 'name'], width: 120 },

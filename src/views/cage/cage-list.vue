@@ -193,7 +193,6 @@ const pagination = reactive({
 })
 
 const columns = [
-  { title: 'ID', dataIndex: 'id', width: 80 },
   { title: '动物类型', dataIndex: ['animalType', 'name'], width: 150 },
   { title: '环境类型', dataIndex: ['environment', 'name'], width: 150 },
   { title: '笼位数量', dataIndex: 'quantity', width: 150 },

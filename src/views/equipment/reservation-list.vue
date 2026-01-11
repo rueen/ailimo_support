@@ -305,7 +305,6 @@ const pagination = reactive({
  * 表格列配置
  */
 const columns = [
-  { title: 'ID', dataIndex: 'id', width: 80, fixed: 'left' },
   {
     title: '设备名称',
     dataIndex: ['equipment', 'name'],

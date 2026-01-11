@@ -134,7 +134,6 @@ const permissionTree = ref([])
  * 表格列配置
  */
 const columns = [
-  { title: 'ID', dataIndex: 'id', width: 80 },
   { title: '权限名称', dataIndex: 'name', width: 200 },
   { title: '权限代码', key: 'code', width: 200 },
   { title: '资源路径', dataIndex: 'resource', width: 250 },
