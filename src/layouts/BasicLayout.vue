@@ -116,7 +116,9 @@ import {
   ToolOutlined,
   FileTextOutlined,
   AppstoreOutlined,
-  BulbOutlined
+  BulbOutlined,
+  ShoppingOutlined,
+  MedicineBoxOutlined
 } from '@ant-design/icons-vue'
 import { useUserStore, useAppStore } from '@/store'
 import { changePassword } from '@/api/auth'
@@ -142,8 +144,8 @@ const menuItems = computed(() => {
     {
       key: 'Dashboard',
       icon: () => h(HomeOutlined),
-      label: '首页',
-      title: '首页'
+      label: '工作台',
+      title: '工作台'
     },
     {
       key: 'UserManagement',
@@ -183,24 +185,6 @@ const menuItems = computed(() => {
           key: 'EquipmentList',
           label: '设备管理',
           title: '设备管理'
-        }
-      ]
-    },
-    {
-      key: 'SystemManagement',
-      icon: () => h(SettingOutlined),
-      label: '系统管理',
-      title: '系统管理',
-      children: [
-        {
-          key: 'AdministratorList',
-          label: '管理员管理',
-          title: '管理员管理'
-        },
-        {
-          key: 'RoleList',
-          label: '角色管理',
-          title: '角色管理'
         }
       ]
     },
@@ -256,6 +240,32 @@ const menuItems = computed(() => {
       ]
     },
     {
+      key: 'AnimalOrderManagement',
+      icon: () => h(ShoppingOutlined),
+      label: '动物订购',
+      title: '动物订购',
+      children: [
+        {
+          key: 'AnimalOrderList',
+          label: '订购订单',
+          title: '订购订单'
+        }
+      ]
+    },
+    {
+      key: 'ReagentOrderManagement',
+      icon: () => h(MedicineBoxOutlined),
+      label: '试剂耗材订购',
+      title: '试剂耗材订购',
+      children: [
+        {
+          key: 'ReagentOrderList',
+          label: '订购订单',
+          title: '订购订单'
+        }
+      ]
+    },
+    {
       key: 'ConfigManagement',
       icon: () => h(ToolOutlined),
       label: '配置管理',
@@ -293,6 +303,24 @@ const menuItems = computed(() => {
           key: 'CompanyInfo',
           label: '公司信息',
           title: '公司信息'
+        }
+      ]
+    },
+    {
+      key: 'SystemManagement',
+      icon: () => h(SettingOutlined),
+      label: '系统管理',
+      title: '系统管理',
+      children: [
+        {
+          key: 'AdministratorList',
+          label: '管理员管理',
+          title: '管理员管理'
+        },
+        {
+          key: 'RoleList',
+          label: '角色管理',
+          title: '角色管理'
         }
       ]
     }
