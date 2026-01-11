@@ -172,7 +172,7 @@ const columns = [
     width: 200,
     customRender: ({ record }) => record.brand?.name || '-'
   },
-  { title: '创建时间', dataIndex: 'createdAt', width: 180 },
+  { title: '创建时间', dataIndex: 'created_at', width: 180 },
   { title: '操作', key: 'action', fixed: 'right', width: 150 }
 ]
 

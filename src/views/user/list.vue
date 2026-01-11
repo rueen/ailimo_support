@@ -274,7 +274,7 @@ const columns = [
   },
   { title: '审核状态', key: 'auditStatus', width: 100 },
   { title: '状态', key: 'status', width: 80 },
-  { title: '创建时间', dataIndex: 'createdAt', width: 160 },
+  { title: '创建时间', dataIndex: 'created_at', width: 160 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 

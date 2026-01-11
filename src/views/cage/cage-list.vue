@@ -198,7 +198,7 @@ const columns = [
   { title: '环境类型', dataIndex: ['environment', 'name'], width: 150 },
   { title: '笼位数量', dataIndex: 'quantity', width: 150 },
   { title: '状态', key: 'status', width: 100 },
-  { title: '创建时间', dataIndex: 'createdAt', width: 180 },
+  { title: '创建时间', dataIndex: 'created_at', width: 180 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 

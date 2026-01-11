@@ -216,7 +216,7 @@ const columns = [
   },
   { title: '状态', key: 'status', width: 100 },
   { title: '最后登录', dataIndex: 'lastLoginTime', width: 180 },
-  { title: '创建时间', dataIndex: 'createdAt', width: 180 },
+  { title: '创建时间', dataIndex: 'created_at', width: 180 },
   { title: '操作', key: 'action', fixed: 'right', width: 150 }
 ]
 

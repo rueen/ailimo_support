@@ -348,7 +348,7 @@
         <a-descriptions-item label="负责人">{{ detailData.handler?.remark || '-' }}</a-descriptions-item>
         <a-descriptions-item label="拒绝原因" :span="2">{{ detailData.rejectReason || '-' }}</a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">{{ detailData.remark || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="创建时间">{{ detailData.createdAt || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="创建时间">{{ detailData.created_at || '-' }}</a-descriptions-item>
         <a-descriptions-item label="审核时间">{{ detailData.auditTime || '-' }}</a-descriptions-item>
         <a-descriptions-item label="完成时间">{{ detailData.completedTime || '-' }}</a-descriptions-item>
       </a-descriptions>
@@ -441,7 +441,7 @@ const columns = [
   { title: '联系电话', dataIndex: 'contactPhone', width: 120 },
   { title: '到货日期', dataIndex: 'deliveryDate', width: 120 },
   { title: '状态', key: 'status', width: 100 },
-  { title: '创建时间', dataIndex: 'createdAt', width: 160 },
+  { title: '创建时间', dataIndex: 'created_at', width: 160 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 

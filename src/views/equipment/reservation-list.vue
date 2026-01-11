@@ -325,7 +325,7 @@ const columns = [
   { title: '预约日期', dataIndex: 'reservationDate', width: 120 },
   { title: '预约时间段', key: 'timeSlots', width: 200 },
   { title: '状态', key: 'status', width: 100 },
-  { title: '创建时间', dataIndex: 'createdAt', width: 160 },
+  { title: '创建时间', dataIndex: 'created_at', width: 160 },
   { title: '操作', key: 'action', fixed: 'right', width: 250 }
 ]
 
