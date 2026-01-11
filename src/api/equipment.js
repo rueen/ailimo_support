@@ -54,26 +54,13 @@ export function updateEquipmentReservation(id, data) {
 }
 
 /**
- * 审核通过设备租赁订单
+ * 审核设备租赁订单
  * @param {number} id - 订单ID
- * @param {Object} data - 负责人信息
+ * @param {Object} data - 审核信息（status: 1-通过 2-拒绝, handlerId/rejectReason）
  */
-export function approveEquipmentReservation(id, data) {
+export function auditEquipmentReservation(id, data) {
   return request({
-    url: `/support/equipment-reservations/${id}/approve`,
-    method: 'PUT',
-    data
-  })
-}
-
-/**
- * 审核拒绝设备租赁订单
- * @param {number} id - 订单ID
- * @param {Object} data - 拒绝原因
- */
-export function rejectEquipmentReservation(id, data) {
-  return request({
-    url: `/support/equipment-reservations/${id}/reject`,
+    url: `/support/equipment-reservations/${id}/audit`,
     method: 'PUT',
     data
   })
@@ -204,5 +191,52 @@ export function getTimeSlotOptions() {
   return request({
     url: '/support/equipment-time-slots/options',
     method: 'GET'
+  })
+}
+
+/**
+ * 获取时间段详情
+ * @param {number} id - 时间段ID
+ */
+export function getTimeSlotDetail(id) {
+  return request({
+    url: `/support/equipment-time-slots/${id}`,
+    method: 'GET'
+  })
+}
+
+/**
+ * 创建时间段
+ * @param {Object} data - 时间段信息
+ */
+export function createTimeSlot(data) {
+  return request({
+    url: '/support/equipment-time-slots',
+    method: 'POST',
+    data
+  })
+}
+
+/**
+ * 更新时间段
+ * @param {number} id - 时间段ID
+ * @param {Object} data - 时间段信息
+ */
+export function updateTimeSlot(id, data) {
+  return request({
+    url: `/support/equipment-time-slots/${id}`,
+    method: 'PUT',
+    data
+  })
+}
+
+/**
+ * 删除时间段
+ * @param {number} id - 时间段ID
+ */
+export function deleteTimeSlot(id) {
+  return request({
+    url: `/support/equipment-time-slots/${id}`,
+    method: 'DELETE'
   })
 }

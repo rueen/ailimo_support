@@ -54,26 +54,13 @@ export function updateCageReservation(id, data) {
 }
 
 /**
- * 审核通过笼位租赁订单
+ * 审核笼位租赁订单
  * @param {number} id - 订单ID
- * @param {Object} data - 审核信息
+ * @param {Object} data - 审核信息（status: 1-通过 2-拒绝, handlerId/rejectReason）
  */
-export function approveCageReservation(id, data) {
+export function auditCageReservation(id, data) {
   return request({
-    url: `/support/cage-reservations/${id}/approve`,
-    method: 'PUT',
-    data
-  })
-}
-
-/**
- * 审核拒绝笼位租赁订单
- * @param {number} id - 订单ID
- * @param {Object} data - 拒绝信息
- */
-export function rejectCageReservation(id, data) {
-  return request({
-    url: `/support/cage-reservations/${id}/reject`,
+    url: `/support/cage-reservations/${id}/audit`,
     method: 'PUT',
     data
   })
@@ -326,24 +313,3 @@ export function deleteCageTimeSlot(id) {
   })
 }
 
-/**
- * 获取提前预约天数配置
- */
-export function getCageAdvanceDays() {
-  return request({
-    url: '/support/cage-advance-days',
-    method: 'GET'
-  })
-}
-
-/**
- * 更新提前预约天数配置
- * @param {Object} data - 配置信息
- */
-export function updateCageAdvanceDays(data) {
-  return request({
-    url: '/support/cage-advance-days',
-    method: 'PUT',
-    data
-  })
-}

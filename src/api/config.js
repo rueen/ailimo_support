@@ -63,6 +63,17 @@ export function deleteHandler(id) {
   })
 }
 
+/**
+ * 获取负责人详情
+ * @param {number} id - 负责人ID
+ */
+export function getHandlerDetail(id) {
+  return request({
+    url: `/support/handlers/${id}`,
+    method: 'GET'
+  })
+}
+
 // ========== 环境类型管理 ==========
 
 /**
@@ -123,6 +134,17 @@ export function deleteEnvironmentType(id) {
   })
 }
 
+/**
+ * 获取环境类型详情
+ * @param {number} id - 环境类型ID
+ */
+export function getEnvironmentTypeDetail(id) {
+  return request({
+    url: `/support/environment-types/${id}`,
+    method: 'GET'
+  })
+}
+
 // ========== 动物类型管理 ==========
 
 /**
@@ -180,5 +202,16 @@ export function deleteAnimalType(id) {
   return request({
     url: `/support/animal-types/${id}`,
     method: 'DELETE'
+  })
+}
+
+/**
+ * 获取动物类型详情
+ * @param {number} id - 动物类型ID
+ */
+export function getAnimalTypeDetail(id) {
+  return request({
+    url: `/support/animal-types/${id}`,
+    method: 'GET'
   })
 }

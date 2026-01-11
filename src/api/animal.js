@@ -54,26 +54,13 @@ export function updateAnimalOrder(id, data) {
 }
 
 /**
- * 审核通过动物订购订单
+ * 审核动物订购订单
  * @param {number} id - 订单ID
- * @param {Object} data - 审核信息
+ * @param {Object} data - 审核信息（status: 1-通过 2-拒绝, handlerId/rejectReason）
  */
-export function approveAnimalOrder(id, data) {
+export function auditAnimalOrder(id, data) {
   return request({
-    url: `/support/animal-orders/${id}/approve`,
-    method: 'PUT',
-    data
-  })
-}
-
-/**
- * 审核拒绝动物订购订单
- * @param {number} id - 订单ID
- * @param {Object} data - 拒绝信息
- */
-export function rejectAnimalOrder(id, data) {
-  return request({
-    url: `/support/animal-orders/${id}/reject`,
+    url: `/support/animal-orders/${id}/audit`,
     method: 'PUT',
     data
   })
@@ -147,6 +134,17 @@ export function deleteAnimalBrand(id) {
 }
 
 /**
+ * 获取品牌详情
+ * @param {number} id - 品牌ID
+ */
+export function getAnimalBrandDetail(id) {
+  return request({
+    url: `/support/animal-brands/${id}`,
+    method: 'GET'
+  })
+}
+
+/**
  * 获取品牌选项列表
  */
 export function getAnimalBrandOptions() {
@@ -200,12 +198,25 @@ export function deleteAnimalVariety(id) {
 }
 
 /**
- * 获取品系选项列表
+ * 获取品系详情
+ * @param {number} id - 品系ID
  */
-export function getAnimalVarietyOptions() {
+export function getAnimalVarietyDetail(id) {
+  return request({
+    url: `/support/animal-varieties/${id}`,
+    method: 'GET'
+  })
+}
+
+/**
+ * 获取品系选项列表
+ * @param {Object} params - 查询参数（brandId: 必填，品牌ID）
+ */
+export function getAnimalVarietyOptions(params) {
   return request({
     url: '/support/animal-varieties/options',
-    method: 'GET'
+    method: 'GET',
+    params
   })
 }
 
@@ -249,6 +260,17 @@ export function deleteAnimalSpecification(id) {
   return request({
     url: `/support/animal-specifications/${id}`,
     method: 'DELETE'
+  })
+}
+
+/**
+ * 获取规格详情
+ * @param {number} id - 规格ID
+ */
+export function getAnimalSpecificationDetail(id) {
+  return request({
+    url: `/support/animal-specifications/${id}`,
+    method: 'GET'
   })
 }
 
@@ -302,6 +324,17 @@ export function deleteAnimalRequirement(id) {
   return request({
     url: `/support/animal-requirements/${id}`,
     method: 'DELETE'
+  })
+}
+
+/**
+ * 获取要求详情
+ * @param {number} id - 要求ID
+ */
+export function getAnimalRequirementDetail(id) {
+  return request({
+    url: `/support/animal-requirements/${id}`,
+    method: 'GET'
   })
 }
 

@@ -54,26 +54,13 @@ export function updateExperimentOperation(id, data) {
 }
 
 /**
- * 审核通过实验代操作订单
+ * 审核实验代操作订单
  * @param {number} id - 订单ID
- * @param {Object} data - 审核信息
+ * @param {Object} data - 审核信息（status: 1-通过 2-拒绝, handlerId/rejectReason）
  */
-export function approveExperimentOperation(id, data) {
+export function auditExperimentOperation(id, data) {
   return request({
-    url: `/support/experiment-operations/${id}/approve`,
-    method: 'PUT',
-    data
-  })
-}
-
-/**
- * 审核拒绝实验代操作订单
- * @param {number} id - 订单ID
- * @param {Object} data - 拒绝信息
- */
-export function rejectExperimentOperation(id, data) {
-  return request({
-    url: `/support/experiment-operations/${id}/reject`,
+    url: `/support/experiment-operations/${id}/audit`,
     method: 'PUT',
     data
   })
@@ -253,24 +240,3 @@ export function deleteExperimentTimeSlot(id) {
   })
 }
 
-/**
- * 获取提前预约天数配置
- */
-export function getExperimentAdvanceDays() {
-  return request({
-    url: '/support/experiment-advance-days',
-    method: 'GET'
-  })
-}
-
-/**
- * 更新提前预约天数配置
- * @param {Object} data - 配置信息
- */
-export function updateExperimentAdvanceDays(data) {
-  return request({
-    url: '/support/experiment-advance-days',
-    method: 'PUT',
-    data
-  })
-}

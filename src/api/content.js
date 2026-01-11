@@ -118,3 +118,49 @@ export function getStatisticsOverview(params) {
     params
   })
 }
+
+// ========== 系统配置管理 ==========
+
+/**
+ * 获取系统配置
+ * @param {string} key - 配置键
+ */
+export function getSystemConfig(key) {
+  return request({
+    url: `/support/system-configs/${key}`,
+    method: 'GET'
+  })
+}
+
+/**
+ * 更新系统配置
+ * @param {string} key - 配置键
+ * @param {Object} data - 配置信息（configValue, description）
+ */
+export function updateSystemConfig(key, data) {
+  return request({
+    url: `/support/system-configs/${key}`,
+    method: 'PUT',
+    data
+  })
+}
+
+/**
+ * 获取所有系统配置列表
+ */
+export function getSystemConfigList() {
+  return request({
+    url: '/support/system-configs',
+    method: 'GET'
+  })
+}
+
+/**
+ * 获取提前预约天数配置（统一接口）
+ */
+export function getAdvanceDays() {
+  return request({
+    url: '/support/advance-days',
+    method: 'GET'
+  })
+}

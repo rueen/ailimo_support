@@ -63,24 +63,13 @@ export function deleteUser(id) {
 }
 
 /**
- * 审核通过用户
+ * 审核用户
  * @param {number} id - 用户ID
+ * @param {Object} data - 审核信息（status: 1-通过 2-拒绝, rejectReason）
  */
-export function approveUser(id) {
+export function auditUser(id, data) {
   return request({
-    url: `/support/users/${id}/approve`,
-    method: 'PUT'
-  })
-}
-
-/**
- * 审核拒绝用户
- * @param {number} id - 用户ID
- * @param {Object} data - 拒绝原因
- */
-export function rejectUser(id, data) {
-  return request({
-    url: `/support/users/${id}/reject`,
+    url: `/support/users/${id}/audit`,
     method: 'PUT',
     data
   })
