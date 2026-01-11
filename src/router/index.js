@@ -252,6 +252,18 @@ const routes = [
             name: 'ReagentOrderList',
             component: () => import('@/views/reagent/order-list.vue'),
             meta: { title: '订购订单', permission: 'reagent_order:list' }
+          },
+          {
+            path: 'brands',
+            name: 'ReagentBrandList',
+            component: () => import('@/views/reagent/brand.vue'),
+            meta: { title: '品牌管理', permission: 'reagent_brand:list' }
+          },
+          {
+            path: 'specifications',
+            name: 'ReagentSpecificationList',
+            component: () => import('@/views/reagent/specification.vue'),
+            meta: { title: '规格管理', permission: 'reagent_specification:list' }
           }
         ]
       }

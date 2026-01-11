@@ -283,6 +283,16 @@ const menuItems = computed(() => {
           key: 'ReagentOrderList',
           label: '订购订单',
           title: '订购订单'
+        },
+        {
+          key: 'ReagentBrandList',
+          label: '品牌管理',
+          title: '品牌管理'
+        },
+        {
+          key: 'ReagentSpecificationList',
+          label: '规格管理',
+          title: '规格管理'
         }
       ]
     },
