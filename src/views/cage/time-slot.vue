@@ -1,48 +1,46 @@
 <template>
   <div class="time-slot-container">
-    <a-card>
-      <div class="action-bar">
-        <a-button type="primary" @click="handleAdd">
-          <PlusOutlined />
-          新增时间段
-        </a-button>
-      </div>
+    <div class="action-bar">
+      <a-button type="primary" @click="handleAdd">
+        <PlusOutlined />
+        新增时间段
+      </a-button>
+    </div>
 
-      <a-table
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="false"
-        row-key="id"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'displayTime'">
-            {{ record.displayTime || `${record.startTime}-${record.endTime}` }}
-          </template>
-          <template v-else-if="column.key === 'status'">
-            <a-switch
-              :checked="record.status === 1"
-              @change="(checked) => handleStatusChange(record, checked)"
-            />
-          </template>
-          <template v-else-if="column.key === 'action'">
-            <a-space>
-              <a-button type="link" size="small" @click="handleEdit(record)">
-                编辑
-              </a-button>
-              <a-popconfirm
-                title="确定删除该时间段吗？"
-                @confirm="handleDelete(record)"
-              >
-                <a-button type="link" danger size="small">
-                  删除
-                </a-button>
-              </a-popconfirm>
-            </a-space>
-          </template>
+    <a-table
+      :columns="columns"
+      :data-source="tableData"
+      :loading="loading"
+      :pagination="false"
+      row-key="id"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'displayTime'">
+          {{ record.displayTime || `${record.startTime}-${record.endTime}` }}
         </template>
-      </a-table>
-    </a-card>
+        <template v-else-if="column.key === 'status'">
+          <a-switch
+            :checked="record.status === 1"
+            @change="(checked) => handleStatusChange(record, checked)"
+          />
+        </template>
+        <template v-else-if="column.key === 'action'">
+          <a-space>
+            <a-button type="link" size="small" @click="handleEdit(record)">
+              编辑
+            </a-button>
+            <a-popconfirm
+              title="确定删除该时间段吗？"
+              @confirm="handleDelete(record)"
+            >
+              <a-button type="link" danger size="small">
+                删除
+              </a-button>
+            </a-popconfirm>
+          </a-space>
+        </template>
+      </template>
+    </a-table>
 
     <!-- 新增/编辑对话框 -->
     <a-modal

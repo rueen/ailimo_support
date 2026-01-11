@@ -64,78 +64,76 @@
     </div>
 
     <!-- 数据表格 -->
-    <a-card>
-      <a-table
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        :scroll="{ x: 1500 }"
-        row-key="id"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'timeSlots'">
-            <a-tag
-              v-for="(slot, index) in record.timeSlots"
-              :key="index"
-              color="blue"
-              style="margin-bottom: 4px"
-            >
-              {{ slot }}
-            </a-tag>
-          </template>
-          <template v-else-if="column.key === 'status'">
-            <a-tag v-if="record.status === 0" color="orange">待审核</a-tag>
-            <a-tag v-else-if="record.status === 1" color="blue">进行中</a-tag>
-            <a-tag v-else-if="record.status === 2" color="red">已拒绝</a-tag>
-            <a-tag v-else-if="record.status === 3" color="green">已完成</a-tag>
-            <a-tag v-else-if="record.status === 4" color="default">已取消</a-tag>
-          </template>
-          <template v-else-if="column.key === 'action'">
-            <a-space>
-              <a-button type="link" size="small" @click="handleView(record)">
-                查看
-              </a-button>
-              <a-button
-                v-if="record.status === 0"
-                type="link"
-                size="small"
-                @click="handleApprove(record)"
-              >
-                审核通过
-              </a-button>
-              <a-button
-                v-if="record.status === 0"
-                type="link"
-                danger
-                size="small"
-                @click="handleReject(record)"
-              >
-                审核拒绝
-              </a-button>
-              <a-button
-                v-if="record.status === 1"
-                type="link"
-                size="small"
-                @click="handleComplete(record)"
-              >
-                完成
-              </a-button>
-              <a-popconfirm
-                v-if="record.status === 1"
-                title="确定取消该订单吗？"
-                @confirm="handleCancel(record)"
-              >
-                <a-button type="link" danger size="small">
-                  取消
-                </a-button>
-              </a-popconfirm>
-            </a-space>
-          </template>
+    <a-table
+      :columns="columns"
+      :data-source="tableData"
+      :loading="loading"
+      :pagination="pagination"
+      :scroll="{ x: 1500 }"
+      row-key="id"
+      @change="handleTableChange"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'timeSlots'">
+          <a-tag
+            v-for="(slot, index) in record.timeSlots"
+            :key="index"
+            color="blue"
+            style="margin-bottom: 4px"
+          >
+            {{ slot }}
+          </a-tag>
         </template>
-      </a-table>
-    </a-card>
+        <template v-else-if="column.key === 'status'">
+          <a-tag v-if="record.status === 0" color="orange">待审核</a-tag>
+          <a-tag v-else-if="record.status === 1" color="blue">进行中</a-tag>
+          <a-tag v-else-if="record.status === 2" color="red">已拒绝</a-tag>
+          <a-tag v-else-if="record.status === 3" color="green">已完成</a-tag>
+          <a-tag v-else-if="record.status === 4" color="default">已取消</a-tag>
+        </template>
+        <template v-else-if="column.key === 'action'">
+          <a-space>
+            <a-button type="link" size="small" @click="handleView(record)">
+              查看
+            </a-button>
+            <a-button
+              v-if="record.status === 0"
+              type="link"
+              size="small"
+              @click="handleApprove(record)"
+            >
+              审核通过
+            </a-button>
+            <a-button
+              v-if="record.status === 0"
+              type="link"
+              danger
+              size="small"
+              @click="handleReject(record)"
+            >
+              审核拒绝
+            </a-button>
+            <a-button
+              v-if="record.status === 1"
+              type="link"
+              size="small"
+              @click="handleComplete(record)"
+            >
+              完成
+            </a-button>
+            <a-popconfirm
+              v-if="record.status === 1"
+              title="确定取消该订单吗？"
+              @confirm="handleCancel(record)"
+            >
+              <a-button type="link" danger size="small">
+                取消
+              </a-button>
+            </a-popconfirm>
+          </a-space>
+        </template>
+      </template>
+    </a-table>
 
     <!-- 新增订单对话框 -->
     <a-modal

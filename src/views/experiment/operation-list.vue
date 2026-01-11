@@ -86,68 +86,66 @@
     </div>
 
     <!-- 数据表格 -->
-    <a-card>
-      <a-table
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        :scroll="{ x: 1500 }"
-        row-key="id"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
-            <a-tag :color="getStatusColor(record.status)">
-              {{ getStatusText(record.status) }}
-            </a-tag>
-          </template>
-          <template v-else-if="column.key === 'timeSlots'">
-            {{ record.timeSlots?.join(', ') || '-' }}
-          </template>
-          <template v-else-if="column.key === 'action'">
-            <a-space>
-              <a-button type="link" size="small" @click="handleView(record)">
-                详情
-              </a-button>
-              <a-button
-                v-if="record.status === 0"
-                type="link"
-                size="small"
-                @click="handleEdit(record)"
-              >
-                编辑
-              </a-button>
-              <a-button
-                v-if="record.status === 0"
-                type="link"
-                size="small"
-                @click="handleApprove(record)"
-              >
-                审核
-              </a-button>
-              <a-button
-                v-if="record.status === 1"
-                type="link"
-                size="small"
-                @click="handleComplete(record)"
-              >
-                完成
-              </a-button>
-              <a-popconfirm
-                v-if="record.status === 1"
-                title="确定取消该订单吗？"
-                @confirm="handleCancel(record)"
-              >
-                <a-button type="link" danger size="small">
-                  取消
-                </a-button>
-              </a-popconfirm>
-            </a-space>
-          </template>
+    <a-table
+      :columns="columns"
+      :data-source="tableData"
+      :loading="loading"
+      :pagination="pagination"
+      :scroll="{ x: 1500 }"
+      row-key="id"
+      @change="handleTableChange"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'status'">
+          <a-tag :color="getStatusColor(record.status)">
+            {{ getStatusText(record.status) }}
+          </a-tag>
         </template>
-      </a-table>
-    </a-card>
+        <template v-else-if="column.key === 'timeSlots'">
+          {{ record.timeSlots?.join(', ') || '-' }}
+        </template>
+        <template v-else-if="column.key === 'action'">
+          <a-space>
+            <a-button type="link" size="small" @click="handleView(record)">
+              详情
+            </a-button>
+            <a-button
+              v-if="record.status === 0"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
+              编辑
+            </a-button>
+            <a-button
+              v-if="record.status === 0"
+              type="link"
+              size="small"
+              @click="handleApprove(record)"
+            >
+              审核
+            </a-button>
+            <a-button
+              v-if="record.status === 1"
+              type="link"
+              size="small"
+              @click="handleComplete(record)"
+            >
+              完成
+            </a-button>
+            <a-popconfirm
+              v-if="record.status === 1"
+              title="确定取消该订单吗？"
+              @confirm="handleCancel(record)"
+            >
+              <a-button type="link" danger size="small">
+                取消
+              </a-button>
+            </a-popconfirm>
+          </a-space>
+        </template>
+      </template>
+    </a-table>
 
     <!-- 新增/编辑订单对话框 -->
     <a-modal

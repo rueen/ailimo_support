@@ -65,62 +65,60 @@
     </div>
 
     <!-- 数据表格 -->
-    <a-card>
-      <a-table
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'auditStatus'">
-            <a-tag v-if="record.auditStatus === 0" color="orange">待审核</a-tag>
-            <a-tag v-else-if="record.auditStatus === 1" color="green">审核通过</a-tag>
-            <a-tag v-else-if="record.auditStatus === 2" color="red">审核拒绝</a-tag>
-          </template>
-          <template v-else-if="column.key === 'status'">
-            <a-badge
-              :status="record.status === 1 ? 'success' : 'default'"
-              :text="record.status === 1 ? '启用' : '禁用'"
-            />
-          </template>
-          <template v-else-if="column.key === 'action'">
-            <a-space>
-              <a-button
-                v-if="record.auditStatus === 0"
-                type="link"
-                size="small"
-                @click="handleApprove(record)"
-              >
-                审核通过
-              </a-button>
-              <a-button
-                v-if="record.auditStatus === 0"
-                type="link"
-                danger
-                size="small"
-                @click="handleReject(record)"
-              >
-                审核拒绝
-              </a-button>
-              <a-button type="link" size="small" @click="handleEdit(record)">
-                编辑
-              </a-button>
-              <a-popconfirm
-                title="确定删除该用户吗？"
-                @confirm="handleDelete(record)"
-              >
-                <a-button type="link" danger size="small">
-                  删除
-                </a-button>
-              </a-popconfirm>
-            </a-space>
-          </template>
+    <a-table
+      :columns="columns"
+      :data-source="tableData"
+      :loading="loading"
+      :pagination="pagination"
+      row-key="id"
+      @change="handleTableChange"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'auditStatus'">
+          <a-tag v-if="record.auditStatus === 0" color="orange">待审核</a-tag>
+          <a-tag v-else-if="record.auditStatus === 1" color="green">审核通过</a-tag>
+          <a-tag v-else-if="record.auditStatus === 2" color="red">审核拒绝</a-tag>
         </template>
-      </a-table>
-    </a-card>
+        <template v-else-if="column.key === 'status'">
+          <a-badge
+            :status="record.status === 1 ? 'success' : 'default'"
+            :text="record.status === 1 ? '启用' : '禁用'"
+          />
+        </template>
+        <template v-else-if="column.key === 'action'">
+          <a-space>
+            <a-button
+              v-if="record.auditStatus === 0"
+              type="link"
+              size="small"
+              @click="handleApprove(record)"
+            >
+              审核通过
+            </a-button>
+            <a-button
+              v-if="record.auditStatus === 0"
+              type="link"
+              danger
+              size="small"
+              @click="handleReject(record)"
+            >
+              审核拒绝
+            </a-button>
+            <a-button type="link" size="small" @click="handleEdit(record)">
+              编辑
+            </a-button>
+            <a-popconfirm
+              title="确定删除该用户吗？"
+              @confirm="handleDelete(record)"
+            >
+              <a-button type="link" danger size="small">
+                删除
+              </a-button>
+            </a-popconfirm>
+          </a-space>
+        </template>
+      </template>
+    </a-table>
 
     <!-- 新增/编辑用户对话框 -->
     <a-modal

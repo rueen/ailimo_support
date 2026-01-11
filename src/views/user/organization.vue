@@ -9,34 +9,32 @@
     </div>
 
     <!-- 数据表格 -->
-    <a-card>
-      <a-table
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'action'">
-            <a-space>
-              <a-button type="link" size="small" @click="handleEdit(record)">
-                编辑
+    <a-table
+      :columns="columns"
+      :data-source="tableData"
+      :loading="loading"
+      :pagination="pagination"
+      row-key="id"
+      @change="handleTableChange"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'action'">
+          <a-space>
+            <a-button type="link" size="small" @click="handleEdit(record)">
+              编辑
+            </a-button>
+            <a-popconfirm
+              title="确定删除该组织机构吗？"
+              @confirm="handleDelete(record)"
+            >
+              <a-button type="link" danger size="small">
+                删除
               </a-button>
-              <a-popconfirm
-                title="确定删除该组织机构吗？"
-                @confirm="handleDelete(record)"
-              >
-                <a-button type="link" danger size="small">
-                  删除
-                </a-button>
-              </a-popconfirm>
-            </a-space>
-          </template>
+            </a-popconfirm>
+          </a-space>
         </template>
-      </a-table>
-    </a-card>
+      </template>
+    </a-table>
 
     <!-- 新增/编辑对话框 -->
     <a-modal

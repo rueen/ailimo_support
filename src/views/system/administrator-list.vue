@@ -56,42 +56,40 @@
     </div>
 
     <!-- 数据表格 -->
-    <a-card>
-      <a-table
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
-            <a-switch
-              :checked="record.status === 1"
-              :disabled="record.username === 'admin'"
-              @change="(checked) => handleStatusChange(record, checked)"
-            />
-          </template>
-          <template v-else-if="column.key === 'action'">
-            <a-space>
-              <a-button type="link" size="small" @click="handleEdit(record)">
-                编辑
-              </a-button>
-              <a-popconfirm
-                v-if="record.username !== 'admin'"
-                title="确定删除该管理员吗？"
-                @confirm="handleDelete(record)"
-              >
-                <a-button type="link" danger size="small">
-                  删除
-                </a-button>
-              </a-popconfirm>
-            </a-space>
-          </template>
+    <a-table
+      :columns="columns"
+      :data-source="tableData"
+      :loading="loading"
+      :pagination="pagination"
+      row-key="id"
+      @change="handleTableChange"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'status'">
+          <a-switch
+            :checked="record.status === 1"
+            :disabled="record.username === 'admin'"
+            @change="(checked) => handleStatusChange(record, checked)"
+          />
         </template>
-      </a-table>
-    </a-card>
+        <template v-else-if="column.key === 'action'">
+          <a-space>
+            <a-button type="link" size="small" @click="handleEdit(record)">
+              编辑
+            </a-button>
+            <a-popconfirm
+              v-if="record.username !== 'admin'"
+              title="确定删除该管理员吗？"
+              @confirm="handleDelete(record)"
+            >
+              <a-button type="link" danger size="small">
+                删除
+              </a-button>
+            </a-popconfirm>
+          </a-space>
+        </template>
+      </template>
+    </a-table>
 
     <!-- 新增/编辑管理员对话框 -->
     <a-modal
