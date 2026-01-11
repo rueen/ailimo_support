@@ -16,7 +16,7 @@
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'displayTime'">
-          {{ record.displayTime || `${record.startTime}-${record.endTime}` }}
+          {{ record.displayTime || `${record.start_time}-${record.end_time}` }}
         </template>
         <template v-else-if="column.key === 'status'">
           <a-switch
@@ -118,10 +118,10 @@ const tableData = ref([])
 
 const columns = [
   { title: '时间段', key: 'displayTime', width: 150 },
-  { title: '开始时间', dataIndex: 'startTime', width: 120 },
-  { title: '结束时间', dataIndex: 'endTime', width: 120 },
+  { title: '开始时间', dataIndex: 'start_time', width: 120 },
+  { title: '结束时间', dataIndex: 'end_time', width: 120 },
   { title: '描述', dataIndex: 'description', ellipsis: true },
-  { title: '排序', dataIndex: 'sortOrder', width: 100 },
+  { title: '排序', dataIndex: 'sort_order', width: 100 },
   { title: '状态', key: 'status', width: 100 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
