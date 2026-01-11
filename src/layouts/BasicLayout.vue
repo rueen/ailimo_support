@@ -6,11 +6,12 @@
       :trigger="null"
       collapsible
       :width="220"
+      :style="{ overflow: 'auto' }"
       theme="dark"
     >
       <div class="logo">
         <span v-if="!collapsed">艾力默管理端</span>
-        <span v-else>ALM</span>
+        <span v-else>艾力默</span>
       </div>
       
       <a-menu
