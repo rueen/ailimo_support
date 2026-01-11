@@ -144,15 +144,5 @@ const handleLogin = async () => {
   }
 }
 
-.login-form {
-  :deep(.ant-input-affix-wrapper),
-  :deep(.ant-input) {
-    padding: 12px 15px;
-  }
 
-  :deep(.ant-btn) {
-    height: 48px;
-    font-size: 16px;
-  }
-}
 </style>
