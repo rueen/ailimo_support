@@ -90,6 +90,12 @@ const routes = [
             name: 'RoleList',
             component: () => import('@/views/system/role-list.vue'),
             meta: { title: '角色管理', permission: 'role:list' }
+          },
+          {
+            path: 'permissions',
+            name: 'PermissionList',
+            component: () => import('@/views/system/permission-list.vue'),
+            meta: { title: '权限管理', permission: 'permission:list' }
           }
         ]
       },
@@ -194,6 +200,58 @@ const routes = [
             name: 'CompanyInfo',
             component: () => import('@/views/content/company-info.vue'),
             meta: { title: '公司信息', permission: 'company_info:view' }
+          }
+        ]
+      },
+      // 动物订购管理
+      {
+        path: 'animal',
+        name: 'AnimalOrderManagement',
+        meta: { title: '动物订购', icon: 'ShoppingOutlined', permission: 'animal_order:list' },
+        children: [
+          {
+            path: 'orders',
+            name: 'AnimalOrderList',
+            component: () => import('@/views/animal/order-list.vue'),
+            meta: { title: '订购订单', permission: 'animal_order:list' }
+          },
+          {
+            path: 'brands',
+            name: 'AnimalBrandList',
+            component: () => import('@/views/animal/brand.vue'),
+            meta: { title: '品牌管理', permission: 'animal_brand:list' }
+          },
+          {
+            path: 'varieties',
+            name: 'AnimalVarietyList',
+            component: () => import('@/views/animal/variety.vue'),
+            meta: { title: '品系管理', permission: 'animal_variety:list' }
+          },
+          {
+            path: 'specifications',
+            name: 'AnimalSpecificationList',
+            component: () => import('@/views/animal/specification.vue'),
+            meta: { title: '规格管理', permission: 'animal_specification:list' }
+          },
+          {
+            path: 'requirements',
+            name: 'AnimalRequirementList',
+            component: () => import('@/views/animal/requirement.vue'),
+            meta: { title: '要求管理', permission: 'animal_requirement:list' }
+          }
+        ]
+      },
+      // 试剂耗材订购管理
+      {
+        path: 'reagent',
+        name: 'ReagentOrderManagement',
+        meta: { title: '试剂耗材订购', icon: 'MedicineBoxOutlined', permission: 'reagent_order:list' },
+        children: [
+          {
+            path: 'orders',
+            name: 'ReagentOrderList',
+            component: () => import('@/views/reagent/order-list.vue'),
+            meta: { title: '订购订单', permission: 'reagent_order:list' }
           }
         ]
       }

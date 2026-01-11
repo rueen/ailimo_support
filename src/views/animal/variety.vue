@@ -1,14 +1,24 @@
 <template>
-  <div class="simple-config-manager">
+  <div class="variety-list-container">
     <!-- 搜索表单 -->
-    <div v-if="showSearch" class="search-form">
+    <div class="search-form">
       <a-form layout="inline" :model="searchForm">
-        <a-form-item :label="`${title}名称`">
-          <a-input
-            v-model:value="searchForm.name"
-            :placeholder="`请输入${title}名称`"
+        <a-form-item label="品牌">
+          <a-select
+            v-model:value="searchForm.brandId"
+            placeholder="请选择品牌"
             allow-clear
             style="width: 200px"
+            :options="brandOptions"
+            :field-names="{ label: 'name', value: 'id' }"
+          />
+        </a-form-item>
+        <a-form-item label="品系名称">
+          <a-input
+            v-model:value="searchForm.name"
+            placeholder="请输入品系名称"
+            allow-clear
+            style="width: 150px"
           />
         </a-form-item>
         <a-form-item>
@@ -30,7 +40,7 @@
     <div class="action-bar">
       <a-button type="primary" @click="handleAdd">
         <PlusOutlined />
-        新增{{ title }}
+        新增品系
       </a-button>
     </div>
 
@@ -50,7 +60,7 @@
               编辑
             </a-button>
             <a-popconfirm
-              :title="`确定删除该${title}吗？`"
+              title="确定删除该品系吗？"
               @confirm="handleDelete(record)"
             >
               <a-button type="link" danger size="small">
@@ -66,6 +76,7 @@
     <a-modal
       v-model:open="modalVisible"
       :title="modalTitle"
+      :width="500"
       @ok="handleSubmit"
       @cancel="handleCancel"
     >
@@ -76,8 +87,19 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item :label="`${title}名称`" name="name">
-          <a-input v-model:value="formData.name" :placeholder="`请输入${title}名称`" />
+        <a-form-item label="品牌" name="brandId">
+          <a-select
+            v-model:value="formData.brandId"
+            placeholder="请选择品牌"
+            :options="brandOptions"
+            :field-names="{ label: 'name', value: 'id' }"
+          />
+        </a-form-item>
+        <a-form-item label="品系名称" name="name">
+          <a-input
+            v-model:value="formData.name"
+            placeholder="请输入品系名称"
+          />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -87,40 +109,24 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { PlusOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
-
-/**
- * 组件属性
- */
-const props = defineProps({
-  title: {
-    type: String,
-    required: true
-  },
-  api: {
-    type: Object,
-    required: true
-  },
-  showSearch: {
-    type: Boolean,
-    default: false
-  }
-})
-
-const loading = ref(false)
-const tableData = ref([])
-const pagination = reactive({
-  current: 1,
-  pageSize: 10,
-  total: 0,
-  showSizeChanger: true,
-  showTotal: (total) => `共 ${total} 条记录`
-})
+import {
+  SearchOutlined,
+  ReloadOutlined,
+  PlusOutlined
+} from '@ant-design/icons-vue'
+import {
+  getAnimalVarietyList,
+  createAnimalVariety,
+  updateAnimalVariety,
+  deleteAnimalVariety,
+  getAnimalBrandOptions
+} from '@/api/animal'
 
 // ========== 搜索表单 ==========
 
 const searchForm = reactive({
-  name: ''
+  name: '',
+  brandId: undefined
 })
 
 /**
@@ -135,17 +141,38 @@ const handleSearch = () => {
  * 重置
  */
 const handleReset = () => {
-  searchForm.name = ''
+  Object.assign(searchForm, {
+    name: '',
+    brandId: undefined
+  })
   handleSearch()
 }
+
+// ========== 数据表格 ==========
+
+const loading = ref(false)
+const tableData = ref([])
+const pagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  showSizeChanger: true,
+  showTotal: (total) => `共 ${total} 条记录`
+})
 
 /**
  * 表格列配置
  */
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 80 },
-  { title: '名称', dataIndex: 'name' },
-  { title: '创建时间', dataIndex: 'createdAt', width: 200 },
+  { title: '品系名称', dataIndex: 'name', width: 150 },
+  {
+    title: '所属品牌',
+    dataIndex: ['brand', 'name'],
+    width: 200,
+    customRender: ({ record }) => record.brand?.name || '-'
+  },
+  { title: '创建时间', dataIndex: 'createdAt', width: 180 },
   { title: '操作', key: 'action', fixed: 'right', width: 150 }
 ]
 
@@ -157,17 +184,14 @@ const fetchTableData = async () => {
     loading.value = true
     const params = {
       page: pagination.current,
-      pageSize: pagination.pageSize
+      pageSize: pagination.pageSize,
+      ...searchForm
     }
-    // 如果有搜索条件，添加到参数中
-    if (props.showSearch && searchForm.name) {
-      params.name = searchForm.name
-    }
-    const res = await props.api.list(params)
+    const res = await getAnimalVarietyList(params)
     tableData.value = res.data.list
     pagination.total = res.data.total
   } catch (error) {
-    console.error(`获取${props.title}列表失败：`, error)
+    console.error('获取品系列表失败：', error)
   } finally {
     loading.value = false
   }
@@ -185,27 +209,30 @@ const handleTableChange = (pag) => {
 // ========== 新增/编辑 ==========
 
 const modalVisible = ref(false)
-const modalTitle = ref(`新增${props.title}`)
+const modalTitle = ref('新增品系')
 const formRef = ref()
 const formData = reactive({
   id: null,
-  name: ''
+  name: '',
+  brandId: undefined
 })
 
 const formRules = {
-  name: [{ required: true, message: `请输入${props.title}名称`, trigger: 'blur' }]
+  name: [{ required: true, message: '请输入品系名称', trigger: 'blur' }],
+  brandId: [{ required: true, message: '请选择品牌', trigger: 'change' }]
 }
 
 /**
  * 新增
  */
 const handleAdd = () => {
-  modalTitle.value = `新增${props.title}`
+  modalTitle.value = '新增品系'
   modalVisible.value = true
   formRef.value?.resetFields()
   Object.assign(formData, {
     id: null,
-    name: ''
+    name: '',
+    brandId: undefined
   })
 }
 
@@ -213,11 +240,12 @@ const handleAdd = () => {
  * 编辑
  */
 const handleEdit = (record) => {
-  modalTitle.value = `编辑${props.title}`
+  modalTitle.value = '编辑品系'
   modalVisible.value = true
   Object.assign(formData, {
     id: record.id,
-    name: record.name
+    name: record.name,
+    brandId: record.brand?.id
   })
 }
 
@@ -227,20 +255,27 @@ const handleEdit = (record) => {
 const handleSubmit = async () => {
   try {
     await formRef.value.validate()
-    const data = { name: formData.name }
+    const data = {
+      name: formData.name,
+      brandId: formData.brandId
+    }
     
     if (formData.id) {
-      await props.api.update(formData.id, data)
+      await updateAnimalVariety(formData.id, data)
       message.success('更新成功')
     } else {
-      await props.api.create(data)
+      await createAnimalVariety(data)
       message.success('创建成功')
     }
     
     modalVisible.value = false
     fetchTableData()
   } catch (error) {
+    if (error.errorFields) {
+      return
+    }
     console.error('提交失败：', error)
+    message.error(error.message || '操作失败')
   }
 }
 
@@ -256,11 +291,28 @@ const handleCancel = () => {
  */
 const handleDelete = async (record) => {
   try {
-    await props.api.delete(record.id)
+    await deleteAnimalVariety(record.id)
     message.success('删除成功')
     fetchTableData()
   } catch (error) {
     console.error('删除失败：', error)
+    message.error(error.message || '删除失败')
+  }
+}
+
+// ========== 选项数据 ==========
+
+const brandOptions = ref([])
+
+/**
+ * 加载品牌选项
+ */
+const loadBrandOptions = async () => {
+  try {
+    const res = await getAnimalBrandOptions()
+    brandOptions.value = res.data
+  } catch (error) {
+    console.error('获取品牌选项失败：', error)
   }
 }
 
@@ -268,11 +320,12 @@ const handleDelete = async (record) => {
 
 onMounted(() => {
   fetchTableData()
+  loadBrandOptions()
 })
 </script>
 
 <style lang="less" scoped>
-.simple-config-manager {
+.variety-list-container {
   .search-form {
     margin-bottom: 16px;
   }

@@ -347,3 +347,17 @@ export function getAnimalRequirementOptions() {
     method: 'GET'
   })
 }
+
+// ========== 统计接口 ==========
+
+/**
+ * 获取动物订购统计
+ * @param {Object} params - 查询参数（startDate, endDate）
+ */
+export function getAnimalOrderStatistics(params) {
+  return request({
+    url: '/support/animal-orders/statistics',
+    method: 'GET',
+    params
+  })
+}

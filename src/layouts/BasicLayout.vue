@@ -250,6 +250,26 @@ const menuItems = computed(() => {
           key: 'AnimalOrderList',
           label: '订购订单',
           title: '订购订单'
+        },
+        {
+          key: 'AnimalBrandList',
+          label: '品牌管理',
+          title: '品牌管理'
+        },
+        {
+          key: 'AnimalVarietyList',
+          label: '品系管理',
+          title: '品系管理'
+        },
+        {
+          key: 'AnimalSpecificationList',
+          label: '规格管理',
+          title: '规格管理'
+        },
+        {
+          key: 'AnimalRequirementList',
+          label: '要求管理',
+          title: '要求管理'
         }
       ]
     },
@@ -322,6 +342,11 @@ const menuItems = computed(() => {
           key: 'RoleList',
           label: '角色管理',
           title: '角色管理'
+        },
+        {
+          key: 'PermissionList',
+          label: '权限管理',
+          title: '权限管理'
         }
       ]
     }

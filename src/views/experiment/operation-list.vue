@@ -362,15 +362,13 @@ import {
   getExperimentOperationDetail,
   createExperimentOperation,
   updateExperimentOperation,
-  approveExperimentOperation,
-  rejectExperimentOperation,
+  auditExperimentOperation,
   completeExperimentOperation,
   cancelExperimentOperation,
   getOperationContentOptions,
   getExperimentTimeSlotOptions
 } from '@/api/experiment'
-import { getAnimalTypeOptions } from '@/api/config'
-import { getHandlerOptions } from '@/api/administrator'
+import { getAnimalTypeOptions, getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
 
 // ========== 搜索表单 ==========
@@ -632,12 +630,14 @@ const handleApproveSubmit = async () => {
     await approveFormRef.value?.validate()
     
     if (approveFormData.result === 'approve') {
-      await approveExperimentOperation(approveFormData.id, {
+      await auditExperimentOperation(approveFormData.id, {
+        status: 1,
         handlerId: approveFormData.handlerId
       })
       message.success('审核通过')
     } else {
-      await rejectExperimentOperation(approveFormData.id, {
+      await auditExperimentOperation(approveFormData.id, {
+        status: 2,
         rejectReason: approveFormData.rejectReason
       })
       message.success('已拒绝')

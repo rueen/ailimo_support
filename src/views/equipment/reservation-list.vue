@@ -251,8 +251,7 @@ import {
 import {
   getEquipmentReservationList,
   createEquipmentReservation,
-  approveEquipmentReservation,
-  rejectEquipmentReservation,
+  auditEquipmentReservation,
   completeEquipmentReservation,
   cancelEquipmentReservation,
   getEquipmentOptions,
@@ -520,7 +519,8 @@ const handleApproveSubmit = async () => {
     return
   }
   try {
-    await approveEquipmentReservation(currentRecord.value.id, {
+    await auditEquipmentReservation(currentRecord.value.id, {
+      status: 1,
       handlerId: handlerId.value
     })
     message.success('审核通过')
@@ -552,7 +552,8 @@ const handleRejectSubmit = async () => {
     return
   }
   try {
-    await rejectEquipmentReservation(currentRecord.value.id, {
+    await auditEquipmentReservation(currentRecord.value.id, {
+      status: 2,
       rejectReason: rejectReason.value
     })
     message.success('已拒绝')

@@ -207,8 +207,7 @@ import {
   createUser,
   updateUser,
   deleteUser,
-  approveUser,
-  rejectUser
+  auditUser
 } from '@/api/user'
 import { getOrganizationOptions, getResearchGroupOptions } from '@/api/organization'
 
@@ -467,7 +466,7 @@ const currentRecord = ref(null)
  */
 const handleApprove = async (record) => {
   try {
-    await approveUser(record.id)
+    await auditUser(record.id, { status: 1 })
     message.success('审核通过')
     fetchTableData()
   } catch (error) {
@@ -493,7 +492,10 @@ const handleRejectSubmit = async () => {
     return
   }
   try {
-    await rejectUser(currentRecord.value.id, { rejectReason: rejectReason.value })
+    await auditUser(currentRecord.value.id, {
+      status: 2,
+      rejectReason: rejectReason.value
+    })
     message.success('已拒绝')
     rejectModalVisible.value = false
     fetchTableData()

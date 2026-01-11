@@ -377,15 +377,13 @@ import {
   getCageReservationDetail,
   createCageReservation,
   updateCageReservation,
-  approveCageReservation,
-  rejectCageReservation,
+  auditCageReservation,
   completeCageReservation,
   cancelCageReservation,
   getCagePurposeOptions,
   getCageTimeSlotOptions
 } from '@/api/cage'
-import { getAnimalTypeOptions, getEnvironmentTypeOptions } from '@/api/config'
-import { getHandlerOptions } from '@/api/administrator'
+import { getAnimalTypeOptions, getEnvironmentTypeOptions, getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
 
 // ========== 搜索表单 ==========
@@ -682,12 +680,14 @@ const handleApproveSubmit = async () => {
     await approveFormRef.value?.validate()
     
     if (approveFormData.result === 'approve') {
-      await approveCageReservation(approveFormData.id, {
+      await auditCageReservation(approveFormData.id, {
+        status: 1,
         handlerId: approveFormData.handlerId
       })
       message.success('审核通过')
     } else {
-      await rejectCageReservation(approveFormData.id, {
+      await auditCageReservation(approveFormData.id, {
+        status: 2,
         rejectReason: approveFormData.rejectReason
       })
       message.success('已拒绝')
