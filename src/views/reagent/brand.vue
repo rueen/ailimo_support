@@ -3,6 +3,11 @@
     title="品牌"
     :api="brandApi"
     :show-search="true"
+    :permissions="{
+      create: 'reagent_brand:create',
+      update: 'reagent_brand:update',
+      delete: 'reagent_brand:delete'
+    }"
   />
 </template>
 

@@ -2,7 +2,11 @@
   <div class="role-list-container">
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="userStore.hasPermission('role:create')"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增角色
       </a-button>
@@ -20,11 +24,16 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleEdit(record)">
+            <a-button
+              v-if="userStore.hasPermission('role:update')"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
               编辑
             </a-button>
             <a-button
-              v-if="record.id !== 1"
+              v-if="record.id !== 1 && userStore.hasPermission('role:update')"
               type="link"
               size="small"
               @click="handlePermission(record)"
@@ -32,7 +41,7 @@
               权限配置
             </a-button>
             <a-popconfirm
-              v-if="record.id !== 1"
+              v-if="record.id !== 1 && userStore.hasPermission('role:delete')"
               title="确定删除该角色吗？"
               @confirm="handleDelete(record)"
             >
@@ -106,6 +115,9 @@ import {
   deleteRole,
   getPermissionTree
 } from '@/api/administrator'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 const loading = ref(false)
 const tableData = ref([])

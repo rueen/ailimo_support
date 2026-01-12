@@ -22,6 +22,11 @@
     :form-fields="[
       { name: 'name', label: '操作内容', type: 'input', placeholder: '请输入操作内容名称（如：灌胃、腹腔注射等）', required: true }
     ]"
+    :permissions="{
+      create: 'operation_content:create',
+      update: 'operation_content:update',
+      delete: 'operation_content:delete'
+    }"
   />
 </template>
 

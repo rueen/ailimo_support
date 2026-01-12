@@ -57,7 +57,11 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="userStore.hasPermission('equipment_reservation:create')"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增订单
       </a-button>
@@ -93,11 +97,16 @@
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleView(record)">
+            <a-button
+              v-if="userStore.hasPermission('equipment_reservation:detail')"
+              type="link"
+              size="small"
+              @click="handleView(record)"
+            >
               查看
             </a-button>
             <a-button
-              v-if="record.status === 0"
+              v-if="record.status === 0 && userStore.hasPermission('equipment_reservation:audit')"
               type="link"
               size="small"
               @click="handleApprove(record)"
@@ -105,7 +114,7 @@
               审核通过
             </a-button>
             <a-button
-              v-if="record.status === 0"
+              v-if="record.status === 0 && userStore.hasPermission('equipment_reservation:audit')"
               type="link"
               danger
               size="small"
@@ -114,7 +123,7 @@
               审核拒绝
             </a-button>
             <a-button
-              v-if="record.status === 1"
+              v-if="record.status === 1 && userStore.hasPermission('equipment_reservation:complete')"
               type="link"
               size="small"
               @click="handleComplete(record)"
@@ -122,7 +131,7 @@
               完成
             </a-button>
             <a-popconfirm
-              v-if="record.status === 1"
+              v-if="record.status === 1 && userStore.hasPermission('equipment_reservation:cancel')"
               title="确定取消该订单吗？"
               @confirm="handleCancel(record)"
             >
@@ -258,6 +267,9 @@ import {
   getEquipmentAvailableSlots
 } from '@/api/equipment'
 import { getUserList } from '@/api/user'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 // ========== 搜索表单 ==========
 

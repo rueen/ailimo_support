@@ -39,7 +39,11 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="userStore.hasPermission('equipment:create')"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增设备
       </a-button>
@@ -57,16 +61,24 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'">
           <a-switch
+            v-if="userStore.hasPermission('equipment:update')"
             :checked="record.status === 1"
             @change="(checked) => handleStatusChange(record, checked)"
           />
+          <span v-else>{{ record.status === 1 ? '启用' : '禁用' }}</span>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleEdit(record)">
+            <a-button
+              v-if="userStore.hasPermission('equipment:update')"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
               编辑
             </a-button>
             <a-popconfirm
+              v-if="userStore.hasPermission('equipment:delete')"
               title="确定删除该设备吗？"
               @confirm="handleDelete(record)"
             >
@@ -155,6 +167,9 @@ import {
   updateEquipment,
   deleteEquipment
 } from '@/api/equipment'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 // ========== 搜索表单 ==========
 

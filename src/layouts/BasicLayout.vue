@@ -123,6 +123,7 @@ import {
 } from '@ant-design/icons-vue'
 import { useUserStore, useAppStore } from '@/store'
 import { changePassword } from '@/api/auth'
+import routerInstance from '@/router'
 
 const router = useRouter()
 const route = useRoute()
@@ -138,237 +139,94 @@ const selectedKeys = ref([route.name])
 const openKeys = ref([])
 
 /**
- * 菜单配置
+ * 图标映射
+ */
+const iconMap = {
+  HomeOutlined,
+  UserOutlined,
+  ExperimentOutlined,
+  SettingOutlined,
+  ToolOutlined,
+  FileTextOutlined,
+  AppstoreOutlined,
+  BulbOutlined,
+  ShoppingOutlined,
+  MedicineBoxOutlined
+}
+
+/**
+ * 获取图标组件
+ */
+const getIcon = (iconName) => {
+  if (!iconName) return null
+  const IconComponent = iconMap[iconName]
+  return IconComponent ? () => h(IconComponent) : null
+}
+
+/**
+ * 检查是否有权限
+ */
+const hasPermission = (permission) => {
+  if (!permission) return true // 没有设置权限要求，默认允许访问
+  return userStore.hasPermission(permission)
+}
+
+/**
+ * 从路由生成菜单项
+ */
+const generateMenuItems = (routes) => {
+  return routes
+    .filter((route) => {
+      // 过滤掉没有权限的路由
+      if (route.meta?.permission !== null && route.meta?.permission !== undefined) {
+        return hasPermission(route.meta.permission)
+      }
+      // 如果没有设置权限，默认显示（如首页）
+      return true
+    })
+    .map((route) => {
+      const menuItem = {
+        key: route.name,
+        label: route.meta?.title || route.name,
+        title: route.meta?.title || route.name
+      }
+
+      // 添加图标
+      if (route.meta?.icon) {
+        const icon = getIcon(route.meta.icon)
+        if (icon) {
+          menuItem.icon = icon
+        }
+      }
+
+      // 处理子路由
+      if (route.children && route.children.length > 0) {
+        const children = generateMenuItems(route.children)
+        // 只有当有子菜单且有权限的子菜单时，才显示父菜单
+        if (children.length > 0) {
+          menuItem.children = children
+        } else {
+          // 如果没有有权限的子菜单，不显示父菜单
+          return null
+        }
+      }
+
+      return menuItem
+    })
+    .filter((item) => item !== null) // 过滤掉 null 项
+}
+
+/**
+ * 菜单配置（从路由动态生成）
  */
 const menuItems = computed(() => {
-  const items = [
-    {
-      key: 'Dashboard',
-      icon: () => h(HomeOutlined),
-      label: '工作台',
-      title: '工作台'
-    },
-    {
-      key: 'UserManagement',
-      icon: () => h(UserOutlined),
-      label: '用户管理',
-      title: '用户管理',
-      children: [
-        {
-          key: 'UserList',
-          label: '用户列表',
-          title: '用户列表'
-        },
-        {
-          key: 'OrganizationList',
-          label: '组织机构',
-          title: '组织机构'
-        },
-        {
-          key: 'ResearchGroupList',
-          label: '课题组',
-          title: '课题组'
-        }
-      ]
-    },
-    {
-      key: 'EquipmentManagement',
-      icon: () => h(ExperimentOutlined),
-      label: '设备租赁',
-      title: '设备租赁',
-      children: [
-        {
-          key: 'EquipmentReservationList',
-          label: '租赁订单',
-          title: '租赁订单'
-        },
-        {
-          key: 'EquipmentList',
-          label: '设备管理',
-          title: '设备管理'
-        },
-        {
-          key: 'EquipmentTimeSlotList',
-          label: '时间段管理',
-          title: '时间段管理'
-        }
-      ]
-    },
-    {
-      key: 'CageManagement',
-      icon: () => h(AppstoreOutlined),
-      label: '笼位租赁',
-      title: '笼位租赁',
-      children: [
-        {
-          key: 'CageReservationList',
-          label: '租赁订单',
-          title: '租赁订单'
-        },
-        {
-          key: 'CageList',
-          label: '笼位管理',
-          title: '笼位管理'
-        },
-        {
-          key: 'CagePurposeList',
-          label: '用途管理',
-          title: '用途管理'
-        },
-        {
-          key: 'CageTimeSlotList',
-          label: '时间段管理',
-          title: '时间段管理'
-        }
-      ]
-    },
-    {
-      key: 'ExperimentManagement',
-      icon: () => h(BulbOutlined),
-      label: '实验代操作',
-      title: '实验代操作',
-      children: [
-        {
-          key: 'ExperimentOperationList',
-          label: '代操作订单',
-          title: '代操作订单'
-        },
-        {
-          key: 'OperationContentList',
-          label: '操作内容',
-          title: '操作内容'
-        },
-        {
-          key: 'ExperimentTimeSlotList',
-          label: '时间段管理',
-          title: '时间段管理'
-        }
-      ]
-    },
-    {
-      key: 'AnimalOrderManagement',
-      icon: () => h(ShoppingOutlined),
-      label: '动物订购',
-      title: '动物订购',
-      children: [
-        {
-          key: 'AnimalOrderList',
-          label: '订购订单',
-          title: '订购订单'
-        },
-        {
-          key: 'AnimalBrandList',
-          label: '品牌管理',
-          title: '品牌管理'
-        },
-        {
-          key: 'AnimalVarietyList',
-          label: '品系管理',
-          title: '品系管理'
-        },
-        {
-          key: 'AnimalSpecificationList',
-          label: '规格管理',
-          title: '规格管理'
-        },
-        {
-          key: 'AnimalRequirementList',
-          label: '要求管理',
-          title: '要求管理'
-        }
-      ]
-    },
-    {
-      key: 'ReagentOrderManagement',
-      icon: () => h(MedicineBoxOutlined),
-      label: '试剂耗材订购',
-      title: '试剂耗材订购',
-      children: [
-        {
-          key: 'ReagentOrderList',
-          label: '订购订单',
-          title: '订购订单'
-        },
-        {
-          key: 'ReagentBrandList',
-          label: '品牌管理',
-          title: '品牌管理'
-        },
-        {
-          key: 'ReagentSpecificationList',
-          label: '规格管理',
-          title: '规格管理'
-        }
-      ]
-    },
-    {
-      key: 'ConfigManagement',
-      icon: () => h(ToolOutlined),
-      label: '配置管理',
-      title: '配置管理',
-      children: [
-        {
-          key: 'HandlerList',
-          label: '负责人管理',
-          title: '负责人管理'
-        },
-        {
-          key: 'EnvironmentTypeList',
-          label: '环境类型',
-          title: '环境类型'
-        },
-        {
-          key: 'AnimalTypeList',
-          label: '动物类型',
-          title: '动物类型'
-        }
-      ]
-    },
-    {
-      key: 'ContentManagement',
-      icon: () => h(FileTextOutlined),
-      label: '内容管理',
-      title: '内容管理',
-      children: [
-        {
-          key: 'CaseList',
-          label: '案例管理',
-          title: '案例管理'
-        },
-        {
-          key: 'CompanyInfo',
-          label: '公司信息',
-          title: '公司信息'
-        }
-      ]
-    },
-    {
-      key: 'SystemManagement',
-      icon: () => h(SettingOutlined),
-      label: '系统管理',
-      title: '系统管理',
-      children: [
-        {
-          key: 'AdministratorList',
-          label: '管理员管理',
-          title: '管理员管理'
-        },
-        {
-          key: 'RoleList',
-          label: '角色管理',
-          title: '角色管理'
-        },
-        {
-          key: 'PermissionList',
-          label: '权限管理',
-          title: '权限管理'
-        }
-      ]
-    }
-  ]
+  // 获取主布局下的子路由
+  const mainRoute = routerInstance.options.routes.find((r) => r.path === '/')
+  if (!mainRoute || !mainRoute.children) {
+    return []
+  }
 
-  // TODO: 根据权限过滤菜单
-  return items
+  return generateMenuItems(mainRoute.children)
 })
 
 /**

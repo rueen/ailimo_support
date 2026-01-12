@@ -38,7 +38,11 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="userStore.hasPermission('animal_variety:create')"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增品系
       </a-button>
@@ -56,10 +60,16 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleEdit(record)">
+            <a-button
+              v-if="userStore.hasPermission('animal_variety:update')"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
               编辑
             </a-button>
             <a-popconfirm
+              v-if="userStore.hasPermission('animal_variety:delete')"
               title="确定删除该品系吗？"
               @confirm="handleDelete(record)"
             >
@@ -121,6 +131,9 @@ import {
   deleteAnimalVariety,
   getAnimalBrandOptions
 } from '@/api/animal'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 // ========== 搜索表单 ==========
 

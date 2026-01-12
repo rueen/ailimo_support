@@ -30,7 +30,11 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="userStore.hasPermission('research_group:create')"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增课题组
       </a-button>
@@ -48,10 +52,16 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleEdit(record)">
+            <a-button
+              v-if="userStore.hasPermission('research_group:update')"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
               编辑
             </a-button>
             <a-popconfirm
+              v-if="userStore.hasPermission('research_group:delete')"
               title="确定删除该课题组吗？"
               @confirm="handleDelete(record)"
             >
@@ -109,6 +119,9 @@ import {
   deleteResearchGroup,
   getOrganizationOptions
 } from '@/api/organization'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 // ========== 搜索表单 ==========
 

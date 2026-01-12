@@ -3,6 +3,11 @@
     title="规格"
     :api="specificationApi"
     :show-search="true"
+    :permissions="{
+      create: 'animal_specification:create',
+      update: 'animal_specification:update',
+      delete: 'animal_specification:delete'
+    }"
   />
 </template>
 

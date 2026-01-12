@@ -58,7 +58,11 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="userStore.hasPermission('user:create')"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增用户
       </a-button>
@@ -88,7 +92,7 @@
         <template v-else-if="column.key === 'action'">
           <a-space>
             <a-button
-              v-if="record.auditStatus === 0"
+              v-if="record.auditStatus === 0 && userStore.hasPermission('user:audit')"
               type="link"
               size="small"
               @click="handleApprove(record)"
@@ -96,7 +100,7 @@
               审核通过
             </a-button>
             <a-button
-              v-if="record.auditStatus === 0"
+              v-if="record.auditStatus === 0 && userStore.hasPermission('user:audit')"
               type="link"
               danger
               size="small"
@@ -104,10 +108,16 @@
             >
               审核拒绝
             </a-button>
-            <a-button type="link" size="small" @click="handleEdit(record)">
+            <a-button
+              v-if="userStore.hasPermission('user:update')"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
               编辑
             </a-button>
             <a-popconfirm
+              v-if="userStore.hasPermission('user:delete')"
               title="确定删除该用户吗？"
               @confirm="handleDelete(record)"
             >
@@ -210,6 +220,9 @@ import {
   auditUser
 } from '@/api/user'
 import { getOrganizationOptions, getResearchGroupOptions } from '@/api/organization'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 // ========== 搜索表单 ==========
 

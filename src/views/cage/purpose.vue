@@ -22,6 +22,11 @@
     :form-fields="[
       { name: 'name', label: '用途名称', type: 'input', placeholder: '请输入用途名称', required: true }
     ]"
+    :permissions="{
+      create: 'cage_purpose:create',
+      update: 'cage_purpose:update',
+      delete: 'cage_purpose:delete'
+    }"
   />
 </template>
 

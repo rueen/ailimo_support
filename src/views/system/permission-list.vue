@@ -2,7 +2,11 @@
   <div class="permission-list-container">
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="userStore.hasPermission('permission:create')"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增权限
       </a-button>
@@ -28,13 +32,24 @@
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleAddChild(record)">
+            <a-button
+              v-if="userStore.hasPermission('permission:create')"
+              type="link"
+              size="small"
+              @click="handleAddChild(record)"
+            >
               添加子权限
             </a-button>
-            <a-button type="link" size="small" @click="handleEdit(record)">
+            <a-button
+              v-if="userStore.hasPermission('permission:update')"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
               编辑
             </a-button>
             <a-popconfirm
+              v-if="userStore.hasPermission('permission:delete')"
               title="确定删除该权限吗？删除后无法恢复"
               @confirm="handleDelete(record)"
             >
@@ -125,6 +140,9 @@ import {
   updatePermission,
   deletePermission
 } from '@/api/administrator'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 const loading = ref(false)
 const tableData = ref([])

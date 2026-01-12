@@ -3,6 +3,11 @@
     title="要求"
     :api="requirementApi"
     :show-search="true"
+    :permissions="{
+      create: 'animal_requirement:create',
+      update: 'animal_requirement:update',
+      delete: 'animal_requirement:delete'
+    }"
   />
 </template>
 

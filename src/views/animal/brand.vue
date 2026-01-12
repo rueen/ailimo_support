@@ -3,6 +3,11 @@
     title="品牌"
     :api="brandApi"
     :show-search="true"
+    :permissions="{
+      create: 'animal_brand:create',
+      update: 'animal_brand:update',
+      delete: 'animal_brand:delete'
+    }"
   />
 </template>
 

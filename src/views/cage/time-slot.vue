@@ -1,7 +1,11 @@
 <template>
   <div class="time-slot-container">
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="userStore.hasPermission('cage_time_slot:create')"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增时间段
       </a-button>
@@ -20,16 +24,24 @@
         </template>
         <template v-else-if="column.key === 'status'">
           <a-switch
+            v-if="userStore.hasPermission('cage_time_slot:update')"
             :checked="record.status === 1"
             @change="(checked) => handleStatusChange(record, checked)"
           />
+          <span v-else>{{ record.status === 1 ? '启用' : '禁用' }}</span>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleEdit(record)">
+            <a-button
+              v-if="userStore.hasPermission('cage_time_slot:update')"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
               编辑
             </a-button>
             <a-popconfirm
+              v-if="userStore.hasPermission('cage_time_slot:delete')"
               title="确定删除该时间段吗？"
               @confirm="handleDelete(record)"
             >
@@ -112,6 +124,9 @@ import {
   updateCageTimeSlot,
   deleteCageTimeSlot
 } from '@/api/cage'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 const loading = ref(false)
 const tableData = ref([])

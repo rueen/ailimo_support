@@ -28,7 +28,11 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="!props.permissions.create || userStore.hasPermission(props.permissions.create)"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增{{ title }}
       </a-button>
@@ -46,10 +50,16 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleEdit(record)">
+            <a-button
+              v-if="!props.permissions.update || userStore.hasPermission(props.permissions.update)"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
               编辑
             </a-button>
             <a-popconfirm
+              v-if="!props.permissions.delete || userStore.hasPermission(props.permissions.delete)"
               :title="`确定删除该${title}吗？`"
               @confirm="handleDelete(record)"
             >
@@ -88,6 +98,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { PlusOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 /**
  * 组件属性
@@ -104,6 +117,14 @@ const props = defineProps({
   showSearch: {
     type: Boolean,
     default: false
+  },
+  permissions: {
+    type: Object,
+    default: () => ({
+      create: null,
+      update: null,
+      delete: null
+    })
   }
 })
 

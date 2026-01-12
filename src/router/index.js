@@ -25,7 +25,7 @@ const routes = [
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
-        meta: { title: '首页', icon: 'HomeOutlined' }
+        meta: { title: '工作台', icon: 'HomeOutlined', permission: 'dashboard:view' }
       },
       // 用户管理
       {
@@ -314,7 +314,97 @@ router.beforeEach((to, from, next) => {
     return
   }
 
-  next()
+  // 权限检查
+  if (to.meta.requiresAuth !== false && to.meta.permission !== null && to.meta.permission !== undefined) {
+    // 动态导入 store（避免循环依赖）
+    import('@/store').then(({ useUserStore }) => {
+      const userStore = useUserStore()
+      if (!userStore.hasPermission(to.meta.permission)) {
+        message.error('无权限访问该页面')
+        // 查找用户有权限的第一个路由
+        const firstAccessibleRoute = findFirstAccessibleRoute(router.options.routes, userStore)
+        if (firstAccessibleRoute) {
+          // 构建完整路径
+          const fullPath = firstAccessibleRoute.path.startsWith('/') 
+            ? firstAccessibleRoute.path 
+            : `/${firstAccessibleRoute.path}`
+          next({ path: fullPath })
+        } else {
+          // 如果没有找到有权限的路由，跳转到登录页
+          message.error('您没有任何页面访问权限')
+          next({ path: '/login' })
+        }
+        return
+      }
+      next()
+    }).catch(() => {
+      next()
+    })
+  } else {
+    next()
+  }
 })
+
+/**
+ * 查找用户有权限的第一个路由
+ * @param {Array} routes - 路由配置数组
+ * @param {Object} userStore - 用户 store 实例
+ * @returns {Object|null} 第一个有权限的路由对象
+ */
+/**
+ * 查找用户有权限的第一个路由
+ * @param {Array} routes - 路由配置数组
+ * @param {Object} userStore - 用户 store 实例
+ * @returns {Object|null} 第一个有权限的路由对象，包含完整路径
+ */
+function findFirstAccessibleRoute(routes, userStore) {
+  // 递归查找路由
+  function findRoute(routeList, parentPath = '') {
+    for (const route of routeList) {
+      // 跳过登录页和404页
+      if (route.path === '/login' || route.name === 'NotFound') {
+        continue
+      }
+      
+      // 构建当前路由的完整路径
+      let currentPath = route.path
+      if (parentPath) {
+        if (route.path.startsWith('/')) {
+          currentPath = route.path
+        } else {
+          // 子路由路径拼接
+          currentPath = parentPath.endsWith('/') 
+            ? `${parentPath}${route.path}` 
+            : `${parentPath}/${route.path}`
+        }
+      } else if (!route.path.startsWith('/')) {
+        // 根路径下的子路由
+        currentPath = `/${route.path}`
+      }
+      
+      // 检查是否有子路由
+      if (route.children && route.children.length > 0) {
+        const childRoute = findRoute(route.children, currentPath)
+        if (childRoute) {
+          return childRoute
+        }
+      }
+      
+      // 检查当前路由是否有权限要求且有组件
+      if (route.meta?.permission && route.component) {
+        // 如果有权限要求，检查用户是否有权限
+        if (userStore.hasPermission(route.meta.permission)) {
+          return {
+            ...route,
+            path: currentPath
+          }
+        }
+      }
+    }
+    return null
+  }
+  
+  return findRoute(routes)
+}
 
 export default router

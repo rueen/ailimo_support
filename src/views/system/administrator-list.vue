@@ -49,7 +49,11 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="userStore.hasPermission('administrator:create')"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增管理员
       </a-button>
@@ -67,18 +71,25 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'">
           <a-switch
+            v-if="userStore.hasPermission('administrator:update')"
             :checked="record.status === 1"
             :disabled="record.username === 'admin'"
             @change="(checked) => handleStatusChange(record, checked)"
           />
+          <span v-else>{{ record.status === 1 ? '启用' : '禁用' }}</span>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleEdit(record)">
+            <a-button
+              v-if="userStore.hasPermission('administrator:update')"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
               编辑
             </a-button>
             <a-popconfirm
-              v-if="record.username !== 'admin'"
+              v-if="record.username !== 'admin' && userStore.hasPermission('administrator:delete')"
               title="确定删除该管理员吗？"
               @confirm="handleDelete(record)"
             >
@@ -160,6 +171,9 @@ import {
   deleteAdministrator
 } from '@/api/administrator'
 import { getRoleList } from '@/api/administrator'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 // ========== 搜索表单 ==========
 

@@ -2,6 +2,11 @@
   <SimpleConfigManager
     title="环境类型"
     :api="environmentTypeApi"
+    :permissions="{
+      create: 'environment_type:create',
+      update: 'environment_type:update',
+      delete: 'environment_type:delete'
+    }"
   />
 </template>
 

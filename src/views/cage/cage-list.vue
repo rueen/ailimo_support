@@ -51,7 +51,11 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button type="primary" @click="handleAdd">
+      <a-button
+        v-if="userStore.hasPermission('cage:create')"
+        type="primary"
+        @click="handleAdd"
+      >
         <PlusOutlined />
         新增笼位
       </a-button>
@@ -69,16 +73,24 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'">
           <a-switch
+            v-if="userStore.hasPermission('cage:update')"
             :checked="record.status === 1"
             @change="(checked) => handleStatusChange(record, checked)"
           />
+          <span v-else>{{ record.status === 1 ? '启用' : '禁用' }}</span>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleEdit(record)">
+            <a-button
+              v-if="userStore.hasPermission('cage:update')"
+              type="link"
+              size="small"
+              @click="handleEdit(record)"
+            >
               编辑
             </a-button>
             <a-popconfirm
+              v-if="userStore.hasPermission('cage:delete')"
               title="确定删除该笼位吗？"
               @confirm="handleDelete(record)"
             >
@@ -157,6 +169,9 @@ import {
   deleteCage
 } from '@/api/cage'
 import { getAnimalTypeOptions, getEnvironmentTypeOptions } from '@/api/config'
+import { useUserStore } from '@/store'
+
+const userStore = useUserStore()
 
 // ========== 搜索表单 ==========
 

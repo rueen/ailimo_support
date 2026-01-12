@@ -2,6 +2,11 @@
   <SimpleConfigManager
     title="负责人"
     :api="handlerApi"
+    :permissions="{
+      create: 'handler:create',
+      update: 'handler:update',
+      delete: 'handler:delete'
+    }"
   />
 </template>
 

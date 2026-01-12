@@ -3,6 +3,11 @@
     title="规格"
     :api="specificationApi"
     :show-search="true"
+    :permissions="{
+      create: 'reagent_specification:create',
+      update: 'reagent_specification:update',
+      delete: 'reagent_specification:delete'
+    }"
   />
 </template>
 

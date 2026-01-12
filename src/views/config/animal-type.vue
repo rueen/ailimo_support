@@ -2,6 +2,11 @@
   <SimpleConfigManager
     title="动物类型"
     :api="animalTypeApi"
+    :permissions="{
+      create: 'animal_type:create',
+      update: 'animal_type:update',
+      delete: 'animal_type:delete'
+    }"
   />
 </template>
 
