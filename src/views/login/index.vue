@@ -38,6 +38,12 @@
         </a-form-item>
 
         <a-form-item>
+          <a-checkbox v-model:checked="rememberPassword">
+            记住密码
+          </a-checkbox>
+        </a-form-item>
+
+        <a-form-item>
           <a-button
             type="primary"
             size="large"
@@ -54,11 +60,12 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/store'
+import { saveRememberPassword, getRememberPassword, clearRememberPassword } from '@/utils/storage'
 
 const router = useRouter()
 const route = useRoute()
@@ -66,13 +73,14 @@ const userStore = useUserStore()
 
 const formRef = ref()
 const loading = ref(false)
+const rememberPassword = ref(false)
 
 /**
  * 登录表单数据
  */
 const loginForm = reactive({
-  username: 'admin',
-  password: '123456'
+  username: '',
+  password: ''
 })
 
 /**
@@ -89,6 +97,18 @@ const rules = {
 }
 
 /**
+ * 加载记住的密码
+ */
+const loadRememberedPassword = () => {
+  const remembered = getRememberPassword()
+  if (remembered) {
+    loginForm.username = remembered.username
+    loginForm.password = remembered.password
+    rememberPassword.value = true
+  }
+}
+
+/**
  * 处理登录
  */
 const handleLogin = async () => {
@@ -96,6 +116,13 @@ const handleLogin = async () => {
     loading.value = true
     await userStore.login(loginForm)
     message.success('登录成功')
+    
+    // 根据记住密码选项保存或清除密码
+    if (rememberPassword.value) {
+      saveRememberPassword(loginForm.username, loginForm.password)
+    } else {
+      clearRememberPassword()
+    }
     
     // 跳转到重定向页面或首页
     const redirect = route.query.redirect || '/'
@@ -106,6 +133,12 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
+
+// ========== 初始化 ==========
+
+onMounted(() => {
+  loadRememberedPassword()
+})
 </script>
 
 <style lang="less" scoped>
