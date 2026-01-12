@@ -186,6 +186,11 @@ const menuItems = computed(() => {
           key: 'EquipmentList',
           label: '设备管理',
           title: '设备管理'
+        },
+        {
+          key: 'EquipmentTimeSlotList',
+          label: '时间段管理',
+          title: '时间段管理'
         }
       ]
     },

@@ -70,6 +70,12 @@ const routes = [
             name: 'EquipmentList',
             component: () => import('@/views/equipment/equipment-list.vue'),
             meta: { title: '设备管理', permission: 'equipment:list' }
+          },
+          {
+            path: 'time-slots',
+            name: 'EquipmentTimeSlotList',
+            component: () => import('@/views/equipment/time-slot.vue'),
+            meta: { title: '时间段管理', permission: 'equipment_time_slot:list' }
           }
         ]
       },
