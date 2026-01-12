@@ -220,7 +220,7 @@
             mode="multiple"
             placeholder="请选择时间段"
             :options="timeSlotOptions"
-            :field-names="{ label: 'displayTime', value: 'displayTime' }"
+            :field-names="{ label: 'display_time', value: 'display_time' }"
           />
         </a-form-item>
         <a-form-item label="备注" name="remark">
