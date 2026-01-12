@@ -95,6 +95,7 @@ import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import {
   getRoleList,
+  getRoleDetail,
   createRole,
   updateRole,
   deleteRole,
@@ -201,7 +202,7 @@ const handleSubmit = async () => {
     const data = {
       name: formData.name,
       description: formData.description,
-      permissionIds: [] // 创建时暂时为空，后续通过权限配置设置
+      permission_ids: [] // 创建时暂时为空，后续通过权限配置设置
     }
     
     if (formData.id) {
@@ -253,19 +254,25 @@ const handlePermission = async (record) => {
   currentRole.value = record
   permissionModalVisible.value = true
   
-  // 加载权限树
+  // 加载权限树和角色详情
   try {
-    const res = await getPermissionTree()
-    permissionTree.value = res.data
+    // 并行加载权限树和角色详情
+    const [permissionRes, roleRes] = await Promise.all([
+      getPermissionTree(),
+      getRoleDetail(record.id)
+    ])
     
-    // 设置已选中的权限
-    if (record.permissions) {
-      checkedPermissions.value = record.permissions.map((p) => p.id)
+    permissionTree.value = permissionRes.data
+    
+    // 从角色详情中获取已选中的权限
+    if (roleRes.data.permissions && roleRes.data.permissions.length > 0) {
+      checkedPermissions.value = roleRes.data.permissions.map((p) => p.id)
     } else {
       checkedPermissions.value = []
     }
   } catch (error) {
-    console.error('加载权限树失败：', error)
+    console.error('加载权限配置失败：', error)
+    message.error('加载权限配置失败')
   }
 }
 
@@ -275,13 +282,14 @@ const handlePermission = async (record) => {
 const handlePermissionSubmit = async () => {
   try {
     await updateRole(currentRole.value.id, {
-      permissionIds: checkedPermissions.value
+      permission_ids: checkedPermissions.value
     })
     message.success('权限配置成功')
     permissionModalVisible.value = false
     fetchTableData()
   } catch (error) {
     console.error('权限配置失败：', error)
+    message.error(error.message || '权限配置失败')
   }
 }
 
