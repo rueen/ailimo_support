@@ -23,7 +23,12 @@
             <a-button type="link" size="small" @click="handleEdit(record)">
               编辑
             </a-button>
-            <a-button type="link" size="small" @click="handlePermission(record)">
+            <a-button
+              v-if="record.id !== 1"
+              type="link"
+              size="small"
+              @click="handlePermission(record)"
+            >
               权限配置
             </a-button>
             <a-popconfirm
