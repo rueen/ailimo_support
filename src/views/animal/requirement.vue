@@ -144,10 +144,10 @@ const handleReset = () => {
  * 表格列配置
  */
 const columns = [
-  { title: '名称', dataIndex: 'name' },
-  { title: '创建时间', dataIndex: 'created_at', width: 200 },
-  { title: '更新时间', dataIndex: 'updated_at', width: 200 },
-  { title: '操作', key: 'action', fixed: 'right', width: 150 }
+  { title: '要求名称', dataIndex: 'name' },
+  { title: '创建时间', dataIndex: 'created_at' },
+  { title: '更新时间', dataIndex: 'updated_at' },
+  { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 
 /**
