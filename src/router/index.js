@@ -79,58 +79,6 @@ const routes = [
           }
         ]
       },
-      // 系统管理
-      {
-        path: 'system',
-        name: 'SystemManagement',
-        meta: { title: '系统管理', icon: 'SettingOutlined', permission: 'administrator:list' },
-        children: [
-          {
-            path: 'administrators',
-            name: 'AdministratorList',
-            component: () => import('@/views/system/administrator-list.vue'),
-            meta: { title: '管理员管理', permission: 'administrator:list' }
-          },
-          {
-            path: 'roles',
-            name: 'RoleList',
-            component: () => import('@/views/system/role-list.vue'),
-            meta: { title: '角色管理', permission: 'role:list' }
-          },
-          {
-            path: 'permissions',
-            name: 'PermissionList',
-            component: () => import('@/views/system/permission-list.vue'),
-            meta: { title: '权限管理', permission: 'permission:list' }
-          }
-        ]
-      },
-      // 配置管理
-      {
-        path: 'config',
-        name: 'ConfigManagement',
-        meta: { title: '配置管理', icon: 'ToolOutlined', permission: 'handler:list' },
-        children: [
-          {
-            path: 'handlers',
-            name: 'HandlerList',
-            component: () => import('@/views/config/handler.vue'),
-            meta: { title: '负责人管理', permission: 'handler:list' }
-          },
-          {
-            path: 'environment-types',
-            name: 'EnvironmentTypeList',
-            component: () => import('@/views/config/environment-type.vue'),
-            meta: { title: '环境类型', permission: 'environment_type:list' }
-          },
-          {
-            path: 'animal-types',
-            name: 'AnimalTypeList',
-            component: () => import('@/views/config/animal-type.vue'),
-            meta: { title: '动物类型', permission: 'animal_type:list' }
-          }
-        ]
-      },
       // 笼位租赁管理
       {
         path: 'cage',
@@ -186,26 +134,6 @@ const routes = [
             name: 'ExperimentTimeSlotList',
             component: () => import('@/views/experiment/time-slot.vue'),
             meta: { title: '时间段管理', permission: 'experiment_time_slot:list' }
-          }
-        ]
-      },
-      // 内容管理
-      {
-        path: 'content',
-        name: 'ContentManagement',
-        meta: { title: '内容管理', icon: 'FileTextOutlined', permission: 'case:list' },
-        children: [
-          {
-            path: 'cases',
-            name: 'CaseList',
-            component: () => import('@/views/content/case-list.vue'),
-            meta: { title: '案例管理', permission: 'case:list' }
-          },
-          {
-            path: 'company-info',
-            name: 'CompanyInfo',
-            component: () => import('@/views/content/company-info.vue'),
-            meta: { title: '公司信息', permission: 'company_info:view' }
           }
         ]
       },
@@ -270,6 +198,78 @@ const routes = [
             name: 'ReagentSpecificationList',
             component: () => import('@/views/reagent/specification.vue'),
             meta: { title: '规格管理', permission: 'reagent_specification:list' }
+          }
+        ]
+      },
+      // 内容管理
+      {
+        path: 'content',
+        name: 'ContentManagement',
+        meta: { title: '内容管理', icon: 'FileTextOutlined', permission: 'case:list' },
+        children: [
+          {
+            path: 'cases',
+            name: 'CaseList',
+            component: () => import('@/views/content/case-list.vue'),
+            meta: { title: '案例管理', permission: 'case:list' }
+          },
+          {
+            path: 'company-info',
+            name: 'CompanyInfo',
+            component: () => import('@/views/content/company-info.vue'),
+            meta: { title: '公司信息', permission: 'company_info:view' }
+          }
+        ]
+      },
+      // 通用配置管理
+      {
+        path: 'config',
+        name: 'ConfigManagement',
+        meta: { title: '通用配置管理', icon: 'ToolOutlined', permission: 'handler:list' },
+        children: [
+          {
+            path: 'handlers',
+            name: 'HandlerList',
+            component: () => import('@/views/config/handler.vue'),
+            meta: { title: '负责人管理', permission: 'handler:list' }
+          },
+          {
+            path: 'environment-types',
+            name: 'EnvironmentTypeList',
+            component: () => import('@/views/config/environment-type.vue'),
+            meta: { title: '环境类型', permission: 'environment_type:list' }
+          },
+          {
+            path: 'animal-types',
+            name: 'AnimalTypeList',
+            component: () => import('@/views/config/animal-type.vue'),
+            meta: { title: '动物类型', permission: 'animal_type:list' }
+          }
+        ]
+      },
+      // 系统管理
+      {
+        path: 'system',
+        name: 'SystemManagement',
+        meta: { title: '系统管理', icon: 'SettingOutlined', permission: 'administrator:list' },
+        children: [
+          {
+            path: 'administrators',
+            name: 'AdministratorList',
+            component: () => import('@/views/system/administrator-list.vue'),
+            meta: { title: '管理员管理', permission: 'administrator:list' }
+          },
+          {
+            path: 'roles',
+            name: 'RoleList',
+            component: () => import('@/views/system/role-list.vue'),
+            meta: { title: '角色管理', permission: 'role:list' }
+          },
+          {
+            path: 'permissions',
+            name: 'PermissionList',
+            component: () => import('@/views/system/permission-list.vue'),
+            meta: { title: '权限管理', permission: 'permission:list' }
           }
         ]
       }
