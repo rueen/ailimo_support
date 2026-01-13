@@ -1,5 +1,5 @@
 <template>
-  <div class="specification-list-container">
+  <div>
     <!-- 搜索表单 -->
     <div class="search-form">
       <a-form layout="inline" :model="searchForm">
@@ -277,14 +277,3 @@ onMounted(() => {
 })
 </script>
 
-<style lang="less" scoped>
-.specification-list-container {
-  .search-form {
-    margin-bottom: 16px;
-  }
-
-  .action-bar {
-    margin-bottom: 16px;
-  }
-}
-</style>

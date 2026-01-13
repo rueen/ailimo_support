@@ -1,5 +1,5 @@
 <template>
-  <div class="brand-list-container">
+  <div>
     <!-- 搜索表单 -->
     <div class="search-form">
       <a-form layout="inline" :model="searchForm">
@@ -276,15 +276,3 @@ onMounted(() => {
   fetchTableData()
 })
 </script>
-
-<style lang="less" scoped>
-.brand-list-container {
-  .search-form {
-    margin-bottom: 16px;
-  }
-
-  .action-bar {
-    margin-bottom: 16px;
-  }
-}
-</style>
