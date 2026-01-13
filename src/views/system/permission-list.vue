@@ -107,9 +107,9 @@
             <a-select-option value="DELETE">DELETE</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="父级权限" name="parentId">
+        <a-form-item label="父级权限" name="parent_id">
           <a-tree-select
-            v-model:value="formData.parentId"
+            v-model:value="formData.parent_id"
             :tree-data="permissionTreeOptions"
             placeholder="请选择父级权限（不选则为顶级权限）"
             :field-names="{ label: 'name', value: 'id', children: 'children' }"
@@ -117,9 +117,9 @@
             allow-clear
           />
         </a-form-item>
-        <a-form-item label="排序" name="sortOrder">
+        <a-form-item label="排序" name="sort_order">
           <a-input-number
-            v-model:value="formData.sortOrder"
+            v-model:value="formData.sort_order"
             :min="0"
             placeholder="请输入排序值"
             style="width: 100%"
@@ -156,7 +156,7 @@ const columns = [
   { title: '权限代码', key: 'code', width: 200 },
   { title: '资源路径', dataIndex: 'resource', width: 250 },
   { title: '请求方法', key: 'method', width: 100 },
-  { title: '排序', dataIndex: 'sortOrder', width: 80 },
+  { title: '排序', dataIndex: 'sort_order', width: 80 },
   { title: '操作', key: 'action', fixed: 'right', width: 280 }
 ]
 
@@ -216,15 +216,15 @@ const formData = reactive({
   code: '',
   resource: '',
   method: '',
-  parentId: null,
-  sortOrder: 0
+  parent_id: null,
+  sort_order: 0
 })
 
 const formRules = {
   name: [{ required: true, message: '请输入权限名称', trigger: 'blur' }],
   code: [{ required: true, message: '请输入权限代码', trigger: 'blur' }],
-  resource: [{ required: true, message: '请输入资源路径', trigger: 'blur' }],
-  method: [{ required: true, message: '请选择请求方法', trigger: 'change' }]
+  // resource: [{ required: true, message: '请输入资源路径', trigger: 'blur' }],
+  // method: [{ required: true, message: '请选择请求方法', trigger: 'change' }]
 }
 
 /**
@@ -242,7 +242,7 @@ const handleAdd = () => {
 const handleAddChild = (record) => {
   modalTitle.value = '新增子权限'
   resetForm()
-  formData.parentId = record.id
+  formData.parent_id = record.id
   modalVisible.value = true
 }
 
@@ -257,8 +257,8 @@ const handleEdit = (record) => {
     code: record.code,
     resource: record.resource,
     method: record.method,
-    parentId: record.parentId || null,
-    sortOrder: record.sortOrder || 0
+    parent_id: record.parent_id || null,
+    sort_order: record.sort_order || 0
   })
   modalVisible.value = true
 }
@@ -274,8 +274,8 @@ const handleSubmit = async () => {
       code: formData.code,
       resource: formData.resource,
       method: formData.method,
-      parentId: formData.parentId || 0,
-      sortOrder: formData.sortOrder || 0
+      parent_id: formData.parent_id || 0,
+      sort_order: formData.sort_order || 0
     }
     if (formData.id) {
       await updatePermission(formData.id, data)
@@ -312,8 +312,8 @@ const resetForm = () => {
     code: '',
     resource: '',
     method: '',
-    parentId: null,
-    sortOrder: 0
+    parent_id: null,
+    sort_order: 0
   })
   formRef.value?.resetFields()
 }
