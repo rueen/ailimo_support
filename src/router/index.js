@@ -270,6 +270,12 @@ const routes = [
             name: 'PermissionList',
             component: () => import('@/views/system/permission-list.vue'),
             meta: { title: '权限管理', permission: 'permission:list' }
+          },
+          {
+            path: 'system-configs',
+            name: 'SystemConfigList',
+            component: () => import('@/views/system/system-config.vue'),
+            meta: { title: '系统配置', permission: 'system_config:list' }
           }
         ]
       }
