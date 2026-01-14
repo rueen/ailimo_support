@@ -146,22 +146,21 @@
         :wrapper-col="{ span: 16 }"
       >
         <a-form-item label="姓名" name="name">
-          <a-input v-model:value="formData.name" />
+          <a-input v-model:value="formData.name" placeholder="请输入姓名" allow-clear />
         </a-form-item>
         <a-form-item label="手机号" name="phone">
-          <a-input v-model:value="formData.phone" />
+          <a-input v-model:value="formData.phone" placeholder="请输入手机号" allow-clear />
         </a-form-item>
-        <a-form-item label="省份" name="province">
-          <a-input v-model:value="formData.province" />
-        </a-form-item>
-        <a-form-item label="城市" name="city">
-          <a-input v-model:value="formData.city" />
-        </a-form-item>
-        <a-form-item label="区县" name="district">
-          <a-input v-model:value="formData.district" />
+        <a-form-item label="地区" name="region">
+          <RegionCascader
+            v-model:province-id="formData.provinceId"
+            v-model:city-id="formData.cityId"
+            v-model:district-id="formData.districtId"
+            select-width="116px"
+          />
         </a-form-item>
         <a-form-item label="详细地址" name="address">
-          <a-textarea v-model:value="formData.address" :rows="2" />
+          <a-textarea v-model:value="formData.address" :rows="2" placeholder="请输入详细地址" allow-clear />
         </a-form-item>
         <a-form-item label="组织机构" name="organizationId">
           <a-select
@@ -169,6 +168,8 @@
             :options="organizationOptions"
             :field-names="{ label: 'name', value: 'id' }"
             @change="handleOrganizationChange"
+            placeholder="请选择组织机构"
+            allow-clear
           />
         </a-form-item>
         <a-form-item label="课题组" name="researchGroupId">
@@ -176,6 +177,8 @@
             v-model:value="formData.researchGroupId"
             :options="researchGroupOptions"
             :field-names="{ label: 'name', value: 'id' }"
+            placeholder="请选择课题组"
+            allow-clear
           />
         </a-form-item>
         <a-form-item label="审核状态" name="auditStatus">
@@ -221,6 +224,7 @@ import {
 } from '@/api/user'
 import { getOrganizationOptions, getResearchGroupOptions } from '@/api/organization'
 import { useUserStore } from '@/store'
+import RegionCascader from '@/components/RegionCascader.vue'
 
 const userStore = useUserStore()
 
@@ -329,9 +333,9 @@ const formData = reactive({
   id: null,
   name: '',
   phone: '',
-  province: '',
-  city: '',
-  district: '',
+  provinceId: undefined,
+  cityId: undefined,
+  districtId: undefined,
   address: '',
   organizationId: undefined,
   researchGroupId: undefined,
@@ -344,9 +348,17 @@ const formRules = {
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
   ],
-  province: [{ required: true, message: '请输入省份', trigger: 'blur' }],
-  city: [{ required: true, message: '请输入城市', trigger: 'blur' }],
-  district: [{ required: true, message: '请输入区县', trigger: 'blur' }],
+  region: [
+    {
+      validator: (rule, value) => {
+        if (!formData.provinceId || !formData.cityId || !formData.districtId) {
+          return Promise.reject('请选择完整的省市区信息')
+        }
+        return Promise.resolve()
+      },
+      trigger: 'change'
+    }
+  ],
   address: [{ required: true, message: '请输入详细地址', trigger: 'blur' }],
   organizationId: [{ required: true, message: '请选择组织机构', trigger: 'change' }],
   researchGroupId: [{ required: true, message: '请选择课题组', trigger: 'change' }]
@@ -366,9 +378,9 @@ const handleAdd = () => {
     id: null,
     name: '',
     phone: '',
-    province: '',
-    city: '',
-    district: '',
+    provinceId: undefined,
+    cityId: undefined,
+    districtId: undefined,
     address: '',
     organizationId: undefined,
     researchGroupId: undefined,
@@ -386,9 +398,9 @@ const handleEdit = (record) => {
     id: record.id,
     name: record.name,
     phone: record.phone,
-    province: record.province,
-    city: record.city,
-    district: record.district,
+    provinceId: record.provinceId || record.province_id,
+    cityId: record.cityId || record.city_id,
+    districtId: record.districtId || record.district_id,
     address: record.address,
     organizationId: record.organization?.id,
     researchGroupId: record.researchGroup?.id,
