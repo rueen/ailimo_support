@@ -64,6 +64,21 @@ const props = defineProps({
     type: Number,
     default: undefined
   },
+  // 省份名称（用于编辑时根据名称回填）
+  provinceName: {
+    type: String,
+    default: ''
+  },
+  // 城市名称（用于编辑时根据名称回填）
+  cityName: {
+    type: String,
+    default: ''
+  },
+  // 区县名称（用于编辑时根据名称回填）
+  districtName: {
+    type: String,
+    default: ''
+  },
   // 下拉框宽度
   selectWidth: {
     type: String,
@@ -90,6 +105,17 @@ const loadProvinces = async () => {
     provinceLoading.value = true
     const res = await getRegionList({ level: 1 })
     provinceOptions.value = res.data || []
+    
+    // 如果有省份名称，根据名称找到对应的ID并设置
+    if (props.provinceName && !selectedProvince.value) {
+      const province = provinceOptions.value.find(item => item.name === props.provinceName)
+      if (province) {
+        selectedProvince.value = province.id
+        emit('update:provinceId', province.id)
+        // 加载城市列表
+        await loadCitiesWithName(province.id)
+      }
+    }
   } catch (error) {
     console.error('加载省份列表失败：', error)
     provinceOptions.value = []
@@ -148,6 +174,36 @@ const loadCities = async (provinceId) => {
 }
 
 /**
+ * 加载城市列表（用于根据名称初始化）
+ * @param {number} provinceId - 省份ID
+ */
+const loadCitiesWithName = async (provinceId) => {
+  if (!provinceId) return
+  
+  try {
+    cityLoading.value = true
+    const res = await getRegionList({ parent_id: provinceId, level: 2 })
+    cityOptions.value = res.data || []
+    
+    // 如果有城市名称，根据名称找到对应的ID并设置
+    if (props.cityName && !selectedCity.value) {
+      const city = cityOptions.value.find(item => item.name === props.cityName)
+      if (city) {
+        selectedCity.value = city.id
+        emit('update:cityId', city.id)
+        // 加载区县列表
+        await loadDistrictsWithName(city.id)
+      }
+    }
+  } catch (error) {
+    console.error('加载城市列表失败：', error)
+    cityOptions.value = []
+  } finally {
+    cityLoading.value = false
+  }
+}
+
+/**
  * 城市改变事件
  */
 const handleCityChange = (value) => {
@@ -185,6 +241,36 @@ const loadDistricts = async (cityId) => {
     districtLoading.value = true
     const res = await getRegionList({ parent_id: cityId, level: 3 })
     districtOptions.value = res.data || []
+  } catch (error) {
+    console.error('加载区县列表失败：', error)
+    districtOptions.value = []
+  } finally {
+    districtLoading.value = false
+  }
+}
+
+/**
+ * 加载区县列表（用于根据名称初始化）
+ * @param {number} cityId - 城市ID
+ */
+const loadDistrictsWithName = async (cityId) => {
+  if (!cityId) return
+  
+  try {
+    districtLoading.value = true
+    const res = await getRegionList({ parent_id: cityId, level: 3 })
+    districtOptions.value = res.data || []
+    
+    // 如果有区县名称，根据名称找到对应的ID并设置
+    if (props.districtName && !selectedDistrict.value) {
+      const district = districtOptions.value.find(item => item.name === props.districtName)
+      if (district) {
+        selectedDistrict.value = district.id
+        emit('update:districtId', district.id)
+        // 触发change事件
+        emitChange()
+      }
+    }
   } catch (error) {
     console.error('加载区县列表失败：', error)
     districtOptions.value = []

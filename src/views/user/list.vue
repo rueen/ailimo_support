@@ -153,17 +153,14 @@
         </a-form-item>
         <a-form-item label="地区" name="region">
           <RegionCascader
-            v-model:province-id="formData.provinceId"
-            v-model:city-id="formData.cityId"
-            v-model:district-id="formData.districtId"
+            v-model:province-id="formData.province_id"
+            v-model:city-id="formData.city_id"
+            v-model:district-id="formData.district_id"
             select-width="116px"
             @change="handleRegionChange"
           />
-          <div v-if="formData.id && formData.province" style="margin-top: 4px; color: #666; font-size: 12px;">
-            当前：{{ formData.province }} {{ formData.city }} {{ formData.district }}
-          </div>
         </a-form-item>
-        <a-form-item label="详细地址" name="address">
+        <a-form-item label="详细地址">
           <a-textarea v-model:value="formData.address" :rows="2" placeholder="请输入详细地址" allow-clear />
         </a-form-item>
         <a-form-item label="组织机构" name="organization_id">
@@ -185,10 +182,18 @@
             allow-clear
           />
         </a-form-item>
-        <a-form-item label="审核状态" name="audit_status">
+        <!-- 新增用户时显示审核状态 -->
+        <a-form-item v-if="!formData.id" label="审核状态" name="audit_status">
           <a-radio-group v-model:value="formData.audit_status">
             <a-radio :value="0">待审核</a-radio>
             <a-radio :value="1">审核通过</a-radio>
+          </a-radio-group>
+        </a-form-item>
+        <!-- 编辑用户时显示启用状态 -->
+        <a-form-item v-else label="状态" name="status">
+          <a-radio-group v-model:value="formData.status">
+            <a-radio :value="0">禁用</a-radio>
+            <a-radio :value="1">启用</a-radio>
           </a-radio-group>
         </a-form-item>
       </a-form>
@@ -337,18 +342,17 @@ const formData = reactive({
   id: null,
   name: '',
   phone: '',
-  // 省市区ID（用于RegionCascader组件绑定）
-  provinceId: undefined,
-  cityId: undefined,
-  districtId: undefined,
-  // 省市区名称（用于提交到后端）
-  province: '',
-  city: '',
-  district: '',
+  // 省市区ID（用于RegionCascader组件绑定和提交到后端）
+  province_id: undefined,
+  city_id: undefined,
+  district_id: undefined,
   address: '',
   organization_id: undefined,
   research_group_id: undefined,
-  audit_status: 1
+  // 新增用户时的审核状态
+  audit_status: 1,
+  // 编辑用户时的启用状态
+  status: 1
 })
 
 const formRules = {
@@ -360,15 +364,26 @@ const formRules = {
   region: [
     {
       validator: (rule, value) => {
-        if (!formData.province || !formData.city || !formData.district) {
-          return Promise.reject('请选择完整的省市区信息')
+        // 省市区是可选的，但必须同时提供或同时不提供
+        const hasProvince = !!formData.province_id
+        const hasCity = !!formData.city_id
+        const hasDistrict = !!formData.district_id
+        
+        // 如果都没有，则通过验证
+        if (!hasProvince && !hasCity && !hasDistrict) {
+          return Promise.resolve()
         }
+        
+        // 如果有部分填写，必须全部填写
+        if (!hasProvince || !hasCity || !hasDistrict) {
+          return Promise.reject('请选择完整的省市区信息，或全部不选')
+        }
+        
         return Promise.resolve()
       },
       trigger: 'change'
     }
   ],
-  address: [{ required: true, message: '请输入详细地址', trigger: 'blur' }],
   organization_id: [{ required: true, message: '请选择组织机构', trigger: 'change' }],
   research_group_id: [{ required: true, message: '请选择课题组', trigger: 'change' }]
 }
@@ -387,16 +402,14 @@ const handleAdd = () => {
     id: null,
     name: '',
     phone: '',
-    provinceId: undefined,
-    cityId: undefined,
-    districtId: undefined,
-    province: '',
-    city: '',
-    district: '',
+    province_id: undefined,
+    city_id: undefined,
+    district_id: undefined,
     address: '',
     organization_id: undefined,
     research_group_id: undefined,
-    audit_status: 1
+    audit_status: 1,  // 新增时默认审核通过
+    status: 1
   })
 }
 
@@ -410,18 +423,15 @@ const handleEdit = (record) => {
     id: record.id,
     name: record.name,
     phone: record.phone,
-    // 清空省市区ID（编辑时需要用户重新选择）
-    provinceId: undefined,
-    cityId: undefined,
-    districtId: undefined,
-    // 从响应数据中获取省市区名称（保留原值，如果用户不重新选择则使用原值）
-    province: record.province || '',
-    city: record.city || '',
-    district: record.district || '',
+    // 从响应数据中获取省市区ID
+    province_id: record.province_id,
+    city_id: record.city_id,
+    district_id: record.district_id,
     address: record.address,
     organization_id: record.organization?.id,
     research_group_id: record.research_group?.id,
-    audit_status: record.audit_status
+    audit_status: record.audit_status,  // 仅用于显示，不会提交
+    status: record.status  // 编辑时可以修改状态
   })
   // 加载课题组选项
   if (record.organization?.id) {
@@ -435,22 +445,35 @@ const handleEdit = (record) => {
 const handleSubmit = async () => {
   try {
     await formRef.value.validate()
+    
+    // 基础数据
     const data = {
       name: formData.name,
       phone: formData.phone,
-      province: formData.province,
-      city: formData.city,
-      district: formData.district,
-      address: formData.address,
       organization_id: formData.organization_id,
-      research_group_id: formData.research_group_id,
-      audit_status: formData.audit_status
+      research_group_id: formData.research_group_id
+    }
+    
+    // 省市区ID（可选，但必须同时提供或不提供）
+    if (formData.province_id && formData.city_id && formData.district_id) {
+      data.province_id = formData.province_id
+      data.city_id = formData.city_id
+      data.district_id = formData.district_id
+    }
+    
+    // 地址（可选）
+    if (formData.address) {
+      data.address = formData.address
     }
     
     if (formData.id) {
+      // 编辑用户：包含 status，不包含 audit_status
+      data.status = formData.status
       await updateUser(formData.id, data)
       message.success('更新成功')
     } else {
+      // 新增用户：包含 audit_status
+      data.audit_status = formData.audit_status
       await createUser(data)
       message.success('创建成功')
     }
@@ -472,11 +495,7 @@ const handleCancel = () => {
 /**
  * 地区变化
  */
-const handleRegionChange = (regionData) => {
-  // 保存省市区名称到 formData（用于提交到后端）
-  formData.province = regionData.provinceName || ''
-  formData.city = regionData.cityName || ''
-  formData.district = regionData.districtName || ''
+const handleRegionChange = () => {
   // 手动触发表单验证
   formRef.value?.validateFields(['region']).catch(() => {})
 }
