@@ -21,7 +21,7 @@
         </a-form-item>
         <a-form-item label="组织机构">
           <a-select
-            v-model:value="searchForm.organizationId"
+            v-model:value="searchForm.organization_id"
             placeholder="请选择组织机构"
             allow-clear
             style="width: 200px"
@@ -31,7 +31,7 @@
         </a-form-item>
         <a-form-item label="审核状态">
           <a-select
-            v-model:value="searchForm.auditStatus"
+            v-model:value="searchForm.audit_status"
             placeholder="请选择审核状态"
             allow-clear
             style="width: 150px"
@@ -78,10 +78,10 @@
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'auditStatus'">
-          <a-tag v-if="record.auditStatus === 0" color="orange">待审核</a-tag>
-          <a-tag v-else-if="record.auditStatus === 1" color="green">审核通过</a-tag>
-          <a-tag v-else-if="record.auditStatus === 2" color="red">审核拒绝</a-tag>
+        <template v-if="column.key === 'audit_status'">
+          <a-tag v-if="record.audit_status === 0" color="orange">待审核</a-tag>
+          <a-tag v-else-if="record.audit_status === 1" color="green">审核通过</a-tag>
+          <a-tag v-else-if="record.audit_status === 2" color="red">审核拒绝</a-tag>
         </template>
         <template v-else-if="column.key === 'status'">
           <a-badge
@@ -92,7 +92,7 @@
         <template v-else-if="column.key === 'action'">
           <a-space>
             <a-button
-              v-if="record.auditStatus === 0 && userStore.hasPermission('user:audit')"
+              v-if="record.audit_status === 0 && userStore.hasPermission('user:audit')"
               type="link"
               size="small"
               @click="handleApprove(record)"
@@ -100,7 +100,7 @@
               审核通过
             </a-button>
             <a-button
-              v-if="record.auditStatus === 0 && userStore.hasPermission('user:audit')"
+              v-if="record.audit_status === 0 && userStore.hasPermission('user:audit')"
               type="link"
               danger
               size="small"
@@ -157,14 +157,18 @@
             v-model:city-id="formData.cityId"
             v-model:district-id="formData.districtId"
             select-width="116px"
+            @change="handleRegionChange"
           />
+          <div v-if="formData.id && formData.province" style="margin-top: 4px; color: #666; font-size: 12px;">
+            当前：{{ formData.province }} {{ formData.city }} {{ formData.district }}
+          </div>
         </a-form-item>
         <a-form-item label="详细地址" name="address">
           <a-textarea v-model:value="formData.address" :rows="2" placeholder="请输入详细地址" allow-clear />
         </a-form-item>
-        <a-form-item label="组织机构" name="organizationId">
+        <a-form-item label="组织机构" name="organization_id">
           <a-select
-            v-model:value="formData.organizationId"
+            v-model:value="formData.organization_id"
             :options="organizationOptions"
             :field-names="{ label: 'name', value: 'id' }"
             @change="handleOrganizationChange"
@@ -172,17 +176,17 @@
             allow-clear
           />
         </a-form-item>
-        <a-form-item label="课题组" name="researchGroupId">
+        <a-form-item label="课题组" name="research_group_id">
           <a-select
-            v-model:value="formData.researchGroupId"
+            v-model:value="formData.research_group_id"
             :options="researchGroupOptions"
             :field-names="{ label: 'name', value: 'id' }"
             placeholder="请选择课题组"
             allow-clear
           />
         </a-form-item>
-        <a-form-item label="审核状态" name="auditStatus">
-          <a-radio-group v-model:value="formData.auditStatus">
+        <a-form-item label="审核状态" name="audit_status">
+          <a-radio-group v-model:value="formData.audit_status">
             <a-radio :value="0">待审核</a-radio>
             <a-radio :value="1">审核通过</a-radio>
           </a-radio-group>
@@ -233,8 +237,8 @@ const userStore = useUserStore()
 const searchForm = reactive({
   name: '',
   phone: '',
-  organizationId: undefined,
-  auditStatus: undefined
+  organization_id: undefined,
+  audit_status: undefined
 })
 
 /**
@@ -252,8 +256,8 @@ const handleReset = () => {
   Object.assign(searchForm, {
     name: '',
     phone: '',
-    organizationId: undefined,
-    auditStatus: undefined
+    organization_id: undefined,
+    audit_status: undefined
   })
   handleSearch()
 }
@@ -284,11 +288,11 @@ const columns = [
   },
   {
     title: '课题组',
-    dataIndex: ['researchGroup', 'name'],
+    dataIndex: ['research_group', 'name'],
     width: 150,
-    customRender: ({ record }) => record.researchGroup?.name || '-'
+    customRender: ({ record }) => record.research_group?.name || '-'
   },
-  { title: '审核状态', key: 'auditStatus', width: 100 },
+  { title: '审核状态', key: 'audit_status', width: 100 },
   { title: '状态', key: 'status', width: 80 },
   { title: '创建时间', dataIndex: 'created_at', width: 160 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
@@ -333,13 +337,18 @@ const formData = reactive({
   id: null,
   name: '',
   phone: '',
+  // 省市区ID（用于RegionCascader组件绑定）
   provinceId: undefined,
   cityId: undefined,
   districtId: undefined,
+  // 省市区名称（用于提交到后端）
+  province: '',
+  city: '',
+  district: '',
   address: '',
-  organizationId: undefined,
-  researchGroupId: undefined,
-  auditStatus: 1
+  organization_id: undefined,
+  research_group_id: undefined,
+  audit_status: 1
 })
 
 const formRules = {
@@ -351,7 +360,7 @@ const formRules = {
   region: [
     {
       validator: (rule, value) => {
-        if (!formData.provinceId || !formData.cityId || !formData.districtId) {
+        if (!formData.province || !formData.city || !formData.district) {
           return Promise.reject('请选择完整的省市区信息')
         }
         return Promise.resolve()
@@ -360,8 +369,8 @@ const formRules = {
     }
   ],
   address: [{ required: true, message: '请输入详细地址', trigger: 'blur' }],
-  organizationId: [{ required: true, message: '请选择组织机构', trigger: 'change' }],
-  researchGroupId: [{ required: true, message: '请选择课题组', trigger: 'change' }]
+  organization_id: [{ required: true, message: '请选择组织机构', trigger: 'change' }],
+  research_group_id: [{ required: true, message: '请选择课题组', trigger: 'change' }]
 }
 
 const organizationOptions = ref([])
@@ -381,10 +390,13 @@ const handleAdd = () => {
     provinceId: undefined,
     cityId: undefined,
     districtId: undefined,
+    province: '',
+    city: '',
+    district: '',
     address: '',
-    organizationId: undefined,
-    researchGroupId: undefined,
-    auditStatus: 1
+    organization_id: undefined,
+    research_group_id: undefined,
+    audit_status: 1
   })
 }
 
@@ -398,13 +410,18 @@ const handleEdit = (record) => {
     id: record.id,
     name: record.name,
     phone: record.phone,
-    provinceId: record.provinceId || record.province_id,
-    cityId: record.cityId || record.city_id,
-    districtId: record.districtId || record.district_id,
+    // 清空省市区ID（编辑时需要用户重新选择）
+    provinceId: undefined,
+    cityId: undefined,
+    districtId: undefined,
+    // 从响应数据中获取省市区名称（保留原值，如果用户不重新选择则使用原值）
+    province: record.province || '',
+    city: record.city || '',
+    district: record.district || '',
     address: record.address,
-    organizationId: record.organization?.id,
-    researchGroupId: record.researchGroup?.id,
-    auditStatus: record.auditStatus
+    organization_id: record.organization?.id,
+    research_group_id: record.research_group?.id,
+    audit_status: record.audit_status
   })
   // 加载课题组选项
   if (record.organization?.id) {
@@ -418,8 +435,17 @@ const handleEdit = (record) => {
 const handleSubmit = async () => {
   try {
     await formRef.value.validate()
-    const data = { ...formData }
-    delete data.id
+    const data = {
+      name: formData.name,
+      phone: formData.phone,
+      province: formData.province,
+      city: formData.city,
+      district: formData.district,
+      address: formData.address,
+      organization_id: formData.organization_id,
+      research_group_id: formData.research_group_id,
+      audit_status: formData.audit_status
+    }
     
     if (formData.id) {
       await updateUser(formData.id, data)
@@ -444,10 +470,22 @@ const handleCancel = () => {
 }
 
 /**
+ * 地区变化
+ */
+const handleRegionChange = (regionData) => {
+  // 保存省市区名称到 formData（用于提交到后端）
+  formData.province = regionData.provinceName || ''
+  formData.city = regionData.cityName || ''
+  formData.district = regionData.districtName || ''
+  // 手动触发表单验证
+  formRef.value?.validateFields(['region']).catch(() => {})
+}
+
+/**
  * 组织机构变化
  */
 const handleOrganizationChange = (value) => {
-  formData.researchGroupId = undefined
+  formData.research_group_id = undefined
   if (value) {
     loadResearchGroupOptions(value)
   } else {
@@ -472,7 +510,7 @@ const loadOrganizationOptions = async () => {
  */
 const loadResearchGroupOptions = async (organizationId) => {
   try {
-    const res = await getResearchGroupOptions({ organizationId })
+    const res = await getResearchGroupOptions({ organization_id: organizationId })
     researchGroupOptions.value = res.data
   } catch (error) {
     console.error('获取课题组选项失败：', error)
@@ -518,7 +556,7 @@ const handleRejectSubmit = async () => {
   try {
     await auditUser(currentRecord.value.id, {
       status: 2,
-      rejectReason: rejectReason.value
+      reject_reason: rejectReason.value
     })
     message.success('已拒绝')
     rejectModalVisible.value = false
