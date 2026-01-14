@@ -340,7 +340,7 @@ const columns = [
   {
     title: '设备名称',
     dataIndex: ['equipment', 'name'],
-    width: 150,
+    width: 120,
     customRender: ({ record }) => record.equipment?.name || '-'
   },
   {
@@ -348,10 +348,11 @@ const columns = [
     width: 120,
     key: 'user_info',
   },
-  { title: '预约时间', key: 'time_slots', width: 200 },
+  { title: '预约时间', key: 'time_slots', width: 100 },
+  { title: '备注', dataIndex: 'remark', width: 150 },
   { title: '状态', key: 'status', width: 200 },
   { 
-    title: '负责人', key: 'handler', width: 100,
+    title: '负责人', key: 'handler', width: 80,
     customRender: ({ record }) => record.handler?.name || '-'
   },
   { title: '创建时间', dataIndex: 'created_at', width: 150 },
