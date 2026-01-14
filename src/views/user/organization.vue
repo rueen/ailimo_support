@@ -97,8 +97,9 @@ const pagination = reactive({
  */
 const columns = [
   { title: '机构名称', dataIndex: 'name' },
-  { title: '创建时间', dataIndex: 'created_at', width: 200 },
-  { title: '操作', key: 'action', fixed: 'right', width: 150 }
+  { title: '创建时间', dataIndex: 'created_at' },
+  { title: '更新时间', dataIndex: 'updated_at' },
+  { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 
 /**
