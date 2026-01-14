@@ -1,5 +1,31 @@
 <template>
-  <div class="organization-container">
+  <div>
+    <!-- 搜索表单 -->
+    <div class="search-form">
+      <a-form layout="inline" :model="searchForm">
+        <a-form-item label="组织机构名称">
+          <a-input
+            v-model:value="searchForm.name"
+            placeholder="请输入组织机构名称"
+            allow-clear
+            style="width: 200px"
+          />
+        </a-form-item>
+        <a-form-item>
+          <a-space>
+            <a-button type="primary" @click="handleSearch">
+              <SearchOutlined />
+              查询
+            </a-button>
+            <a-button @click="handleReset">
+              <ReloadOutlined />
+              重置
+            </a-button>
+          </a-space>
+        </a-form-item>
+      </a-form>
+    </div>
+    
     <!-- 操作栏 -->
     <div class="action-bar">
       <a-button
@@ -71,7 +97,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import {
   getOrganizationList,
   createOrganization,
@@ -92,6 +118,28 @@ const pagination = reactive({
   showTotal: (total) => `共 ${total} 条记录`
 })
 
+// ========== 搜索表单 ==========
+
+const searchForm = reactive({
+  name: ''
+})
+
+/**
+ * 查询
+ */
+ const handleSearch = () => {
+  pagination.current = 1
+  fetchTableData()
+}
+
+/**
+ * 重置
+ */
+const handleReset = () => {
+  searchForm.name = ''
+  handleSearch()
+}
+
 /**
  * 表格列配置
  */
@@ -111,6 +159,9 @@ const fetchTableData = async () => {
     const params = {
       page: pagination.current,
       pageSize: pagination.pageSize
+    }
+    if (searchForm.name) {
+      params.name = searchForm.name
     }
     const res = await getOrganizationList(params)
     tableData.value = res.data.list
@@ -219,11 +270,3 @@ onMounted(() => {
   fetchTableData()
 })
 </script>
-
-<style lang="less" scoped>
-.organization-container {
-  .action-bar {
-    margin-bottom: 16px;
-  }
-}
-</style>

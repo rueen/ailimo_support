@@ -78,10 +78,23 @@
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'audit_status'">
+        <template v-if="column.key === 'base_info'">
+          <div>{{ record.name }}</div>
+          <div>{{ record.phone }}</div>
+          <div>{{ record.province?.name }} {{ record.city?.name }} {{ record.district?.name }}</div>
+          <div>{{ record.address }}</div>
+        </template>
+        <template v-if="column.key === 'organization_info'">
+          <div>{{ record.organization?.name }}</div>
+          <div>{{ record.research_group?.name }}</div>
+        </template>
+        <template v-if="column.key === 'audit_info'">
           <a-tag v-if="record.audit_status === 0" color="orange">待审核</a-tag>
           <a-tag v-else-if="record.audit_status === 1" color="green">审核通过</a-tag>
           <a-tag v-else-if="record.audit_status === 2" color="red">审核拒绝</a-tag>
+          <div v-if="record.audit_status === 2">拒绝原因：{{ record.reject_reason }}</div>
+          <div v-if="record.audit_status !== 0">审核时间：{{ record.audit_time }}</div>
+          <div v-if="record.audit_status !== 0">审核人：{{ record.audit_by?.username }}</div>
         </template>
         <template v-else-if="column.key === 'status'">
           <a-badge
@@ -91,14 +104,16 @@
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
-            <a-button
+            <a-popconfirm
               v-if="record.audit_status === 0 && userStore.hasPermission('user:audit')"
-              type="link"
-              size="small"
-              @click="handleApprove(record)"
+              title="确定审核通过吗？"
+              @confirm="handleApprove(record)"
             >
-              审核通过
-            </a-button>
+              <a-button type="link" size="small">
+                审核通过
+              </a-button>
+            </a-popconfirm>
+
             <a-button
               v-if="record.audit_status === 0 && userStore.hasPermission('user:audit')"
               type="link"
@@ -283,23 +298,27 @@ const pagination = reactive({
  * 表格列配置
  */
 const columns = [
-  { title: '姓名', dataIndex: 'name', width: 100 },
-  { title: '手机号', dataIndex: 'phone', width: 120 },
-  {
-    title: '组织机构',
-    dataIndex: ['organization', 'name'],
+  { 
+    title: '基本信息', 
+    dataIndex: 'base_info', 
+    key: 'base_info',
     width: 150,
-    customRender: ({ record }) => record.organization?.name || '-'
   },
-  {
-    title: '课题组',
-    dataIndex: ['research_group', 'name'],
-    width: 150,
-    customRender: ({ record }) => record.research_group?.name || '-'
+  { 
+    title: '组织机构', 
+    dataIndex: 'organization_info', 
+    key: 'organization_info', 
+    width: 150
   },
-  { title: '审核状态', key: 'audit_status', width: 100 },
+  { 
+    title: '审核信息', 
+    dataIndex: 'audit_info', 
+    key: 'audit_info', 
+    width: 200
+  },
   { title: '状态', key: 'status', width: 80 },
-  { title: '创建时间', dataIndex: 'created_at', width: 160 },
+  { title: '创建时间', dataIndex: 'created_at', width: 150 },
+  { title: '更新时间', dataIndex: 'updated_at', width: 150 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 

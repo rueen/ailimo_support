@@ -1,11 +1,19 @@
 <template>
-  <div class="research-group-container">
+  <div>
     <!-- 搜索表单 -->
     <div class="search-form">
       <a-form layout="inline" :model="searchForm">
+        <a-form-item label="课题组名称">
+          <a-input
+            v-model:value="searchForm.name"
+            placeholder="请输入课题组名称"
+            allow-clear
+            style="width: 200px"
+          />
+        </a-form-item>
         <a-form-item label="组织机构">
           <a-select
-            v-model:value="searchForm.organizationId"
+            v-model:value="searchForm.organization_id"
             placeholder="请选择组织机构"
             allow-clear
             style="width: 200px"
@@ -88,9 +96,9 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="组织机构" name="organizationId">
+        <a-form-item label="组织机构" name="organization_id">
           <a-select
-            v-model:value="formData.organizationId"
+            v-model:value="formData.organization_id"
             placeholder="请选择组织机构"
             :options="organizationOptions"
             :field-names="{ label: 'name', value: 'id' }"
@@ -126,7 +134,8 @@ const userStore = useUserStore()
 // ========== 搜索表单 ==========
 
 const searchForm = reactive({
-  organizationId: undefined
+  organization_id: undefined,
+  name: ''
 })
 
 /**
@@ -141,7 +150,8 @@ const handleSearch = () => {
  * 重置
  */
 const handleReset = () => {
-  searchForm.organizationId = undefined
+  searchForm.organization_id = undefined
+  searchForm.name = ''
   handleSearch()
 }
 
@@ -183,6 +193,12 @@ const fetchTableData = async () => {
       pageSize: pagination.pageSize,
       ...searchForm
     }
+    if (searchForm.name) {
+      params.name = searchForm.name
+    }
+    if (searchForm.organization_id) {
+      params.organization_id = searchForm.organization_id
+    }
     const res = await getResearchGroupList(params)
     tableData.value = res.data.list
     pagination.total = res.data.total
@@ -210,12 +226,12 @@ const formRef = ref()
 const formData = reactive({
   id: null,
   name: '',
-  organizationId: undefined
+  organization_id: undefined
 })
 
 const formRules = {
   name: [{ required: true, message: '请输入课题组名称', trigger: 'blur' }],
-  organizationId: [{ required: true, message: '请选择组织机构', trigger: 'change' }]
+  organization_id: [{ required: true, message: '请选择组织机构', trigger: 'change' }]
 }
 
 const organizationOptions = ref([])
@@ -230,7 +246,7 @@ const handleAdd = () => {
   Object.assign(formData, {
     id: null,
     name: '',
-    organizationId: undefined
+    organization_id: undefined
   })
 }
 
@@ -243,7 +259,7 @@ const handleEdit = (record) => {
   Object.assign(formData, {
     id: record.id,
     name: record.name,
-    organizationId: record.organization?.id
+    organization_id: record.organization?.id
   })
 }
 
@@ -255,7 +271,7 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     const data = {
       name: formData.name,
-      organizationId: formData.organizationId
+      organization_id: formData.organization_id
     }
     
     if (formData.id) {
@@ -312,15 +328,3 @@ onMounted(() => {
   loadOrganizationOptions()
 })
 </script>
-
-<style lang="less" scoped>
-.research-group-container {
-  .search-form {
-    margin-bottom: 16px;
-  }
-
-  .action-bar {
-    margin-bottom: 16px;
-  }
-}
-</style>

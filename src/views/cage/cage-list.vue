@@ -1,5 +1,5 @@
 <template>
-  <div class="cage-list-container">
+  <div>
     <!-- 搜索表单 -->
     <div class="search-form">
       <a-form layout="inline" :model="searchForm">
@@ -359,15 +359,3 @@ onMounted(() => {
   loadOptions()
 })
 </script>
-
-<style lang="less" scoped>
-.cage-list-container {
-  .search-form {
-    margin-bottom: 16px;
-  }
-
-  .action-bar {
-    margin-bottom: 16px;
-  }
-}
-</style>
