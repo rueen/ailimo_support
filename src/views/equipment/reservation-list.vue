@@ -5,25 +5,33 @@
       <a-form layout="inline" :model="searchForm">
         <a-form-item label="设备名称">
           <a-input
-            v-model:value="searchForm.equipmentName"
+            v-model:value="searchForm.equipment_name"
             placeholder="请输入设备名称"
             allow-clear
-            style="width: 180px"
+            style="width: 160px"
           />
         </a-form-item>
         <a-form-item label="用户姓名">
           <a-input
-            v-model:value="searchForm.userName"
+            v-model:value="searchForm.user_name"
             placeholder="请输入用户姓名"
             allow-clear
-            style="width: 180px"
+            style="width: 140px"
+          />
+        </a-form-item>
+        <a-form-item label="用户手机号">
+          <a-input
+            v-model:value="searchForm.user_phone"
+            placeholder="请输入手机号"
+            allow-clear
+            style="width: 140px"
           />
         </a-form-item>
         <a-form-item label="预约日期">
           <a-date-picker
-            v-model:value="searchForm.reservationDate"
+            v-model:value="searchForm.reservation_date"
             placeholder="请选择预约日期"
-            style="width: 180px"
+            style="width: 140px"
           />
         </a-form-item>
         <a-form-item label="订单状态">
@@ -31,7 +39,7 @@
             v-model:value="searchForm.status"
             placeholder="请选择订单状态"
             allow-clear
-            style="width: 150px"
+            style="width: 110px"
           >
             <a-select-option :value="0">待审核</a-select-option>
             <a-select-option :value="1">进行中</a-select-option>
@@ -78,9 +86,14 @@
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'timeSlots'">
+        <template v-if="column.key === 'user_info'">
+          <div>{{ record.user?.name }}</div>
+          <div>{{ record.user?.phone }}</div>
+        </template>
+        <template v-if="column.key === 'time_slots'">
+          <div>{{ record.reservation_date }}</div>
           <a-tag
-            v-for="(slot, index) in record.timeSlots"
+            v-for="(slot, index) in record.time_slots"
             :key="index"
             color="blue"
             style="margin-bottom: 4px"
@@ -94,16 +107,19 @@
           <a-tag v-else-if="record.status === 2" color="red">已拒绝</a-tag>
           <a-tag v-else-if="record.status === 3" color="green">已完成</a-tag>
           <a-tag v-else-if="record.status === 4" color="default">已取消</a-tag>
+          <div v-if="record.reject_reason">拒绝原因：{{ record.reject_reason }}</div>
+          <div v-if="record.audit_time">审核时间：{{ record.audit_time }}</div>
+          <div v-if="record.audit_by">审核人：{{ record.audit_by?.username }}</div>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
             <a-button
-              v-if="userStore.hasPermission('equipment_reservation:detail')"
+              v-if="(record.status === 0 || record.status === 1) && userStore.hasPermission('equipment_reservation:update')"
               type="link"
               size="small"
-              @click="handleView(record)"
+              @click="handleEdit(record)"
             >
-              查看
+              编辑
             </a-button>
             <a-button
               v-if="record.status === 0 && userStore.hasPermission('equipment_reservation:audit')"
@@ -144,13 +160,13 @@
       </template>
     </a-table>
 
-    <!-- 新增订单对话框 -->
+    <!-- 新增/编辑订单对话框 -->
     <a-modal
       v-model:open="modalVisible"
-      title="新增设备租赁订单"
+      :title="modalTitle"
       :width="700"
       @ok="handleSubmit"
-      @cancel="handleCancel"
+      @cancel="handleCancelModal"
     >
       <a-form
         ref="formRef"
@@ -159,18 +175,18 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="设备" name="equipmentId">
+        <a-form-item label="设备" name="equipment_id">
           <a-select
-            v-model:value="formData.equipmentId"
+            v-model:value="formData.equipment_id"
             placeholder="请选择设备"
             :options="equipmentOptions"
             :field-names="{ label: 'name', value: 'id' }"
             @change="handleEquipmentChange"
           />
         </a-form-item>
-        <a-form-item label="用户" name="userId">
+        <a-form-item label="用户" name="user_id">
           <a-select
-            v-model:value="formData.userId"
+            v-model:value="formData.user_id"
             placeholder="请输入用户手机号搜索"
             show-search
             :filter-option="false"
@@ -186,28 +202,27 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="预约日期" name="reservationDate">
+        <a-form-item label="预约日期" name="reservation_date">
           <a-date-picker
-            v-model:value="formData.reservationDate"
+            v-model:value="formData.reservation_date"
             :disabled-date="disabledDate"
             style="width: 100%"
             @change="handleDateChange"
           />
         </a-form-item>
-        <a-form-item label="预约时间段" name="timeSlots">
-          <a-checkbox-group v-model:value="formData.timeSlots">
-            <a-checkbox
-              v-for="slot in availableTimeSlots"
-              :key="slot"
-              :value="slot"
-              :disabled="bookedTimeSlots.includes(slot)"
-            >
-              {{ slot }}
-              <span v-if="bookedTimeSlots.includes(slot)" style="color: #999">
-                (已预约)
-              </span>
-            </a-checkbox>
-          </a-checkbox-group>
+        <a-form-item label="预约时段" name="time_slots">
+          <a-select
+            v-model:value="formData.time_slots"
+            mode="multiple"
+            placeholder="请先选择设备和日期"
+            :options="timeSlotOptions"
+            :disabled="!formData.equipment_id || !formData.reservation_date"
+            :not-found-content="formData.equipment_id && formData.reservation_date ? '暂无可用时段' : '请先选择设备和日期'"
+          >
+            <template #notFoundContent>
+              <a-empty :description="formData.equipment_id && formData.reservation_date ? '暂无可用时段' : '请先选择设备和日期'" />
+            </template>
+          </a-select>
         </a-form-item>
         <a-form-item label="备注" name="remark">
           <a-textarea v-model:value="formData.remark" :rows="3" />
@@ -221,9 +236,9 @@
       title="审核通过"
       @ok="handleApproveSubmit"
     >
-      <a-form-item label="负责人" name="handlerId">
+      <a-form-item label="负责人" name="handler_id">
         <a-select
-          v-model:value="handlerId"
+          v-model:value="handler_id"
           placeholder="请选择负责人"
           :options="handlerOptions"
           :field-names="{ label: 'name', value: 'id' }"
@@ -239,7 +254,7 @@
     >
       <a-form-item label="拒绝原因">
         <a-textarea
-          v-model:value="rejectReason"
+          v-model:value="reject_reason"
           :rows="4"
           placeholder="请输入拒绝原因"
         />
@@ -249,7 +264,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import {
@@ -260,6 +275,7 @@ import {
 import {
   getEquipmentReservationList,
   createEquipmentReservation,
+  updateEquipmentReservation,
   auditEquipmentReservation,
   completeEquipmentReservation,
   cancelEquipmentReservation,
@@ -267,6 +283,8 @@ import {
   getEquipmentAvailableSlots
 } from '@/api/equipment'
 import { getUserList } from '@/api/user'
+import { getHandlerOptions } from '@/api/config'
+import { getAdvanceDays } from '@/api/content'
 import { useUserStore } from '@/store'
 
 const userStore = useUserStore()
@@ -274,9 +292,10 @@ const userStore = useUserStore()
 // ========== 搜索表单 ==========
 
 const searchForm = reactive({
-  equipmentName: '',
-  userName: '',
-  reservationDate: null,
+  equipment_name: '',
+  user_name: '',
+  user_phone: '',
+  reservation_date: null,
   status: undefined
 })
 
@@ -293,9 +312,10 @@ const handleSearch = () => {
  */
 const handleReset = () => {
   Object.assign(searchForm, {
-    equipmentName: '',
-    userName: '',
-    reservationDate: null,
+    equipment_name: '',
+    user_name: '',
+    user_phone: '',
+    reservation_date: null,
     status: undefined
   })
   handleSearch()
@@ -326,18 +346,17 @@ const columns = [
   {
     title: '用户',
     width: 120,
-    customRender: ({ record }) => record.user?.name || '-'
+    key: 'user_info',
   },
-  {
-    title: '手机号',
-    dataIndex: ['user', 'phone'],
-    width: 120
+  { title: '预约时间', key: 'time_slots', width: 200 },
+  { title: '状态', key: 'status', width: 200 },
+  { 
+    title: '负责人', key: 'handler', width: 100,
+    customRender: ({ record }) => record.handler?.name || '-'
   },
-  { title: '预约日期', dataIndex: 'reservationDate', width: 120 },
-  { title: '预约时间段', key: 'timeSlots', width: 200 },
-  { title: '状态', key: 'status', width: 100 },
-  { title: '创建时间', dataIndex: 'created_at', width: 160 },
-  { title: '操作', key: 'action', fixed: 'right', width: 250 }
+  { title: '创建时间', dataIndex: 'created_at', width: 150 },
+  { title: '更新时间', dataIndex: 'updated_at', width: 150 },
+  { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 
 /**
@@ -349,10 +368,13 @@ const fetchTableData = async () => {
     const params = {
       page: pagination.current,
       pageSize: pagination.pageSize,
-      ...searchForm,
-      reservationDate: searchForm.reservationDate
-        ? dayjs(searchForm.reservationDate).format('YYYY-MM-DD')
-        : undefined
+      equipment_name: searchForm.equipment_name,
+      user_name: searchForm.user_name,
+      user_phone: searchForm.user_phone,
+      reservation_date: searchForm.reservation_date
+        ? dayjs(searchForm.reservation_date).format('YYYY-MM-DD')
+        : undefined,
+      status: searchForm.status
     }
     const res = await getEquipmentReservationList(params)
     tableData.value = res.data.list
@@ -373,45 +395,113 @@ const handleTableChange = (pag) => {
   fetchTableData()
 }
 
-// ========== 新增订单 ==========
+// ========== 新增/编辑订单 ==========
 
 const modalVisible = ref(false)
+const modalTitle = ref('新增设备租赁订单')
 const formRef = ref()
 const formData = reactive({
-  equipmentId: undefined,
-  userId: undefined,
-  reservationDate: null,
-  timeSlots: [],
+  id: null,
+  equipment_id: undefined,
+  user_id: undefined,
+  reservation_date: null,
+  time_slots: [],
   remark: ''
 })
 
 const formRules = {
-  equipmentId: [{ required: true, message: '请选择设备', trigger: 'change' }],
-  userId: [{ required: true, message: '请选择用户', trigger: 'change' }],
-  reservationDate: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
-  timeSlots: [{ required: true, message: '请选择预约时间段', trigger: 'change' }]
+  equipment_id: [{ required: true, message: '请选择设备', trigger: 'change' }],
+  user_id: [{ required: true, message: '请选择用户', trigger: 'change' }],
+  reservation_date: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
+  time_slots: [{ required: true, message: '请选择预约时间段', trigger: 'change' }]
 }
 
 const equipmentOptions = ref([])
 const userOptions = ref([])
 const availableTimeSlots = ref([])
 const bookedTimeSlots = ref([])
+const advanceDays = ref({
+  equipment_advance_days: 7  // 设备租赁默认提前7天
+})
+
+/**
+ * 时段选项（计算属性）
+ * 标记已被预订的时段为禁用状态
+ * 编辑时，当前订单已选择的时段不会被禁用
+ */
+const timeSlotOptions = computed(() => {
+  // 安全检查：确保 availableTimeSlots 是数组
+  if (!Array.isArray(availableTimeSlots.value)) {
+    return []
+  }
+  
+  // 编辑时，当前订单已选择的时段列表
+  const currentSelectedSlots = formData.id ? (formData.time_slots || []) : []
+  
+  return availableTimeSlots.value.map(slot => {
+    // 如果是编辑模式且该时段已被当前订单选择，则不禁用
+    const isCurrentSelected = formData.id && currentSelectedSlots.includes(slot.display_time)
+    // 检查是否被其他订单预订
+    const isBooked = !isCurrentSelected && (bookedTimeSlots.value?.some(booked => booked === slot.display_time) || false)
+    
+    return {
+      label: isBooked ? `${slot.display_time} (已预订)` : slot.display_time,
+      value: slot.display_time,
+      disabled: isBooked
+    }
+  })
+})
 
 /**
  * 新增
  */
 const handleAdd = () => {
+  modalTitle.value = '新增设备租赁订单'
   modalVisible.value = true
   formRef.value?.resetFields()
   Object.assign(formData, {
-    equipmentId: undefined,
-    userId: undefined,
-    reservationDate: null,
-    timeSlots: [],
+    id: null,
+    equipment_id: undefined,
+    user_id: undefined,
+    reservation_date: null,
+    time_slots: [],
     remark: ''
   })
   availableTimeSlots.value = []
   bookedTimeSlots.value = []
+  userOptions.value = []
+}
+
+/**
+ * 编辑
+ */
+const handleEdit = (record) => {
+  modalTitle.value = '编辑设备租赁订单'
+  modalVisible.value = true
+  formRef.value?.resetFields()
+  
+  // 填充表单数据
+  Object.assign(formData, {
+    id: record.id,
+    equipment_id: record.equipment?.id,
+    user_id: record.user?.id,
+    reservation_date: record.reservation_date ? dayjs(record.reservation_date) : null,
+    time_slots: record.time_slots || [],
+    remark: record.remark || ''
+  })
+  
+  // 设置用户选项（用于显示）
+  if (record.user) {
+    userOptions.value = [record.user]
+  }
+  
+  // 如果有设备和日期，加载可用时段
+  if (formData.equipment_id && formData.reservation_date) {
+    loadAvailableSlots()
+  } else {
+    availableTimeSlots.value = []
+    bookedTimeSlots.value = []
+  }
 }
 
 /**
@@ -421,12 +511,22 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     const data = {
-      ...formData,
-      reservationDate: dayjs(formData.reservationDate).format('YYYY-MM-DD')
+      equipment_id: formData.equipment_id,
+      user_id: formData.user_id,
+      reservation_date: dayjs(formData.reservation_date).format('YYYY-MM-DD'),
+      time_slots: formData.time_slots,
+      remark: formData.remark
     }
     
-    await createEquipmentReservation(data)
-    message.success('创建成功')
+    if (formData.id) {
+      // 编辑
+      await updateEquipmentReservation(formData.id, data)
+      message.success('更新成功')
+    } else {
+      // 新增
+      await createEquipmentReservation(data)
+      message.success('创建成功')
+    }
     
     modalVisible.value = false
     fetchTableData()
@@ -436,18 +536,31 @@ const handleSubmit = async () => {
 }
 
 /**
- * 禁用日期（不能选择过去的日期）
+ * 取消
+ */
+const handleCancelModal = () => {
+  formRef.value?.resetFields()
+}
+
+/**
+ * 禁用日期（根据系统配置的提前预约天数）
  */
 const disabledDate = (current) => {
-  return current && current < dayjs().startOf('day')
+  if (!current) return false
+  
+  const today = dayjs().startOf('day')
+  const maxDate = today.add(advanceDays.value.equipment_advance_days, 'day')
+  
+  // 不能选择今天之前的日期，也不能选择超过最大提前预约天数的日期
+  return current < today || current > maxDate
 }
 
 /**
  * 设备变化
  */
 const handleEquipmentChange = () => {
-  formData.timeSlots = []
-  if (formData.equipmentId && formData.reservationDate) {
+  formData.time_slots = []
+  if (formData.equipment_id && formData.reservation_date) {
     loadAvailableSlots()
   }
 }
@@ -456,8 +569,8 @@ const handleEquipmentChange = () => {
  * 日期变化
  */
 const handleDateChange = () => {
-  formData.timeSlots = []
-  if (formData.equipmentId && formData.reservationDate) {
+  formData.time_slots = []
+  if (formData.equipment_id && formData.reservation_date) {
     loadAvailableSlots()
   }
 }
@@ -495,20 +608,61 @@ const loadEquipmentOptions = async () => {
  */
 const loadAvailableSlots = async () => {
   try {
-    const res = await getEquipmentAvailableSlots(formData.equipmentId, {
-      date: dayjs(formData.reservationDate).format('YYYY-MM-DD')
-    })
-    availableTimeSlots.value = res.data.allSlots
-    bookedTimeSlots.value = res.data.bookedSlots
+    const params = {
+      date: dayjs(formData.reservation_date).format('YYYY-MM-DD')
+    }
+    
+    // 编辑时，排除当前订单的时段（避免自己的时段被标记为已预订）
+    if (formData.id) {
+      params.exclude_reservation_id = formData.id
+    }
+    
+    const res = await getEquipmentAvailableSlots(formData.equipment_id, params)
+    console.log('时段数据响应：', res.data)
+    
+    // 根据实际API返回的数据结构调整
+    availableTimeSlots.value = res.data.allSlots || res.data.available_slots || res.data || []
+    bookedTimeSlots.value = res.data.bookedSlots || res.data.booked_slots || []
+    
+    console.log('可用时段：', availableTimeSlots.value)
+    console.log('已预订时段：', bookedTimeSlots.value)
   } catch (error) {
     console.error('获取可用时间段失败：', error)
+    availableTimeSlots.value = []
+    bookedTimeSlots.value = []
+  }
+}
+
+/**
+ * 加载负责人选项
+ */
+const loadHandlerOptions = async () => {
+  try {
+    const res = await getHandlerOptions()
+    handlerOptions.value = res.data
+  } catch (error) {
+    console.error('获取负责人选项失败：', error)
+  }
+}
+
+/**
+ * 加载提前预约天数配置
+ */
+const loadAdvanceDays = async () => {
+  try {
+    const res = await getAdvanceDays()
+    if (res.data) {
+      advanceDays.value = res.data
+    }
+  } catch (error) {
+    console.error('获取提前预约天数配置失败：', error)
   }
 }
 
 // ========== 审核 ==========
 
 const approveModalVisible = ref(false)
-const handlerId = ref(undefined)
+const handler_id = ref(undefined)
 const handlerOptions = ref([])
 const currentRecord = ref(null)
 
@@ -517,22 +671,24 @@ const currentRecord = ref(null)
  */
 const handleApprove = (record) => {
   currentRecord.value = record
-  handlerId.value = undefined
+  handler_id.value = undefined
   approveModalVisible.value = true
+  // 加载负责人选项
+  loadHandlerOptions()
 }
 
 /**
  * 提交审核通过
  */
 const handleApproveSubmit = async () => {
-  if (!handlerId.value) {
+  if (!handler_id.value) {
     message.warning('请选择负责人')
     return
   }
   try {
     await auditEquipmentReservation(currentRecord.value.id, {
       status: 1,
-      handlerId: handlerId.value
+      handler_id: handler_id.value
     })
     message.success('审核通过')
     approveModalVisible.value = false
@@ -543,14 +699,14 @@ const handleApproveSubmit = async () => {
 }
 
 const rejectModalVisible = ref(false)
-const rejectReason = ref('')
+const reject_reason = ref('')
 
 /**
  * 审核拒绝
  */
 const handleReject = (record) => {
   currentRecord.value = record
-  rejectReason.value = ''
+  reject_reason.value = ''
   rejectModalVisible.value = true
 }
 
@@ -558,14 +714,14 @@ const handleReject = (record) => {
  * 提交审核拒绝
  */
 const handleRejectSubmit = async () => {
-  if (!rejectReason.value) {
+  if (!reject_reason.value) {
     message.warning('请输入拒绝原因')
     return
   }
   try {
     await auditEquipmentReservation(currentRecord.value.id, {
       status: 2,
-      rejectReason: rejectReason.value
+      reject_reason: reject_reason.value
     })
     message.success('已拒绝')
     rejectModalVisible.value = false
@@ -601,20 +757,12 @@ const handleCancel = async (record) => {
   }
 }
 
-/**
- * 查看详情
- */
-const handleView = (record) => {
-  // TODO: 实现查看详情
-  message.info('查看详情功能待实现')
-}
-
 // ========== 初始化 ==========
 
 onMounted(() => {
   fetchTableData()
   loadEquipmentOptions()
-  // TODO: 加载负责人选项
+  loadAdvanceDays()
 })
 </script>
 
