@@ -202,8 +202,10 @@
           <a-select
             v-model:value="formData.environment_id"
             placeholder="请选择环境类型"
-            :options="environmentTypeOptions"
+            :options="dynamicEnvironmentOptions"
             :field-names="{ label: 'name', value: 'id' }"
+            :disabled="!formData.animal_type_id"
+            :not-found-content="formData.animal_type_id ? '该动物类型暂无可用笼位' : '请先选择动物类型'"
             @change="handleEnvironmentChange"
           />
         </a-form-item>
@@ -211,10 +213,14 @@
           <a-input-number
             v-model:value="formData.quantity"
             :min="1"
-            :max="1000"
+            :max="getMaxQuantity()"
             placeholder="请输入数量"
             style="width: 100%"
+            @change="handleQuantityChange"
           />
+          <div v-if="getMinAvailableQuantity() !== null" style="color: #999; margin-top: 4px">
+            所选时段最少可用：{{ getMinAvailableQuantity() }}
+          </div>
         </a-form-item>
         <a-form-item label="用途" name="purpose_id">
           <a-select
@@ -240,9 +246,22 @@
             v-model:value="formData.time_slots"
             mode="multiple"
             placeholder="请选择时间段"
-            :options="timeSlotOptions"
-            :field-names="{ label: 'display_time', value: 'display_time' }"
-          />
+            :disabled="!formData.environment_id || !formData.reservation_date"
+            :not-found-content="formData.environment_id && formData.reservation_date ? '暂无可用时段' : '请先选择环境类型和日期'"
+            @change="handleTimeSlotsChange"
+          >
+            <a-select-option
+              v-for="slot in timeSlotOptions"
+              :key="slot.display_time"
+              :value="slot.display_time"
+              :disabled="slot.available_quantity <= 0"
+            >
+              {{ slot.display_time }} (可用:{{ slot.available_quantity }})
+            </a-select-option>
+          </a-select>
+          <div v-if="totalCageQuantity > 0" style="color: #999; margin-top: 4px">
+            该环境总笼位数：{{ totalCageQuantity }}
+          </div>
         </a-form-item>
         <a-form-item label="备注" name="remark">
           <a-textarea
@@ -390,7 +409,9 @@ import {
   completeCageReservation,
   cancelCageReservation,
   getCagePurposeOptions,
-  getCageTimeSlotOptions
+  getCageTimeSlotOptions,
+  getEnvironmentsByAnimalType,
+  getCageAvailableTimeSlots
 } from '@/api/cage'
 import { getAnimalTypeOptions, getEnvironmentTypeOptions, getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
@@ -532,7 +553,19 @@ const formRules = {
   user_id: [{ required: true, message: '请选择用户', trigger: 'change' }],
   animal_type_id: [{ required: true, message: '请选择动物类型', trigger: 'change' }],
   environment_id: [{ required: true, message: '请选择环境类型', trigger: 'change' }],
-  quantity: [{ required: true, message: '请输入数量', trigger: 'blur' }],
+  quantity: [
+    { required: true, message: '请输入数量', trigger: 'blur' },
+    { 
+      validator: (rule, value) => {
+        const maxQty = getMaxQuantity()
+        if (value > maxQty) {
+          return Promise.reject(`数量不能超过 ${maxQty}`)
+        }
+        return Promise.resolve()
+      }, 
+      trigger: 'change' 
+    }
+  ],
   purpose_id: [{ required: true, message: '请选择用途', trigger: 'change' }],
   reservation_date: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
   time_slots: [{ required: true, message: '请选择预约时段', trigger: 'change', type: 'array', min: 1 }]
@@ -540,9 +573,12 @@ const formRules = {
 
 // 选项数据
 const animalTypeOptions = ref([])
-const environmentTypeOptions = ref([])
+const environmentTypeOptions = ref([]) // 所有环境类型（用于搜索）
+const dynamicEnvironmentOptions = ref([]) // 动态环境类型（根据动物类型筛选）
 const purposeOptions = ref([])
 const timeSlotOptions = ref([])
+const timeSlotQuantityMap = ref({}) // 时间段可用数量映射
+const totalCageQuantity = ref(0) // 总笼位数量
 const userOptions = ref([])
 const handlerOptions = ref([])
 
@@ -561,10 +597,15 @@ const handleAdd = () => {
     time_slots: [],
     remark: ''
   })
+  // 重置动态数据
   userOptions.value = []
+  dynamicEnvironmentOptions.value = []
+  timeSlotOptions.value = []
+  timeSlotQuantityMap.value = {}
+  totalCageQuantity.value = 0
 }
 
-const handleEdit = (record) => {
+const handleEdit = async (record) => {
   modalTitle.value = '编辑订单'
   modalVisible.value = true
   Object.assign(formData, {
@@ -581,6 +622,16 @@ const handleEdit = (record) => {
   // 设置用户选项（用于显示）
   if (record.user) {
     userOptions.value = [record.user]
+  }
+  
+  // 加载动物类型对应的环境类型
+  if (formData.animal_type_id) {
+    await loadEnvironmentsByAnimalType()
+  }
+  
+  // 加载可用时间段
+  if (formData.environment_id && formData.reservation_date) {
+    await loadAvailableTimeSlots()
   }
 }
 
@@ -643,22 +694,94 @@ const handleUserChange = () => {
 /**
  * 动物类型改变
  */
-const handleAnimalTypeChange = () => {
-  // 可以在这里处理动物类型改变的逻辑
+const handleAnimalTypeChange = async () => {
+  // 重置环境类型和时间段
+  formData.environment_id = undefined
+  formData.time_slots = []
+  dynamicEnvironmentOptions.value = []
+  timeSlotOptions.value = []
+  timeSlotQuantityMap.value = {}
+  totalCageQuantity.value = 0
+  
+  // 加载对应的环境类型
+  if (formData.animal_type_id) {
+    await loadEnvironmentsByAnimalType()
+  }
 }
 
 /**
  * 环境类型改变
  */
-const handleEnvironmentChange = () => {
-  // 可以在这里处理环境类型改变的逻辑
+const handleEnvironmentChange = async () => {
+  // 重置时间段
+  formData.time_slots = []
+  timeSlotOptions.value = []
+  timeSlotQuantityMap.value = {}
+  totalCageQuantity.value = 0
+  
+  // 如果环境和日期都已选择，加载可用时间段
+  if (formData.environment_id && formData.reservation_date) {
+    await loadAvailableTimeSlots()
+  }
 }
 
 /**
  * 日期改变
  */
-const handleDateChange = () => {
-  // 可以在这里处理日期改变的逻辑
+const handleDateChange = async () => {
+  // 重置时间段
+  formData.time_slots = []
+  timeSlotOptions.value = []
+  timeSlotQuantityMap.value = {}
+  totalCageQuantity.value = 0
+  
+  // 如果环境和日期都已选择，加载可用时间段
+  if (formData.environment_id && formData.reservation_date) {
+    await loadAvailableTimeSlots()
+  }
+}
+
+/**
+ * 时间段改变
+ */
+const handleTimeSlotsChange = () => {
+  // 校验数量是否超过最小可用数量
+  const minQty = getMinAvailableQuantity()
+  if (minQty !== null && formData.quantity > minQty) {
+    formData.quantity = minQty
+    message.warning(`笼位数量已自动调整为最大可用数量：${minQty}`)
+  }
+}
+
+/**
+ * 数量改变
+ */
+const handleQuantityChange = (value) => {
+  const minQty = getMinAvailableQuantity()
+  if (minQty !== null && value > minQty) {
+    formData.quantity = minQty
+    message.warning(`笼位数量不能超过所选时段的最小可用数量：${minQty}`)
+  }
+}
+
+/**
+ * 获取所选时段的最小可用数量
+ */
+const getMinAvailableQuantity = () => {
+  if (!formData.time_slots || formData.time_slots.length === 0) {
+    return null
+  }
+  
+  const quantities = formData.time_slots.map(slot => timeSlotQuantityMap.value[slot] || 0)
+  return Math.min(...quantities)
+}
+
+/**
+ * 获取最大可输入数量
+ */
+const getMaxQuantity = () => {
+  const minQty = getMinAvailableQuantity()
+  return minQty !== null ? minQty : 1000
 }
 
 /**
@@ -756,21 +879,81 @@ const handleView = async (record) => {
 
 const loadOptions = async () => {
   try {
-    const [animalTypes, environmentTypes, purposes, timeSlots, handlers] = await Promise.all([
+    const [animalTypes, environmentTypes, purposes, handlers] = await Promise.all([
       getAnimalTypeOptions(),
       getEnvironmentTypeOptions(),
       getCagePurposeOptions(),
-      getCageTimeSlotOptions(),
       getHandlerOptions()
     ])
     
     animalTypeOptions.value = animalTypes.data
-    environmentTypeOptions.value = environmentTypes.data
+    environmentTypeOptions.value = environmentTypes.data // 用于搜索筛选
     purposeOptions.value = purposes.data
-    timeSlotOptions.value = timeSlots.data
     handlerOptions.value = handlers.data
   } catch (error) {
     console.error('加载选项数据失败：', error)
+  }
+}
+
+/**
+ * 根据动物类型加载环境类型
+ */
+const loadEnvironmentsByAnimalType = async () => {
+  if (!formData.animal_type_id) {
+    dynamicEnvironmentOptions.value = []
+    return
+  }
+  
+  try {
+    const res = await getEnvironmentsByAnimalType({
+      animal_type_id: formData.animal_type_id
+    })
+    dynamicEnvironmentOptions.value = res.data || []
+    
+    if (dynamicEnvironmentOptions.value.length === 0) {
+      message.warning('该动物类型暂无可用笼位')
+    }
+  } catch (error) {
+    console.error('获取环境类型失败：', error)
+    dynamicEnvironmentOptions.value = []
+  }
+}
+
+/**
+ * 加载可用时间段
+ */
+const loadAvailableTimeSlots = async () => {
+  if (!formData.animal_type_id || !formData.environment_id || !formData.reservation_date) {
+    timeSlotOptions.value = []
+    return
+  }
+  
+  try {
+    const res = await getCageAvailableTimeSlots({
+      animal_type_id: formData.animal_type_id,
+      environment_id: formData.environment_id,
+      date: formData.reservation_date
+    })
+    
+    if (res.data) {
+      totalCageQuantity.value = res.data.total_quantity || 0
+      timeSlotOptions.value = res.data.time_slots || []
+      
+      // 构建时间段可用数量映射
+      timeSlotQuantityMap.value = {}
+      timeSlotOptions.value.forEach(slot => {
+        timeSlotQuantityMap.value[slot.display_time] = slot.available_quantity
+      })
+      
+      if (timeSlotOptions.value.length === 0) {
+        message.warning('该日期暂无可用时段')
+      }
+    }
+  } catch (error) {
+    console.error('获取可用时间段失败：', error)
+    timeSlotOptions.value = []
+    timeSlotQuantityMap.value = {}
+    totalCageQuantity.value = 0
   }
 }
 

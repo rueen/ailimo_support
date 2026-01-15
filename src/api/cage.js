@@ -173,6 +173,30 @@ export function getCageAvailableQuantity(params) {
   })
 }
 
+/**
+ * 根据动物类型获取环境类型选项
+ * @param {Object} params - 查询参数 { animal_type_id: number }
+ */
+export function getEnvironmentsByAnimalType(params) {
+  return request({
+    url: '/support/cages/environments-by-animal-type',
+    method: 'GET',
+    params
+  })
+}
+
+/**
+ * 查询笼位可用时间段
+ * @param {Object} params - 查询参数 { animal_type_id, environment_id, date }
+ */
+export function getCageAvailableTimeSlots(params) {
+  return request({
+    url: '/support/cages/available-time-slots',
+    method: 'GET',
+    params
+  })
+}
+
 // ========== 笼位用途管理 ==========
 
 /**
