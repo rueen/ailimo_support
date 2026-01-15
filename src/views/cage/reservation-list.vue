@@ -171,14 +171,14 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="预约用户" name="user_id">
+        <a-form-item label="用户" name="user_id">
           <a-select
             v-model:value="formData.user_id"
-            placeholder="请选择用户"
+            placeholder="请输入用户姓名/手机号搜索"
             show-search
             :filter-option="false"
+            :not-found-content="null"
             @search="handleUserSearch"
-            @change="handleUserChange"
           >
             <a-select-option
               v-for="user in userOptions"
@@ -561,6 +561,7 @@ const handleAdd = () => {
     time_slots: [],
     remark: ''
   })
+  userOptions.value = []
 }
 
 const handleEdit = (record) => {
@@ -577,7 +578,7 @@ const handleEdit = (record) => {
     time_slots: record.time_slots || [],
     remark: record.remark
   })
-  // 设置用户选项
+  // 设置用户选项（用于显示）
   if (record.user) {
     userOptions.value = [record.user]
   }
@@ -619,10 +620,13 @@ const handleModalCancel = () => {
 /**
  * 用户搜索
  */
-const handleUserSearch = async (value) => {
-  if (!value) return
+ const handleUserSearch = async (value) => {
+  if (!value) {
+    userOptions.value = []
+    return
+  }
   try {
-    const res = await getUserList({ name: value, page: 1, pageSize: 20 })
+    const res = await getUserList({ keyword: value, pageSize: 20 })
     userOptions.value = res.data.list
   } catch (error) {
     console.error('搜索用户失败：', error)
