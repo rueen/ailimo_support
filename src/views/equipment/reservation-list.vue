@@ -3,35 +3,34 @@
     <!-- 搜索表单 -->
     <div class="search-form">
       <a-form layout="inline" :model="searchForm">
-        <a-form-item label="设备名称">
-          <a-input
-            v-model:value="searchForm.equipment_name"
-            placeholder="请输入设备名称"
+        <a-form-item label="设备">
+          <a-select
+            v-model:value="searchForm.equipment_id"
+            placeholder="请选择设备"
+            :options="equipmentOptions"
+            :field-names="{ label: 'name', value: 'id' }"
             allow-clear
-            style="width: 160px"
+            show-search
+            :filter-option="filterEquipmentOption"
+            @change="handleEquipmentChange"
+            style="width: 150px"
           />
         </a-form-item>
-        <a-form-item label="用户姓名">
+        <a-form-item label="用户">
           <a-input
-            v-model:value="searchForm.user_name"
-            placeholder="请输入用户姓名"
+            v-model:value="searchForm.user_keyword"
+            placeholder="用户姓名/手机号"
             allow-clear
-            style="width: 140px"
-          />
-        </a-form-item>
-        <a-form-item label="用户手机号">
-          <a-input
-            v-model:value="searchForm.user_phone"
-            placeholder="请输入手机号"
-            allow-clear
-            style="width: 140px"
+            style="width: 150px"
           />
         </a-form-item>
         <a-form-item label="预约日期">
-          <a-date-picker
-            v-model:value="searchForm.reservation_date"
-            placeholder="请选择预约日期"
-            style="width: 140px"
+          <a-range-picker
+            v-model:value="dateRange"
+            format="YYYY-MM-DD"
+            :value-format="'YYYY-MM-DD'"
+            allow-clear
+            style="width: 240px"
           />
         </a-form-item>
         <a-form-item label="订单状态">
@@ -39,7 +38,7 @@
             v-model:value="searchForm.status"
             placeholder="请选择订单状态"
             allow-clear
-            style="width: 110px"
+            style="width: 150px"
           >
             <a-select-option :value="0">待审核</a-select-option>
             <a-select-option :value="1">进行中</a-select-option>
@@ -181,13 +180,16 @@
             placeholder="请选择设备"
             :options="equipmentOptions"
             :field-names="{ label: 'name', value: 'id' }"
+            allow-clear
+            show-search
+            :filter-option="filterEquipmentOption"
             @change="handleEquipmentChange"
           />
         </a-form-item>
         <a-form-item label="用户" name="user_id">
           <a-select
             v-model:value="formData.user_id"
-            placeholder="请输入用户手机号搜索"
+            placeholder="请输入用户姓名/手机号搜索"
             show-search
             :filter-option="false"
             :not-found-content="null"
@@ -292,12 +294,12 @@ const userStore = useUserStore()
 // ========== 搜索表单 ==========
 
 const searchForm = reactive({
-  equipment_name: '',
-  user_name: '',
-  user_phone: '',
-  reservation_date: null,
+  equipment_id: undefined,
+  user_keyword: '',
   status: undefined
 })
+
+const dateRange = ref([])
 
 /**
  * 查询
@@ -312,12 +314,11 @@ const handleSearch = () => {
  */
 const handleReset = () => {
   Object.assign(searchForm, {
-    equipment_name: '',
-    user_name: '',
-    user_phone: '',
-    reservation_date: null,
+    equipment_id: undefined,
+    user_keyword: '',
     status: undefined
   })
+  dateRange.value = []
   handleSearch()
 }
 
@@ -369,13 +370,13 @@ const fetchTableData = async () => {
     const params = {
       page: pagination.current,
       pageSize: pagination.pageSize,
-      equipment_name: searchForm.equipment_name,
-      user_name: searchForm.user_name,
-      user_phone: searchForm.user_phone,
-      reservation_date: searchForm.reservation_date
-        ? dayjs(searchForm.reservation_date).format('YYYY-MM-DD')
-        : undefined,
+      equipment_id: searchForm.equipment_id,
+      user_keyword: searchForm.user_keyword,
       status: searchForm.status
+    }
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.start_date = dateRange.value[0]
+      params.end_date = dateRange.value[1]
     }
     const res = await getEquipmentReservationList(params)
     tableData.value = res.data.list
@@ -405,7 +406,6 @@ const formData = reactive({
   id: null,
   equipment_id: undefined,
   user_id: undefined,
-  reservation_date: null,
   time_slots: [],
   remark: ''
 })
@@ -593,7 +593,7 @@ const handleUserSearch = async (value) => {
 }
 
 /**
- * 加载设备选项
+ * 加载设备选项（用于表单）
  */
 const loadEquipmentOptions = async () => {
   try {
@@ -602,6 +602,14 @@ const loadEquipmentOptions = async () => {
   } catch (error) {
     console.error('获取设备选项失败：', error)
   }
+}
+
+/**
+ * 设备筛选（支持搜索）
+ */
+const filterEquipmentOption = (input, option) => {
+  const name = option.name || ''
+  return name.toLowerCase().includes(input.toLowerCase())
 }
 
 /**
