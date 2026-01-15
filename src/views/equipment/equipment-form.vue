@@ -1,6 +1,6 @@
 <template>
   <div class="equipment-form-container">
-    <PageHeader :title="modalTitle" back-path="/equipment/list" />
+    <PageHeader :title="modalTitle" back-path="/equipment/list" :need-confirm="true" />
 
     <a-form
       ref="formRef"
@@ -144,6 +144,10 @@ const loadEquipmentDetail = async () => {
     message.error('获取设备详情失败')
     handleBack()
   }
+}
+
+const handleBack = () => {
+  router.back()
 }
 
 /**
