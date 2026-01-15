@@ -322,9 +322,6 @@
         <a-descriptions-item label="联系电话">
           {{ detailData.user?.phone || '-' }}
         </a-descriptions-item>
-        <a-descriptions-item label="所属机构">
-          {{ detailData.user?.organization?.name || '-' }}
-        </a-descriptions-item>
         <a-descriptions-item label="操作内容">
           {{ detailData.operation_content?.name || '-' }}
         </a-descriptions-item>
@@ -334,14 +331,14 @@
         <a-descriptions-item label="动物数量">
           {{ detailData.quantity }}
         </a-descriptions-item>
-        <a-descriptions-item label="预约日期">
+        <a-descriptions-item label="预约日期" :span="2">
           {{ detailData.reservation_date || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="预约时段" :span="2">
           {{ detailData.time_slots?.join(', ') || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="负责人">
-          {{ detailData.handler?.username || '-' }}
+          {{ detailData.handler?.name || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="审核人">
           {{ detailData.audit_by?.username || '-' }}
