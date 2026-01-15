@@ -160,14 +160,15 @@
             >
               审核拒绝
             </a-button>
-            <a-button
+            <a-popconfirm
               v-if="record.status === 1 && userStore.hasPermission('cage_reservation:complete')"
-              type="link"
-              size="small"
-              @click="handleComplete(record)"
+              title="确定完成该订单吗？"
+              @confirm="handleComplete(record)"
             >
-              完成
-            </a-button>
+              <a-button type="link" size="small">
+                完成
+              </a-button>
+            </a-popconfirm>
             <a-popconfirm
               v-if="record.status === 1 && userStore.hasPermission('cage_reservation:cancel')"
               title="确定取消该订单吗？"
@@ -239,13 +240,12 @@
           <a-input-number
             v-model:value="formData.quantity"
             :min="1"
-            :max="getMaxQuantity()"
             placeholder="请输入数量"
             style="width: 100%"
             @change="handleQuantityChange"
           />
-          <div v-if="getMinAvailableQuantity() !== null" style="color: #999; margin-top: 4px">
-            所选时段最少可用：{{ getMinAvailableQuantity() }}
+          <div v-if="formData.id === null && getMinAvailableQuantity() !== null" style="color: #999; margin-top: 4px">
+            所选时段剩余笼位：{{ getMinAvailableQuantity() }}
           </div>
         </a-form-item>
         <a-form-item label="用途" name="purpose_id">
@@ -285,9 +285,6 @@
               {{ slot.display_time }} (可用:{{ slot.available_quantity }})
             </a-select-option>
           </a-select>
-          <div v-if="totalCageQuantity > 0" style="color: #999; margin-top: 4px">
-            该环境总笼位数：{{ totalCageQuantity }}
-          </div>
         </a-form-item>
         <a-form-item label="备注" name="remark">
           <a-textarea
@@ -374,19 +371,19 @@
           {{ detailData.time_slots?.join(', ') || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="负责人">
-          {{ detailData.handler?.username || '-' }}
+          {{ detailData.handler?.name || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="审核人">
-          {{ detailData.auditBy?.username || '-' }}
+          {{ detailData.audit_by?.username || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="审核时间">
-          {{ detailData.auditTime || '-' }}
+          {{ detailData.audit_time || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="完成时间">
-          {{ detailData.completedTime || '-' }}
+          {{ detailData.completed_time || '-' }}
         </a-descriptions-item>
-        <a-descriptions-item v-if="detailData.rejectReason" label="拒绝原因" :span="2">
-          {{ detailData.rejectReason }}
+        <a-descriptions-item v-if="detailData.reject_reason" label="拒绝原因" :span="2">
+          {{ detailData.reject_reason }}
         </a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">
           {{ detailData.remark || '-' }}
@@ -565,6 +562,10 @@ const formRules = {
     { required: true, message: '请输入数量', trigger: 'blur' },
     { 
       validator: (rule, value) => {
+        // 编辑模式下不校验数量（已锁定的订单由接口端校验）
+        if (formData.id !== null) {
+          return Promise.resolve()
+        }
         const maxQty = getMaxQuantity()
         if (value > maxQty) {
           return Promise.reject(`数量不能超过 ${maxQty}`)
@@ -752,6 +753,10 @@ const handleDateChange = async () => {
  * 时间段改变
  */
 const handleTimeSlotsChange = () => {
+  // 编辑模式下不校验数量（已锁定的订单由接口端校验）
+  if (formData.id !== null) {
+    return
+  }
   // 校验数量是否超过最小可用数量
   const minQty = getMinAvailableQuantity()
   if (minQty !== null && formData.quantity > minQty) {
@@ -764,10 +769,14 @@ const handleTimeSlotsChange = () => {
  * 数量改变
  */
 const handleQuantityChange = (value) => {
+  // 编辑模式下不校验数量（已锁定的订单由接口端校验）
+  if (formData.id !== null) {
+    return
+  }
   const minQty = getMinAvailableQuantity()
   if (minQty !== null && value > minQty) {
     formData.quantity = minQty
-    message.warning(`笼位数量不能超过所选时段的最小可用数量：${minQty}`)
+    message.warning(`笼位数量不能超过所选时段的剩余数量：${minQty}`)
   }
 }
 

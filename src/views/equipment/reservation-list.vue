@@ -145,14 +145,15 @@
             >
               审核拒绝
             </a-button>
-            <a-button
+            <a-popconfirm
               v-if="record.status === 1 && userStore.hasPermission('equipment_reservation:complete')"
-              type="link"
-              size="small"
-              @click="handleComplete(record)"
+              title="确定完成该订单吗？"
+              @confirm="handleComplete(record)"
             >
-              完成
-            </a-button>
+              <a-button type="link" size="small">
+                完成
+              </a-button>
+            </a-popconfirm>
             <a-popconfirm
               v-if="record.status === 1 && userStore.hasPermission('equipment_reservation:cancel')"
               title="确定取消该订单吗？"
