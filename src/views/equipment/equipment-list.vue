@@ -60,12 +60,10 @@
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'">
-          <a-switch
-            v-if="userStore.hasPermission('equipment:update')"
-            :checked="record.status === 1"
-            @change="(checked) => handleStatusChange(record, checked)"
+          <a-badge
+            :status="record.status === 1 ? 'success' : 'default'"
+            :text="record.status === 1 ? '启用' : '禁用'"
           />
-          <span v-else>{{ record.status === 1 ? '启用' : '禁用' }}</span>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -155,15 +153,9 @@ const pagination = reactive({
  */
 const columns = [
   { title: '设备名称', dataIndex: 'name', width: 200 },
-  {
-    title: '基本信息',
-    width: 300,
-    customRender: ({ record }) => {
-      return record.details?.base_info || '-'
-    }
-  },
   { title: '状态', key: 'status', width: 100 },
   { title: '创建时间', dataIndex: 'created_at', width: 180 },
+  { title: '更新时间', dataIndex: 'updated_at', width: 180 },
   { title: '操作', key: 'action', fixed: 'right', width: 150 }
 ]
 
@@ -195,19 +187,6 @@ const handleTableChange = (pag) => {
   pagination.current = pag.current
   pagination.pageSize = pag.pageSize
   fetchTableData()
-}
-
-/**
- * 状态变化
- */
-const handleStatusChange = async (record, checked) => {
-  try {
-    await updateEquipment(record.id, { status: checked ? 1 : 0 })
-    message.success('状态更新成功')
-    fetchTableData()
-  } catch (error) {
-    console.error('状态更新失败：', error)
-  }
 }
 
 /**

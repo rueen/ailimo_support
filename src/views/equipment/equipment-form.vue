@@ -1,6 +1,6 @@
 <template>
   <div class="equipment-form-container">
-    <PageHeader :title="modalTitle" back-path="/equipment/list" :need-confirm="true" />
+    <PageHeader :title="modalTitle" back-path="/equipment/list" />
 
     <a-form
       ref="formRef"
@@ -26,11 +26,14 @@
       </a-form-item>
       
       <a-form-item label="规格参数" name="specs">
-        <a-textarea
-          v-model:value="formData.details.specs"
-          :rows="4"
+        <quill-editor 
+          v-model:content="formData.details.specs"
+          theme="snow"
+          contentType="html"
+          :toolbar="toolbarOptions"
+          style="height: 250px;"
           placeholder="请输入设备规格参数"
-          style="width: 600px"
+          @ready="onQuillReady"
         />
       </a-form-item>
       

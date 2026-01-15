@@ -23,12 +23,10 @@
           {{ record.display_time || `${record.start_time}-${record.end_time}` }}
         </template>
         <template v-else-if="column.key === 'status'">
-          <a-switch
-            v-if="userStore.hasPermission('equipment_time_slot:update')"
-            :checked="record.status === 1"
-            @change="(checked) => handleStatusChange(record, checked)"
+          <a-badge
+            :status="record.status === 1 ? 'success' : 'default'"
+            :text="record.status === 1 ? '启用' : '禁用'"
           />
-          <span v-else>{{ record.status === 1 ? '启用' : '禁用' }}</span>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -157,20 +155,6 @@ const fetchTableData = async () => {
     message.error('获取时间段列表失败')
   } finally {
     loading.value = false
-  }
-}
-
-/**
- * 状态变更
- */
-const handleStatusChange = async (record, checked) => {
-  try {
-    await updateTimeSlot(record.id, { status: checked ? 1 : 0 })
-    message.success('状态更新成功')
-    fetchTableData()
-  } catch (error) {
-    console.error('状态更新失败：', error)
-    message.error(error.message || '状态更新失败')
   }
 }
 
