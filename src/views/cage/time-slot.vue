@@ -23,12 +23,10 @@
           {{ record.display_time || `${record.start_time}-${record.end_time}` }}
         </template>
         <template v-else-if="column.key === 'status'">
-          <a-switch
-            v-if="userStore.hasPermission('cage_time_slot:update')"
-            :checked="record.status === 1"
-            @change="(checked) => handleStatusChange(record, checked)"
+          <a-badge
+            :status="record.status === 1 ? 'success' : 'default'"
+            :text="record.status === 1 ? '启用' : '禁用'"
           />
-          <span v-else>{{ record.status === 1 ? '启用' : '禁用' }}</span>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -69,18 +67,18 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="开始时间" name="startTime">
+        <a-form-item label="开始时间" name="start_time">
           <a-time-picker
-            v-model:value="formData.startTime"
+            v-model:value="formData.start_time"
             format="HH:mm"
             :value-format="'HH:mm:ss'"
             placeholder="请选择开始时间"
             style="width: 100%"
           />
         </a-form-item>
-        <a-form-item label="结束时间" name="endTime">
+        <a-form-item label="结束时间" name="end_time">
           <a-time-picker
-            v-model:value="formData.endTime"
+            v-model:value="formData.end_time"
             format="HH:mm"
             :value-format="'HH:mm:ss'"
             placeholder="请选择结束时间"
@@ -94,9 +92,9 @@
             placeholder="请输入描述信息（可选）"
           />
         </a-form-item>
-        <a-form-item label="排序" name="sortOrder">
+        <a-form-item label="排序" name="sort_order">
           <a-input-number
-            v-model:value="formData.sortOrder"
+            v-model:value="formData.sort_order"
             :min="0"
             :max="1000"
             placeholder="排序值越小越靠前"
@@ -136,7 +134,7 @@ const columns = [
   { title: '开始时间', dataIndex: 'start_time', width: 120 },
   { title: '结束时间', dataIndex: 'end_time', width: 120 },
   { title: '描述', dataIndex: 'description', ellipsis: true },
-  { title: '排序', dataIndex: 'sortOrder', width: 100 },
+  { title: '排序', dataIndex: 'sort_order', width: 100 },
   { title: '状态', key: 'status', width: 100 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
@@ -153,16 +151,6 @@ const fetchTableData = async () => {
   }
 }
 
-const handleStatusChange = async (record, checked) => {
-  try {
-    await updateCageTimeSlot(record.id, { status: checked ? 1 : 0 })
-    message.success('状态更新成功')
-    fetchTableData()
-  } catch (error) {
-    console.error('状态更新失败：', error)
-  }
-}
-
 // ========== 新增/编辑 ==========
 
 const modalVisible = ref(false)
@@ -170,16 +158,16 @@ const modalTitle = ref('新增时间段')
 const formRef = ref()
 const formData = reactive({
   id: null,
-  startTime: null,
-  endTime: null,
+  start_time: null,
+  end_time: null,
   description: '',
-  sortOrder: 0,
+  sort_order: 0,
   status: 1
 })
 
 const formRules = {
-  startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
-  endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }]
+  start_time: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
+  end_time: [{ required: true, message: '请选择结束时间', trigger: 'change' }]
 }
 
 const handleAdd = () => {
@@ -188,10 +176,10 @@ const handleAdd = () => {
   formRef.value?.resetFields()
   Object.assign(formData, {
     id: null,
-    startTime: null,
-    endTime: null,
+    start_time: null,
+    end_time: null,
     description: '',
-    sortOrder: 0,
+    sort_order: 0,
     status: 1
   })
 }
@@ -201,10 +189,10 @@ const handleEdit = (record) => {
   modalVisible.value = true
   Object.assign(formData, {
     id: record.id,
-    startTime: record.startTime,
-    endTime: record.endTime,
+    start_time: record.start_time,
+    end_time: record.end_time,
     description: record.description,
-    sortOrder: record.sortOrder,
+    sort_order: record.sort_order,
     status: record.status
   })
 }
@@ -213,10 +201,10 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     const data = {
-      startTime: formData.startTime,
-      endTime: formData.endTime,
+      start_time: formData.start_time,
+      end_time: formData.end_time,
       description: formData.description,
-      sortOrder: formData.sortOrder,
+      sort_order: formData.sort_order,
       status: formData.status
     }
     
