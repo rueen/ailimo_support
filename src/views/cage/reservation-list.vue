@@ -5,7 +5,7 @@
       <a-form layout="inline" :model="searchForm">
         <a-form-item label="用户姓名">
           <a-input
-            v-model:value="searchForm.userName"
+            v-model:value="searchForm.user_name"
             placeholder="请输入用户姓名"
             allow-clear
             style="width: 150px"
@@ -13,7 +13,7 @@
         </a-form-item>
         <a-form-item label="用户手机号">
           <a-input
-            v-model:value="searchForm.userPhone"
+            v-model:value="searchForm.user_phone"
             placeholder="请输入手机号"
             allow-clear
             style="width: 150px"
@@ -21,7 +21,7 @@
         </a-form-item>
         <a-form-item label="动物类型">
           <a-select
-            v-model:value="searchForm.animalTypeId"
+            v-model:value="searchForm.animal_type_id"
             placeholder="请选择"
             allow-clear
             style="width: 120px"
@@ -31,7 +31,7 @@
         </a-form-item>
         <a-form-item label="环境类型">
           <a-select
-            v-model:value="searchForm.environmentId"
+            v-model:value="searchForm.environment_id"
             placeholder="请选择"
             allow-clear
             style="width: 120px"
@@ -105,8 +105,8 @@
             {{ getStatusText(record.status) }}
           </a-tag>
         </template>
-        <template v-else-if="column.key === 'timeSlots'">
-          {{ record.timeSlots?.join(', ') || '-' }}
+        <template v-else-if="column.key === 'time_slots'">
+          {{ record.time_slots?.join(', ') || '-' }}
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -171,9 +171,9 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="预约用户" name="userId">
+        <a-form-item label="预约用户" name="user_id">
           <a-select
-            v-model:value="formData.userId"
+            v-model:value="formData.user_id"
             placeholder="请选择用户"
             show-search
             :filter-option="false"
@@ -189,18 +189,18 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="动物类型" name="animalTypeId">
+        <a-form-item label="动物类型" name="animal_type_id">
           <a-select
-            v-model:value="formData.animalTypeId"
+            v-model:value="formData.animal_type_id"
             placeholder="请选择动物类型"
             :options="animalTypeOptions"
             :field-names="{ label: 'name', value: 'id' }"
             @change="handleAnimalTypeChange"
           />
         </a-form-item>
-        <a-form-item label="环境类型" name="environmentId">
+        <a-form-item label="环境类型" name="environment_id">
           <a-select
-            v-model:value="formData.environmentId"
+            v-model:value="formData.environment_id"
             placeholder="请选择环境类型"
             :options="environmentTypeOptions"
             :field-names="{ label: 'name', value: 'id' }"
@@ -216,17 +216,17 @@
             style="width: 100%"
           />
         </a-form-item>
-        <a-form-item label="用途" name="purposeId">
+        <a-form-item label="用途" name="purpose_id">
           <a-select
-            v-model:value="formData.purposeId"
+            v-model:value="formData.purpose_id"
             placeholder="请选择用途"
             :options="purposeOptions"
             :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
-        <a-form-item label="预约日期" name="reservationDate">
+        <a-form-item label="预约日期" name="reservation_date">
           <a-date-picker
-            v-model:value="formData.reservationDate"
+            v-model:value="formData.reservation_date"
             format="YYYY-MM-DD"
             :value-format="'YYYY-MM-DD'"
             :disabled-date="disabledDate"
@@ -235,9 +235,9 @@
             @change="handleDateChange"
           />
         </a-form-item>
-        <a-form-item label="预约时段" name="timeSlots">
+        <a-form-item label="预约时段" name="time_slots">
           <a-select
-            v-model:value="formData.timeSlots"
+            v-model:value="formData.time_slots"
             mode="multiple"
             placeholder="请选择时间段"
             :options="timeSlotOptions"
@@ -327,7 +327,7 @@
           {{ detailData.user?.organization?.name || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="动物类型">
-          {{ detailData.animalType?.name || '-' }}
+          {{ detailData.animal_type?.name || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="环境类型">
           {{ detailData.environment?.name || '-' }}
@@ -339,10 +339,10 @@
           {{ detailData.purpose?.name || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="预约日期">
-          {{ detailData.reservationDate || '-' }}
+          {{ detailData.reservation_date || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="预约时段" :span="2">
-          {{ detailData.timeSlots?.join(', ') || '-' }}
+          {{ detailData.time_slots?.join(', ') || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="负责人">
           {{ detailData.handler?.username || '-' }}
@@ -401,10 +401,10 @@ const userStore = useUserStore()
 // ========== 搜索表单 ==========
 
 const searchForm = reactive({
-  userName: '',
-  userPhone: '',
-  animalTypeId: undefined,
-  environmentId: undefined,
+  user_name: '',
+  user_phone: '',
+  animal_type_id: undefined,
+  environment_id: undefined,
   status: undefined
 })
 
@@ -417,10 +417,10 @@ const handleSearch = () => {
 
 const handleReset = () => {
   Object.assign(searchForm, {
-    userName: '',
-    userPhone: '',
-    animalTypeId: undefined,
-    environmentId: undefined,
+    user_name: '',
+    user_phone: '',
+    animal_type_id: undefined,
+    environment_id: undefined,
     status: undefined
   })
   dateRange.value = []
@@ -442,12 +442,12 @@ const pagination = reactive({
 const columns = [
   { title: '用户姓名', dataIndex: ['user', 'name'], width: 120 },
   { title: '联系电话', dataIndex: ['user', 'phone'], width: 130 },
-  { title: '动物类型', dataIndex: ['animalType', 'name'], width: 100 },
+  { title: '动物类型', dataIndex: ['animal_type', 'name'], width: 100 },
   { title: '环境类型', dataIndex: ['environment', 'name'], width: 100 },
   { title: '笼位数量', dataIndex: 'quantity', width: 100 },
   { title: '用途', dataIndex: ['purpose', 'name'], width: 100 },
-  { title: '预约日期', dataIndex: 'reservationDate', width: 120 },
-  { title: '预约时段', key: 'timeSlots', width: 180 },
+  { title: '预约日期', dataIndex: 'reservation_date', width: 120 },
+  { title: '预约时段', key: 'time_slots', width: 180 },
   { title: '状态', key: 'status', width: 100 },
   { title: '创建时间', dataIndex: 'created_at', width: 170 },
   { title: '操作', key: 'action', fixed: 'right', width: 240 }
@@ -518,24 +518,24 @@ const modalTitle = ref('新增订单')
 const formRef = ref()
 const formData = reactive({
   id: null,
-  userId: undefined,
-  animalTypeId: undefined,
-  environmentId: undefined,
+  user_id: undefined,
+  animal_type_id: undefined,
+  environment_id: undefined,
   quantity: 1,
-  purposeId: undefined,
-  reservationDate: null,
-  timeSlots: [],
+  purpose_id: undefined,
+  reservation_date: null,
+  time_slots: [],
   remark: ''
 })
 
 const formRules = {
-  userId: [{ required: true, message: '请选择用户', trigger: 'change' }],
-  animalTypeId: [{ required: true, message: '请选择动物类型', trigger: 'change' }],
-  environmentId: [{ required: true, message: '请选择环境类型', trigger: 'change' }],
+  user_id: [{ required: true, message: '请选择用户', trigger: 'change' }],
+  animal_type_id: [{ required: true, message: '请选择动物类型', trigger: 'change' }],
+  environment_id: [{ required: true, message: '请选择环境类型', trigger: 'change' }],
   quantity: [{ required: true, message: '请输入数量', trigger: 'blur' }],
-  purposeId: [{ required: true, message: '请选择用途', trigger: 'change' }],
-  reservationDate: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
-  timeSlots: [{ required: true, message: '请选择预约时段', trigger: 'change', type: 'array', min: 1 }]
+  purpose_id: [{ required: true, message: '请选择用途', trigger: 'change' }],
+  reservation_date: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
+  time_slots: [{ required: true, message: '请选择预约时段', trigger: 'change', type: 'array', min: 1 }]
 }
 
 // 选项数据
@@ -552,13 +552,13 @@ const handleAdd = () => {
   formRef.value?.resetFields()
   Object.assign(formData, {
     id: null,
-    userId: undefined,
-    animalTypeId: undefined,
-    environmentId: undefined,
+    user_id: undefined,
+    animal_type_id: undefined,
+    environment_id: undefined,
     quantity: 1,
-    purposeId: undefined,
-    reservationDate: null,
-    timeSlots: [],
+    purpose_id: undefined,
+    reservation_date: null,
+    time_slots: [],
     remark: ''
   })
 }
@@ -568,13 +568,13 @@ const handleEdit = (record) => {
   modalVisible.value = true
   Object.assign(formData, {
     id: record.id,
-    userId: record.user?.id,
-    animalTypeId: record.animalType?.id,
-    environmentId: record.environment?.id,
+    user_id: record.user?.id,
+    animal_type_id: record.animal_type?.id,
+    environment_id: record.environment?.id,
     quantity: record.quantity,
-    purposeId: record.purpose?.id,
-    reservationDate: record.reservationDate,
-    timeSlots: record.timeSlots || [],
+    purpose_id: record.purpose?.id,
+    reservation_date: record.reservation_date,
+    time_slots: record.time_slots || [],
     remark: record.remark
   })
   // 设置用户选项
@@ -587,13 +587,13 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     const data = {
-      userId: formData.userId,
-      animalTypeId: formData.animalTypeId,
-      environmentId: formData.environmentId,
+      user_id: formData.user_id,
+      animal_type_id: formData.animal_type_id,
+      environment_id: formData.environment_id,
       quantity: formData.quantity,
-      purposeId: formData.purposeId,
-      reservationDate: formData.reservationDate,
-      timeSlots: formData.timeSlots,
+      purpose_id: formData.purpose_id,
+      reservation_date: formData.reservation_date,
+      time_slots: formData.time_slots,
       remark: formData.remark
     }
     

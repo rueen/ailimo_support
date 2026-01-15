@@ -5,7 +5,7 @@
       <a-form layout="inline" :model="searchForm">
         <a-form-item label="动物类型">
           <a-select
-            v-model:value="searchForm.animalTypeId"
+            v-model:value="searchForm.animal_type_id"
             placeholder="请选择"
             allow-clear
             style="width: 150px"
@@ -15,7 +15,7 @@
         </a-form-item>
         <a-form-item label="环境类型">
           <a-select
-            v-model:value="searchForm.environmentId"
+            v-model:value="searchForm.environment_id"
             placeholder="请选择"
             allow-clear
             style="width: 150px"
@@ -72,12 +72,10 @@
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'">
-          <a-switch
-            v-if="userStore.hasPermission('cage:update')"
-            :checked="record.status === 1"
-            @change="(checked) => handleStatusChange(record, checked)"
+          <a-badge
+            :status="record.status === 1 ? 'success' : 'default'"
+            :text="record.status === 1 ? '启用' : '禁用'"
           />
-          <span v-else>{{ record.status === 1 ? '启用' : '禁用' }}</span>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -118,17 +116,17 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="动物类型" name="animalTypeId">
+        <a-form-item label="动物类型" name="animal_type_id">
           <a-select
-            v-model:value="formData.animalTypeId"
+            v-model:value="formData.animal_type_id"
             placeholder="请选择动物类型"
             :options="animalTypeOptions"
             :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
-        <a-form-item label="环境类型" name="environmentId">
+        <a-form-item label="环境类型" name="environment_id">
           <a-select
-            v-model:value="formData.environmentId"
+            v-model:value="formData.environment_id"
             placeholder="请选择环境类型"
             :options="environmentTypeOptions"
             :field-names="{ label: 'name', value: 'id' }"
@@ -176,8 +174,8 @@ const userStore = useUserStore()
 // ========== 搜索表单 ==========
 
 const searchForm = reactive({
-  animalTypeId: undefined,
-  environmentId: undefined,
+  animal_type_id: undefined,
+  environment_id: undefined,
   status: undefined
 })
 
@@ -188,8 +186,8 @@ const handleSearch = () => {
 
 const handleReset = () => {
   Object.assign(searchForm, {
-    animalTypeId: undefined,
-    environmentId: undefined,
+    animal_type_id: undefined,
+    environment_id: undefined,
     status: undefined
   })
   handleSearch()
@@ -208,7 +206,7 @@ const pagination = reactive({
 })
 
 const columns = [
-  { title: '动物类型', dataIndex: ['animalType', 'name'], width: 150 },
+  { title: '动物类型', dataIndex: ['animal_type', 'name'], width: 150 },
   { title: '环境类型', dataIndex: ['environment', 'name'], width: 150 },
   { title: '笼位数量', dataIndex: 'quantity', width: 150 },
   { title: '状态', key: 'status', width: 100 },
@@ -240,16 +238,6 @@ const handleTableChange = (pag) => {
   fetchTableData()
 }
 
-const handleStatusChange = async (record, checked) => {
-  try {
-    await updateCage(record.id, { status: checked ? 1 : 0 })
-    message.success('状态更新成功')
-    fetchTableData()
-  } catch (error) {
-    console.error('状态更新失败：', error)
-  }
-}
-
 // ========== 新增/编辑笼位 ==========
 
 const modalVisible = ref(false)
@@ -257,15 +245,15 @@ const modalTitle = ref('新增笼位')
 const formRef = ref()
 const formData = reactive({
   id: null,
-  animalTypeId: undefined,
-  environmentId: undefined,
+  animal_type_id: undefined,
+  environment_id: undefined,
   quantity: 100,
   status: 1
 })
 
 const formRules = {
-  animalTypeId: [{ required: true, message: '请选择动物类型', trigger: 'change' }],
-  environmentId: [{ required: true, message: '请选择环境类型', trigger: 'change' }],
+  animal_type_id: [{ required: true, message: '请选择动物类型', trigger: 'change' }],
+  environment_id: [{ required: true, message: '请选择环境类型', trigger: 'change' }],
   quantity: [{ required: true, message: '请输入笼位数量', trigger: 'blur' }]
 }
 
@@ -278,8 +266,8 @@ const handleAdd = () => {
   formRef.value?.resetFields()
   Object.assign(formData, {
     id: null,
-    animalTypeId: undefined,
-    environmentId: undefined,
+    animal_type_id: undefined,
+    environment_id: undefined,
     quantity: 100,
     status: 1
   })
@@ -290,8 +278,8 @@ const handleEdit = (record) => {
   modalVisible.value = true
   Object.assign(formData, {
     id: record.id,
-    animalTypeId: record.animalType?.id,
-    environmentId: record.environment?.id,
+    animal_type_id: record.animal_type?.id,
+    environment_id: record.environment?.id,
     quantity: record.quantity,
     status: record.status
   })
@@ -301,8 +289,8 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     const data = {
-      animalTypeId: formData.animalTypeId,
-      environmentId: formData.environmentId,
+      animal_type_id: formData.animal_type_id,
+      environment_id: formData.environment_id,
       quantity: formData.quantity,
       status: formData.status
     }
