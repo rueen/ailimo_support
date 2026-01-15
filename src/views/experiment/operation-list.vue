@@ -5,7 +5,7 @@
       <a-form layout="inline" :model="searchForm">
         <a-form-item label="用户姓名">
           <a-input
-            v-model:value="searchForm.userName"
+            v-model:value="searchForm.user_name"
             placeholder="请输入用户姓名"
             allow-clear
             style="width: 150px"
@@ -13,7 +13,7 @@
         </a-form-item>
         <a-form-item label="用户手机号">
           <a-input
-            v-model:value="searchForm.userPhone"
+            v-model:value="searchForm.user_phone"
             placeholder="请输入手机号"
             allow-clear
             style="width: 150px"
@@ -21,7 +21,7 @@
         </a-form-item>
         <a-form-item label="操作内容">
           <a-select
-            v-model:value="searchForm.operationContentId"
+            v-model:value="searchForm.operation_content_id"
             placeholder="请选择"
             allow-clear
             style="width: 150px"
@@ -31,7 +31,7 @@
         </a-form-item>
         <a-form-item label="动物类型">
           <a-select
-            v-model:value="searchForm.animalTypeId"
+            v-model:value="searchForm.animal_type_id"
             placeholder="请选择"
             allow-clear
             style="width: 120px"
@@ -100,13 +100,30 @@
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'user_info'">
+          <div>{{ record.user?.name }}</div>
+          <div>{{ record.user?.phone }}</div>
+        </template>
+        <template v-if="column.key === 'animal_info'">
+          <div>动物类型：{{ record.animal_type?.name }}</div>
+          <div>动物数量：{{ record.quantity }}</div>
+          <div>操作内容：{{ record.operation_content?.name }}</div>
+        </template>
+        <template v-if="column.key === 'time_slots'">
+          <div>{{ record.reservation_date }}</div>
+          <a-tag
+            v-for="(slot, index) in record.time_slots"
+            :key="index"
+            color="blue"
+            style="margin-bottom: 4px"
+          >
+            {{ slot }}
+          </a-tag>
+        </template>
         <template v-if="column.key === 'status'">
           <a-tag :color="getStatusColor(record.status)">
             {{ getStatusText(record.status) }}
           </a-tag>
-        </template>
-        <template v-else-if="column.key === 'timeSlots'">
-          {{ record.timeSlots?.join(', ') || '-' }}
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -132,7 +149,16 @@
               size="small"
               @click="handleApprove(record)"
             >
-              审核
+              审核通过
+            </a-button>
+            <a-button
+              v-if="record.status === 0 && userStore.hasPermission('experiment_operation:audit')"
+              type="link"
+              danger
+              size="small"
+              @click="handleReject(record)"
+            >
+              审核拒绝
             </a-button>
             <a-button
               v-if="record.status === 1 && userStore.hasPermission('experiment_operation:complete')"
@@ -171,12 +197,13 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="预约用户" name="userId">
+      <a-form-item label="用户" name="user_id">
           <a-select
-            v-model:value="formData.userId"
-            placeholder="请选择用户"
+            v-model:value="formData.user_id"
+            placeholder="请输入用户姓名/手机号搜索"
             show-search
             :filter-option="false"
+            :not-found-content="null"
             @search="handleUserSearch"
           >
             <a-select-option
@@ -188,17 +215,17 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="操作内容" name="operationContentId">
+        <a-form-item label="操作内容" name="operation_content_id">
           <a-select
-            v-model:value="formData.operationContentId"
+            v-model:value="formData.operation_content_id"
             placeholder="请选择操作内容"
             :options="operationContentOptions"
             :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
-        <a-form-item label="动物类型" name="animalTypeId">
+        <a-form-item label="动物类型" name="animal_type_id">
           <a-select
-            v-model:value="formData.animalTypeId"
+            v-model:value="formData.animal_type_id"
             placeholder="请选择动物类型"
             :options="animalTypeOptions"
             :field-names="{ label: 'name', value: 'id' }"
@@ -213,9 +240,9 @@
             style="width: 100%"
           />
         </a-form-item>
-        <a-form-item label="预约日期" name="reservationDate">
+        <a-form-item label="预约日期" name="reservation_date">
           <a-date-picker
-            v-model:value="formData.reservationDate"
+            v-model:value="formData.reservation_date"
             format="YYYY-MM-DD"
             :value-format="'YYYY-MM-DD'"
             :disabled-date="disabledDate"
@@ -223,9 +250,9 @@
             style="width: 100%"
           />
         </a-form-item>
-        <a-form-item label="预约时段" name="timeSlots">
+        <a-form-item label="预约时段" name="time_slots">
           <a-select
-            v-model:value="formData.timeSlots"
+            v-model:value="formData.time_slots"
             mode="multiple"
             placeholder="请选择时间段"
             :options="timeSlotOptions"
@@ -242,51 +269,35 @@
       </a-form>
     </a-modal>
 
-    <!-- 审核对话框 -->
+    <!-- 审核通过对话框 -->
     <a-modal
       v-model:open="approveModalVisible"
-      title="审核订单"
-      :width="600"
+      title="审核通过"
       @ok="handleApproveSubmit"
     >
-      <a-form
-        ref="approveFormRef"
-        :model="approveFormData"
-        :label-col="{ span: 6 }"
-        :wrapper-col="{ span: 16 }"
-      >
-        <a-form-item label="审核结果">
-          <a-radio-group v-model:value="approveFormData.result">
-            <a-radio :value="'approve'">通过</a-radio>
-            <a-radio :value="'reject'">拒绝</a-radio>
-          </a-radio-group>
-        </a-form-item>
-        <a-form-item
-          v-if="approveFormData.result === 'approve'"
-          label="负责人"
-          name="handlerId"
-          :rules="[{ required: true, message: '请选择负责人' }]"
-        >
-          <a-select
-            v-model:value="approveFormData.handlerId"
-            placeholder="请选择负责人"
-            :options="handlerOptions"
-            :field-names="{ label: 'username', value: 'id' }"
-          />
-        </a-form-item>
-        <a-form-item
-          v-if="approveFormData.result === 'reject'"
-          label="拒绝原因"
-          name="rejectReason"
-          :rules="[{ required: true, message: '请输入拒绝原因' }]"
-        >
-          <a-textarea
-            v-model:value="approveFormData.rejectReason"
-            :rows="4"
-            placeholder="请输入拒绝原因"
-          />
-        </a-form-item>
-      </a-form>
+      <a-form-item label="负责人" name="handler_id">
+        <a-select
+          v-model:value="handler_id"
+          placeholder="请选择负责人"
+          :options="handlerOptions"
+          :field-names="{ label: 'name', value: 'id' }"
+        />
+      </a-form-item>
+    </a-modal>
+
+    <!-- 审核拒绝对话框 -->
+    <a-modal
+      v-model:open="rejectModalVisible"
+      title="审核拒绝"
+      @ok="handleRejectSubmit"
+    >
+      <a-form-item label="拒绝原因">
+        <a-textarea
+          v-model:value="reject_reason"
+          :rows="4"
+          placeholder="请输入拒绝原因"
+        />
+      </a-form-item>
     </a-modal>
 
     <!-- 详情对话框 -->
@@ -315,34 +326,34 @@
           {{ detailData.user?.organization?.name || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="操作内容">
-          {{ detailData.operationContent?.name || '-' }}
+          {{ detailData.operation_content?.name || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="动物类型">
-          {{ detailData.animalType?.name || '-' }}
+          {{ detailData.animal_type?.name || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="动物数量">
           {{ detailData.quantity }}
         </a-descriptions-item>
         <a-descriptions-item label="预约日期">
-          {{ detailData.reservationDate || '-' }}
+          {{ detailData.reservation_date || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="预约时段" :span="2">
-          {{ detailData.timeSlots?.join(', ') || '-' }}
+          {{ detailData.time_slots?.join(', ') || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="负责人">
           {{ detailData.handler?.username || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="审核人">
-          {{ detailData.auditBy?.username || '-' }}
+          {{ detailData.audit_by?.username || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="审核时间">
-          {{ detailData.auditTime || '-' }}
+          {{ detailData.audit_time || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="完成时间">
-          {{ detailData.completedTime || '-' }}
+          {{ detailData.completed_time || '-' }}
         </a-descriptions-item>
-        <a-descriptions-item v-if="detailData.rejectReason" label="拒绝原因" :span="2">
-          {{ detailData.rejectReason }}
+        <a-descriptions-item v-if="detailData.reject_reason" label="拒绝原因" :span="2">
+          {{ detailData.reject_reason }}
         </a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">
           {{ detailData.remark || '-' }}
@@ -361,6 +372,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
+import dayjs from 'dayjs'
 import {
   SearchOutlined,
   ReloadOutlined,
@@ -379,6 +391,7 @@ import {
 } from '@/api/experiment'
 import { getAnimalTypeOptions, getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
+import { getAdvanceDays } from '@/api/content'
 import { useUserStore } from '@/store'
 
 const userStore = useUserStore()
@@ -386,14 +399,17 @@ const userStore = useUserStore()
 // ========== 搜索表单 ==========
 
 const searchForm = reactive({
-  userName: '',
-  userPhone: '',
-  operationContentId: undefined,
-  animalTypeId: undefined,
+  user_name: '',
+  user_phone: '',
+  operation_content_id: undefined,
+  animal_type_id: undefined,
   status: undefined
 })
 
 const dateRange = ref([])
+const advanceDays = ref({
+  experiment_advance_days: 7  // 实验操作默认提前7天
+})
 
 const handleSearch = () => {
   pagination.current = 1
@@ -403,9 +419,9 @@ const handleSearch = () => {
 const handleReset = () => {
   Object.assign(searchForm, {
     userName: '',
-    userPhone: '',
-    operationContentId: undefined,
-    animalTypeId: undefined,
+    user_phone: '',
+    operation_content_id: undefined,
+    animal_type_id: undefined,
     status: undefined
   })
   dateRange.value = []
@@ -425,16 +441,21 @@ const pagination = reactive({
 })
 
 const columns = [
-  { title: '用户姓名', dataIndex: ['user', 'name'], width: 120 },
-  { title: '联系电话', dataIndex: ['user', 'phone'], width: 130 },
-  { title: '操作内容', dataIndex: ['operationContent', 'name'], width: 120 },
-  { title: '动物类型', dataIndex: ['animalType', 'name'], width: 100 },
-  { title: '动物数量', dataIndex: 'quantity', width: 100 },
-  { title: '预约日期', dataIndex: 'reservationDate', width: 120 },
-  { title: '预约时段', key: 'timeSlots', width: 200 },
+  {
+    title: '用户信息',
+    key: 'user_info',
+    width: 120,
+  },
+  {
+    title: '动物信息',
+    key: 'animal_info',
+    width: 120,
+  },
+  { title: '预约时间', key: 'time_slots', width: 100 },
   { title: '状态', key: 'status', width: 100 },
-  { title: '创建时间', dataIndex: 'created_at', width: 170 },
-  { title: '操作', key: 'action', fixed: 'right', width: 240 }
+  { title: '创建时间', dataIndex: 'created_at', width: 150 },
+  { title: '更新时间', dataIndex: 'updated_at', width: 150 },
+  { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 
 const fetchTableData = async () => {
@@ -447,8 +468,8 @@ const fetchTableData = async () => {
     }
     
     if (dateRange.value && dateRange.value.length === 2) {
-      params.startDate = dateRange.value[0]
-      params.endDate = dateRange.value[1]
+      params.start_date = dateRange.value[0]
+      params.end_date = dateRange.value[1]
     }
     
     const res = await getExperimentOperationList(params)
@@ -502,22 +523,22 @@ const modalTitle = ref('新增订单')
 const formRef = ref()
 const formData = reactive({
   id: null,
-  userId: undefined,
-  operationContentId: undefined,
-  animalTypeId: undefined,
+  user_id: undefined,
+  operation_content_id: undefined,
+  animal_type_id: undefined,
   quantity: 1,
-  reservationDate: null,
-  timeSlots: [],
+  reservation_date: null,
+  time_slots: [],
   remark: ''
 })
 
 const formRules = {
-  userId: [{ required: true, message: '请选择用户', trigger: 'change' }],
-  operationContentId: [{ required: true, message: '请选择操作内容', trigger: 'change' }],
-  animalTypeId: [{ required: true, message: '请选择动物类型', trigger: 'change' }],
+  user_id: [{ required: true, message: '请选择用户', trigger: 'change' }],
+  operation_content_id: [{ required: true, message: '请选择操作内容', trigger: 'change' }],
+  animal_type_id: [{ required: true, message: '请选择动物类型', trigger: 'change' }],
   quantity: [{ required: true, message: '请输入动物数量', trigger: 'blur' }],
-  reservationDate: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
-  timeSlots: [{ required: true, message: '请选择预约时段', trigger: 'change', type: 'array', min: 1 }]
+  reservation_date: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
+  time_slots: [{ required: true, message: '请选择预约时段', trigger: 'change', type: 'array', min: 1 }]
 }
 
 // 选项数据
@@ -525,7 +546,6 @@ const animalTypeOptions = ref([])
 const operationContentOptions = ref([])
 const timeSlotOptions = ref([])
 const userOptions = ref([])
-const handlerOptions = ref([])
 
 const handleAdd = () => {
   modalTitle.value = '新增订单'
@@ -533,12 +553,12 @@ const handleAdd = () => {
   formRef.value?.resetFields()
   Object.assign(formData, {
     id: null,
-    userId: undefined,
-    operationContentId: undefined,
-    animalTypeId: undefined,
+    user_id: undefined,
+    operation_content_id: undefined,
+    animal_type_id: undefined,
     quantity: 1,
-    reservationDate: null,
-    timeSlots: [],
+    reservation_date: null,
+    time_slots: [],
     remark: ''
   })
 }
@@ -548,12 +568,12 @@ const handleEdit = (record) => {
   modalVisible.value = true
   Object.assign(formData, {
     id: record.id,
-    userId: record.user?.id,
-    operationContentId: record.operationContent?.id,
-    animalTypeId: record.animalType?.id,
+    user_id: record.user?.id,
+    operation_content_id: record.operation_content?.id,
+    animal_type_id: record.animal_type?.id,
     quantity: record.quantity,
-    reservationDate: record.reservationDate,
-    timeSlots: record.timeSlots || [],
+    reservation_date: record.reservation_date,
+    time_slots: record.time_slots || [],
     remark: record.remark
   })
   // 设置用户选项
@@ -566,12 +586,12 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     const data = {
-      userId: formData.userId,
-      operationContentId: formData.operationContentId,
-      animalTypeId: formData.animalTypeId,
+      user_id: formData.user_id,
+      operation_content_id: formData.operation_content_id,
+      animal_type_id: formData.animal_type_id,
       quantity: formData.quantity,
-      reservationDate: formData.reservationDate,
-      timeSlots: formData.timeSlots,
+      reservation_date: formData.reservation_date,
+      time_slots: formData.time_slots,
       remark: formData.remark
     }
     
@@ -597,10 +617,13 @@ const handleModalCancel = () => {
 /**
  * 用户搜索
  */
-const handleUserSearch = async (value) => {
-  if (!value) return
+ const handleUserSearch = async (value) => {
+  if (!value) {
+    userOptions.value = []
+    return
+  }
   try {
-    const res = await getUserList({ name: value, page: 1, pageSize: 20 })
+    const res = await getUserList({ keyword: value, pageSize: 20 })
     userOptions.value = res.data.list
   } catch (error) {
     console.error('搜索用户失败：', error)
@@ -608,56 +631,113 @@ const handleUserSearch = async (value) => {
 }
 
 /**
- * 禁用日期
+ * 禁用日期（根据系统配置的提前预约天数）
  */
 const disabledDate = (current) => {
-  // 禁用今天之前的日期
-  return current && current < new Date().setHours(0, 0, 0, 0)
+  if (!current) return false
+  
+  const today = dayjs().startOf('day')
+  const maxDate = today.add(advanceDays.value.experiment_advance_days, 'day')
+  
+  // 不能选择今天之前的日期，也不能选择超过最大提前预约天数的日期
+  return current < today || current > maxDate
 }
 
-// ========== 审核订单 ==========
+/**
+ * 加载负责人选项
+ */
+ const loadHandlerOptions = async () => {
+  try {
+    const res = await getHandlerOptions()
+    handlerOptions.value = res.data
+  } catch (error) {
+    console.error('获取负责人选项失败：', error)
+  }
+}
+
+/**
+ * 加载提前预约天数配置
+ */
+const loadAdvanceDays = async () => {
+  try {
+    const res = await getAdvanceDays()
+    if (res.data) {
+      advanceDays.value = res.data
+    }
+  } catch (error) {
+    console.error('获取提前预约天数配置失败：', error)
+  }
+}
+
+// ========== 审核 ==========
 
 const approveModalVisible = ref(false)
-const approveFormRef = ref()
-const approveFormData = reactive({
-  id: null,
-  result: 'approve',
-  handlerId: undefined,
-  rejectReason: ''
-})
+const handler_id = ref(undefined)
+const handlerOptions = ref([])
+const currentRecord = ref(null)
 
+/**
+ * 审核通过
+ */
 const handleApprove = (record) => {
+  currentRecord.value = record
+  handler_id.value = undefined
   approveModalVisible.value = true
-  Object.assign(approveFormData, {
-    id: record.id,
-    result: 'approve',
-    handlerId: undefined,
-    rejectReason: ''
-  })
+  // 加载负责人选项
+  loadHandlerOptions()
 }
 
+/**
+ * 提交审核通过
+ */
 const handleApproveSubmit = async () => {
+  if (!handler_id.value) {
+    message.warning('请选择负责人')
+    return
+  }
   try {
-    await approveFormRef.value?.validate()
-    
-    if (approveFormData.result === 'approve') {
-      await auditExperimentOperation(approveFormData.id, {
-        status: 1,
-        handlerId: approveFormData.handlerId
-      })
-      message.success('审核通过')
-    } else {
-      await auditExperimentOperation(approveFormData.id, {
-        status: 2,
-        rejectReason: approveFormData.rejectReason
-      })
-      message.success('已拒绝')
-    }
-    
+    await auditExperimentOperation(currentRecord.value.id, {
+      status: 1,
+      handler_id: handler_id.value
+    })
+    message.success('审核通过')
     approveModalVisible.value = false
     fetchTableData()
   } catch (error) {
     console.error('审核失败：', error)
+  }
+}
+
+const rejectModalVisible = ref(false)
+const reject_reason = ref('')
+
+/**
+ * 审核拒绝
+ */
+const handleReject = (record) => {
+  currentRecord.value = record
+  reject_reason.value = ''
+  rejectModalVisible.value = true
+}
+
+/**
+ * 提交审核拒绝
+ */
+const handleRejectSubmit = async () => {
+  if (!reject_reason.value) {
+    message.warning('请输入拒绝原因')
+    return
+  }
+  try {
+    await auditExperimentOperation(currentRecord.value.id, {
+      status: 2,
+      reject_reason: reject_reason.value
+    })
+    message.success('已拒绝')
+    rejectModalVisible.value = false
+    fetchTableData()
+  } catch (error) {
+    console.error('拒绝失败：', error)
   }
 }
 
@@ -723,6 +803,7 @@ const loadOptions = async () => {
 onMounted(() => {
   fetchTableData()
   loadOptions()
+  loadAdvanceDays()
 })
 </script>
 
