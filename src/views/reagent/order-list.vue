@@ -6,14 +6,14 @@
         <a-form-item label="试剂名称">
           <a-input
             v-model:value="searchForm.name"
-            placeholder="请输入试剂名称"
+            placeholder="输入试剂名称"
             allow-clear
             style="width: 150px"
           />
         </a-form-item>
         <a-form-item label="品牌">
           <a-select
-            v-model:value="searchForm.brandId"
+            v-model:value="searchForm.brand_id"
             placeholder="请选择"
             allow-clear
             style="width: 150px"
@@ -23,28 +23,28 @@
         </a-form-item>
         <a-form-item label="规格">
           <a-select
-            v-model:value="searchForm.specificationId"
+            v-model:value="searchForm.specification_id"
             placeholder="请选择"
             allow-clear
-            style="width: 120px"
+            style="width: 150px"
             :options="specificationOptions"
             :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
         <a-form-item label="订购人">
           <a-input
-            v-model:value="searchForm.ordererName"
-            placeholder="请输入订购人姓名"
+            v-model:value="searchForm.orderer_name"
+            placeholder="输入订购人姓名"
             allow-clear
-            style="width: 120px"
+            style="width: 150px"
           />
         </a-form-item>
         <a-form-item label="联系电话">
           <a-input
-            v-model:value="searchForm.contactPhone"
-            placeholder="请输入联系电话"
+            v-model:value="searchForm.contact_phone"
+            placeholder="输入联系电话"
             allow-clear
-            style="width: 120px"
+            style="width: 150px"
           />
         </a-form-item>
         <a-form-item label="订单状态">
@@ -108,6 +108,17 @@
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'product_info'">
+          <div>名称：{{ record.name }}</div>
+          <div>品牌：{{ record.brand?.name }}</div>
+          <div>规格：{{ record.specification?.name }}</div>
+          <div>数量：{{ record.quantity }}</div>
+        </template>
+        <template v-if="column.key === 'orderer_info'">
+          <div>订购人：{{ record.orderer_name }}</div>
+          <div>联系电话：{{ record.contact_phone }}</div>
+          <div>地址：{{ record.province?.name }} {{ record.city?.name }} {{ record.district?.name }} {{ record.address }}</div>
+        </template>
         <template v-if="column.key === 'status'">
           <a-tag :color="getStatusColor(record.status)">
             {{ getStatusText(record.status) }}
@@ -137,7 +148,16 @@
               size="small"
               @click="handleApprove(record)"
             >
-              审核
+              审核通过
+            </a-button>
+            <a-button
+              v-if="record.status === 0 && userStore.hasPermission('reagent_order:audit')"
+              type="link"
+              danger
+              size="small"
+              @click="handleReject(record)"
+            >
+              审核拒绝
             </a-button>
             <a-button
               v-if="record.status === 1 && userStore.hasPermission('reagent_order:complete')"
@@ -176,12 +196,13 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="预约用户" name="userId">
+      <a-form-item label="用户" name="user_id">
           <a-select
-            v-model:value="formData.userId"
-            placeholder="请选择用户"
+            v-model:value="formData.user_id"
+            placeholder="请输入用户姓名/手机号搜索"
             show-search
             :filter-option="false"
+            :not-found-content="null"
             @search="handleUserSearch"
           >
             <a-select-option
@@ -199,17 +220,17 @@
             placeholder="请输入试剂耗材名称"
           />
         </a-form-item>
-        <a-form-item label="品牌" name="brandId">
+        <a-form-item label="品牌" name="brand_id">
           <a-select
-            v-model:value="formData.brandId"
+            v-model:value="formData.brand_id"
             placeholder="请选择品牌"
             :options="brandOptions"
             :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
-        <a-form-item label="规格" name="specificationId">
+        <a-form-item label="规格" name="specification_id">
           <a-select
-            v-model:value="formData.specificationId"
+            v-model:value="formData.specification_id"
             placeholder="请选择规格"
             :options="specificationOptions"
             :field-names="{ label: 'name', value: 'id' }"
@@ -223,51 +244,39 @@
             style="width: 100%"
           />
         </a-form-item>
-        <a-form-item label="订购人姓名" name="ordererName">
+        <a-form-item label="订购人姓名" name="orderer_name">
           <a-input
-            v-model:value="formData.ordererName"
+            v-model:value="formData.orderer_name"
             placeholder="请输入订购人姓名"
           />
         </a-form-item>
-        <a-form-item label="联系电话" name="contactPhone">
+        <a-form-item label="联系电话" name="contact_phone">
           <a-input
-            v-model:value="formData.contactPhone"
+            v-model:value="formData.contact_phone"
             placeholder="请输入联系电话（11位）"
-            maxlength="11"
+            :maxlength="11"
           />
         </a-form-item>
-        <a-form-item label="到货日期" name="deliveryDate">
+        <a-form-item label="到货日期" name="delivery_date">
           <a-date-picker
-            v-model:value="formData.deliveryDate"
+            v-model:value="formData.delivery_date"
             format="YYYY-MM-DD"
             :value-format="'YYYY-MM-DD'"
             :disabled-date="disabledDate"
             style="width: 100%"
           />
         </a-form-item>
-        <a-form-item label="省份" name="province">
-          <a-input
-            v-model:value="formData.province"
-            placeholder="请输入省份"
+        <a-form-item label="地区" name="region">
+          <RegionCascader
+            v-model:province-id="formData.province_id"
+            v-model:city-id="formData.city_id"
+            v-model:district-id="formData.district_id"
+            select-width="162px"
+            @change="handleRegionChange"
           />
         </a-form-item>
-        <a-form-item label="城市" name="city">
-          <a-input
-            v-model:value="formData.city"
-            placeholder="请输入城市"
-          />
-        </a-form-item>
-        <a-form-item label="区县" name="district">
-          <a-input
-            v-model:value="formData.district"
-            placeholder="请输入区县"
-          />
-        </a-form-item>
-        <a-form-item label="详细地址" name="address">
-          <a-input
-            v-model:value="formData.address"
-            placeholder="请输入详细地址"
-          />
+        <a-form-item label="详细地址">
+          <a-textarea v-model:value="formData.address" :rows="2" placeholder="请输入详细地址" allow-clear />
         </a-form-item>
         <a-form-item label="备注" name="remark">
           <a-textarea
@@ -279,52 +288,35 @@
       </a-form>
     </a-modal>
 
-    <!-- 审核订单对话框 -->
+    <!-- 审核通过对话框 -->
     <a-modal
       v-model:open="approveModalVisible"
-      title="审核订单"
-      :width="500"
+      title="审核通过"
       @ok="handleApproveSubmit"
-      @cancel="approveModalVisible = false"
     >
-      <a-form
-        ref="approveFormRef"
-        :model="approveFormData"
-        :label-col="{ span: 6 }"
-        :wrapper-col="{ span: 16 }"
-      >
-        <a-form-item label="审核结果" name="result">
-          <a-radio-group v-model:value="approveFormData.result">
-            <a-radio value="approve">通过</a-radio>
-            <a-radio value="reject">拒绝</a-radio>
-          </a-radio-group>
-        </a-form-item>
-        <a-form-item
-          v-if="approveFormData.result === 'approve'"
-          label="负责人"
-          name="handlerId"
-          :rules="[{ required: true, message: '请选择负责人' }]"
-        >
-          <a-select
-            v-model:value="approveFormData.handlerId"
-            placeholder="请选择负责人"
-            :options="handlerOptions"
-            :field-names="{ label: 'name', value: 'id' }"
-          />
-        </a-form-item>
-        <a-form-item
-          v-if="approveFormData.result === 'reject'"
-          label="拒绝原因"
-          name="rejectReason"
-          :rules="[{ required: true, message: '请输入拒绝原因' }]"
-        >
-          <a-textarea
-            v-model:value="approveFormData.rejectReason"
-            placeholder="请输入拒绝原因"
-            :rows="4"
-          />
-        </a-form-item>
-      </a-form>
+      <a-form-item label="负责人" name="handler_id">
+        <a-select
+          v-model:value="handler_id"
+          placeholder="请选择负责人"
+          :options="handlerOptions"
+          :field-names="{ label: 'name', value: 'id' }"
+        />
+      </a-form-item>
+    </a-modal>
+
+    <!-- 审核拒绝对话框 -->
+    <a-modal
+      v-model:open="rejectModalVisible"
+      title="审核拒绝"
+      @ok="handleRejectSubmit"
+    >
+      <a-form-item label="拒绝原因">
+        <a-textarea
+          v-model:value="reject_reason"
+          :rows="4"
+          placeholder="请输入拒绝原因"
+        />
+      </a-form-item>
     </a-modal>
 
     <!-- 订单详情对话框 -->
@@ -345,21 +337,21 @@
         <a-descriptions-item label="品牌">{{ detailData.brand?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="规格">{{ detailData.specification?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="数量">{{ detailData.quantity || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="订购人">{{ detailData.ordererName || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="联系电话">{{ detailData.contactPhone || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="到货日期">{{ detailData.deliveryDate || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="省份">{{ detailData.province || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="城市">{{ detailData.city || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="区县">{{ detailData.district || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="详细地址" :span="2">{{ detailData.address || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="订购人">{{ detailData.orderer_name || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="联系电话">{{ detailData.contact_phone || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="到货日期">{{ detailData.delivery_date || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="地址" :span="2">{{ detailData.province?.name }} {{ detailData.city?.name }} {{ detailData.district?.name }} {{ detailData.address || '-' }}</a-descriptions-item>
         <a-descriptions-item label="用户">{{ detailData.user?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="用户手机号">{{ detailData.user?.phone || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="负责人">{{ detailData.handler?.remark || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="拒绝原因" :span="2">{{ detailData.rejectReason || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="负责人">{{ detailData.handler?.name || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="拒绝原因" :span="2">{{ detailData.reject_reason || '-' }}</a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">{{ detailData.remark || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="审核人">
+          {{ detailData.audit_by?.username || '-' }}
+        </a-descriptions-item>
+        <a-descriptions-item label="审核时间">{{ detailData.audit_time || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="完成时间">{{ detailData.completed_time || '-' }}</a-descriptions-item>
         <a-descriptions-item label="创建时间">{{ detailData.created_at || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="审核时间">{{ detailData.auditTime || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="完成时间">{{ detailData.completedTime || '-' }}</a-descriptions-item>
       </a-descriptions>
     </a-modal>
   </div>
@@ -388,6 +380,7 @@ import {
 import { getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
 import { useUserStore } from '@/store'
+import RegionCascader from '@/components/RegionCascader.vue'
 
 const userStore = useUserStore()
 
@@ -395,10 +388,10 @@ const userStore = useUserStore()
 
 const searchForm = reactive({
   name: '',
-  brandId: undefined,
-  specificationId: undefined,
-  ordererName: '',
-  contactPhone: '',
+  brand_id: undefined,
+  specification_id: undefined,
+  orderer_name: '',
+  contact_phone: '',
   status: undefined
 })
 
@@ -418,10 +411,10 @@ const handleSearch = () => {
 const handleReset = () => {
   Object.assign(searchForm, {
     name: '',
-    brandId: undefined,
-    specificationId: undefined,
-    ordererName: '',
-    contactPhone: '',
+    brand_id: undefined,
+    specification_id: undefined,
+    orderer_name: '',
+    contact_phone: '',
     status: undefined
   })
   dateRange.value = []
@@ -444,13 +437,9 @@ const pagination = reactive({
  * 表格列配置
  */
 const columns = [
-  { title: '试剂名称', dataIndex: 'name', width: 150 },
-  { title: '品牌', dataIndex: ['brand', 'name'], width: 120 },
-  { title: '规格', dataIndex: ['specification', 'name'], width: 100 },
-  { title: '数量', dataIndex: 'quantity', width: 80 },
-  { title: '订购人', dataIndex: 'ordererName', width: 100 },
-  { title: '联系电话', dataIndex: 'contactPhone', width: 120 },
-  { title: '到货日期', dataIndex: 'deliveryDate', width: 120 },
+  { title: '产品信息', key: 'product_info', width: 120 },
+  { title: '订购人', key: 'orderer_info', width: 100 },
+  { title: '到货日期', dataIndex: 'delivery_date', width: 120 },
   { title: '状态', key: 'status', width: 100 },
   { title: '创建时间', dataIndex: 'created_at', width: 160 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
@@ -527,43 +516,63 @@ const modalTitle = ref('新增订单')
 const formRef = ref()
 const formData = reactive({
   id: null,
-  userId: undefined,
+  user_id: undefined,
   name: '',
-  brandId: undefined,
-  specificationId: undefined,
+  brand_id: undefined,
+  specification_id: undefined,
   quantity: 1,
-  ordererName: '',
-  contactPhone: '',
-  deliveryDate: null,
-  province: '',
-  city: '',
-  district: '',
+  orderer_name: '',
+  contact_phone: '',
+  delivery_date: null,
+  // 省市区ID（用于RegionCascader组件绑定和提交到后端）
+  province_id: undefined,
+  city_id: undefined,
+  district_id: undefined,
   address: '',
   remark: ''
 })
 
 const formRules = {
-  userId: [{ required: true, message: '请选择用户', trigger: 'change' }],
+  user_id: [{ required: true, message: '请选择用户', trigger: 'change' }],
   name: [{ required: true, message: '请输入试剂名称', trigger: 'blur' }],
-  brandId: [{ required: true, message: '请选择品牌', trigger: 'change' }],
-  specificationId: [{ required: true, message: '请选择规格', trigger: 'change' }],
+  brand_id: [{ required: true, message: '请选择品牌', trigger: 'change' }],
+  specification_id: [{ required: true, message: '请选择规格', trigger: 'change' }],
   quantity: [{ required: true, message: '请输入数量', trigger: 'blur' }],
-  ordererName: [{ required: true, message: '请输入订购人姓名', trigger: 'blur' }],
-  contactPhone: [
+  orderer_name: [{ required: true, message: '请输入订购人姓名', trigger: 'blur' }],
+  contact_phone: [
     { required: true, message: '请输入联系电话', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
   ],
-  deliveryDate: [{ required: true, message: '请选择到货日期', trigger: 'change' }],
-  province: [{ required: true, message: '请输入省份', trigger: 'blur' }],
-  city: [{ required: true, message: '请输入城市', trigger: 'blur' }],
-  district: [{ required: true, message: '请输入区县', trigger: 'blur' }],
+  delivery_date: [{ required: true, message: '请选择到货日期', trigger: 'change' }],
+  region: [
+    {
+      validator: (rule, value) => {
+        // 省市区是可选的，但必须同时提供或同时不提供
+        const hasProvince = !!formData.province_id
+        const hasCity = !!formData.city_id
+        const hasDistrict = !!formData.district_id
+        
+        // 如果都没有，则通过验证
+        if (!hasProvince && !hasCity && !hasDistrict) {
+          return Promise.resolve()
+        }
+        
+        // 如果有部分填写，必须全部填写
+        if (!hasProvince || !hasCity || !hasDistrict) {
+          return Promise.reject('请选择完整的省市区信息，或全部不选')
+        }
+        
+        return Promise.resolve()
+      },
+      trigger: 'change'
+    }
+  ],
   address: [{ required: true, message: '请输入详细地址', trigger: 'blur' }]
 }
 
 // 选项数据
 const brandOptions = ref([])
 const specificationOptions = ref([])
-const handlerOptions = ref([])
 const userOptions = ref([])
 
 /**
@@ -575,17 +584,17 @@ const handleAdd = () => {
   formRef.value?.resetFields()
   Object.assign(formData, {
     id: null,
-    userId: undefined,
+    user_id: undefined,
     name: '',
-    brandId: undefined,
-    specificationId: undefined,
+    brand_id: undefined,
+    specification_id: undefined,
     quantity: 1,
-    ordererName: '',
-    contactPhone: '',
-    deliveryDate: null,
-    province: '',
-    city: '',
-    district: '',
+    orderer_name: '',
+    contact_phone: '',
+    delivery_date: null,
+    province_id: undefined,
+    city_id: undefined,
+    district_id: undefined,
     address: '',
     remark: ''
   })
@@ -599,17 +608,18 @@ const handleEdit = (record) => {
   modalVisible.value = true
   Object.assign(formData, {
     id: record.id,
-    userId: record.user?.id,
+    user_id: record.user?.id,
     name: record.name,
-    brandId: record.brand?.id,
-    specificationId: record.specification?.id,
+    brand_id: record.brand?.id,
+    specification_id: record.specification?.id,
     quantity: record.quantity,
-    ordererName: record.ordererName,
-    contactPhone: record.contactPhone,
-    deliveryDate: record.deliveryDate,
-    province: record.province,
-    city: record.city,
-    district: record.district,
+    orderer_name: record.orderer_name,
+    contact_phone: record.contact_phone,
+    delivery_date: record.delivery_date,
+    // 从响应数据中获取省市区ID
+    province_id: record.province_id,
+    city_id: record.city_id,
+    district_id: record.district_id,
     address: record.address,
     remark: record.remark
   })
@@ -626,19 +636,23 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     const data = {
-      userId: formData.userId,
+      user_id: formData.user_id,
       name: formData.name,
-      brandId: formData.brandId,
-      specificationId: formData.specificationId,
+      brand_id: formData.brand_id,
+      specification_id: formData.specification_id,
       quantity: formData.quantity,
-      ordererName: formData.ordererName,
-      contactPhone: formData.contactPhone,
-      deliveryDate: formData.deliveryDate,
-      province: formData.province,
-      city: formData.city,
-      district: formData.district,
+      orderer_name: formData.orderer_name,
+      contact_phone: formData.contact_phone,
+      delivery_date: formData.delivery_date,
       address: formData.address,
       remark: formData.remark
+    }
+
+    // 省市区ID（可选，但必须同时提供或不提供）
+    if (formData.province_id && formData.city_id && formData.district_id) {
+      data.province_id = formData.province_id
+      data.city_id = formData.city_id
+      data.district_id = formData.district_id
     }
     
     if (formData.id) {
@@ -668,15 +682,23 @@ const handleModalCancel = () => {
 }
 
 /**
+ * 地区变化
+ */
+const handleRegionChange = () => {
+  // 手动触发表单验证
+  formRef.value?.validateFields(['region']).catch(() => {})
+}
+
+/**
  * 用户搜索
  */
-const handleUserSearch = async (value) => {
+ const handleUserSearch = async (value) => {
   if (!value) {
     userOptions.value = []
     return
   }
   try {
-    const res = await getUserList({ phone: value, pageSize: 20 })
+    const res = await getUserList({ keyword: value, pageSize: 20 })
     userOptions.value = res.data.list
   } catch (error) {
     console.error('搜索用户失败：', error)
@@ -690,67 +712,87 @@ const disabledDate = (current) => {
   return current && current < dayjs().startOf('day')
 }
 
-// ========== 审核订单 ==========
+/**
+ * 加载负责人选项
+ */
+ const loadHandlerOptions = async () => {
+  try {
+    const res = await getHandlerOptions()
+    handlerOptions.value = res.data
+  } catch (error) {
+    console.error('获取负责人选项失败：', error)
+  }
+}
+
+// ========== 审核 ==========
 
 const approveModalVisible = ref(false)
-const approveFormRef = ref()
-const approveFormData = reactive({
-  id: null,
-  result: 'approve',
-  handlerId: undefined,
-  rejectReason: ''
-})
+const handler_id = ref(undefined)
+const handlerOptions = ref([])
+const currentRecord = ref(null)
 
 /**
- * 审核
+ * 审核通过
  */
 const handleApprove = (record) => {
+  currentRecord.value = record
+  handler_id.value = undefined
   approveModalVisible.value = true
-  Object.assign(approveFormData, {
-    id: record.id,
-    result: 'approve',
-    handlerId: undefined,
-    rejectReason: ''
-  })
+  // 加载负责人选项
+  loadHandlerOptions()
 }
 
 /**
- * 提交审核
+ * 提交审核通过
  */
 const handleApproveSubmit = async () => {
+  if (!handler_id.value) {
+    message.warning('请选择负责人')
+    return
+  }
   try {
-    await approveFormRef.value?.validate()
-    
-    if (approveFormData.result === 'approve') {
-      if (!approveFormData.handlerId) {
-        message.warning('请选择负责人')
-        return
-      }
-      await auditReagentOrder(approveFormData.id, {
-        status: 1,
-        handlerId: approveFormData.handlerId
-      })
-      message.success('审核通过')
-    } else {
-      if (!approveFormData.rejectReason) {
-        message.warning('请输入拒绝原因')
-        return
-      }
-      await auditReagentOrder(approveFormData.id, {
-        status: 2,
-        rejectReason: approveFormData.rejectReason
-      })
-      message.success('已拒绝')
-    }
-    
+    await auditReagentOrder(currentRecord.value.id, {
+      status: 1,
+      handler_id: handler_id.value
+    })
+    message.success('审核通过')
     approveModalVisible.value = false
     fetchTableData()
   } catch (error) {
-    if (error.errorFields) {
-      return
-    }
     console.error('审核失败：', error)
-    message.error(error.message || '审核失败')
+  }
+}
+
+const rejectModalVisible = ref(false)
+const reject_reason = ref('')
+
+/**
+ * 审核拒绝
+ */
+const handleReject = (record) => {
+  currentRecord.value = record
+  reject_reason.value = ''
+  rejectModalVisible.value = true
+}
+
+/**
+ * 提交审核拒绝
+ */
+const handleRejectSubmit = async () => {
+  if (!reject_reason.value) {
+    message.warning('请输入拒绝原因')
+    return
+  }
+  try {
+    await auditReagentOrder(currentRecord.value.id, {
+      status: 2,
+      reject_reason: reject_reason.value
+    })
+    message.success('已拒绝')
+    rejectModalVisible.value = false
+    fetchTableData()
+  } catch (error) {
+    console.error('拒绝失败：', error)
   }
 }
 
