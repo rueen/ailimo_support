@@ -197,7 +197,7 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-      <a-form-item label="用户" name="user_id">
+        <a-form-item label="用户" name="user_id">
           <a-select
             v-model:value="formData.user_id"
             placeholder="请输入用户姓名/手机号搜索"

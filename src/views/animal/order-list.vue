@@ -5,7 +5,7 @@
       <a-form layout="inline" :model="searchForm">
         <a-form-item label="品牌">
           <a-select
-            v-model:value="searchForm.brandId"
+            v-model:value="searchForm.brand_id"
             placeholder="请选择"
             allow-clear
             style="width: 150px"
@@ -16,18 +16,18 @@
         </a-form-item>
         <a-form-item label="品系">
           <a-select
-            v-model:value="searchForm.varietyId"
+            v-model:value="searchForm.variety_id"
             placeholder="请选择"
             allow-clear
             style="width: 150px"
             :options="varietyOptions"
             :field-names="{ label: 'name', value: 'id' }"
-            :disabled="!searchForm.brandId"
+            :disabled="!searchForm.brand_id"
           />
         </a-form-item>
         <a-form-item label="规格">
           <a-select
-            v-model:value="searchForm.specificationId"
+            v-model:value="searchForm.specification_id"
             placeholder="请选择"
             allow-clear
             style="width: 120px"
@@ -49,7 +49,7 @@
         </a-form-item>
         <a-form-item label="导师姓名">
           <a-input
-            v-model:value="searchForm.supervisorName"
+            v-model:value="searchForm.supervisor_name"
             placeholder="请输入导师姓名"
             allow-clear
             style="width: 120px"
@@ -57,7 +57,7 @@
         </a-form-item>
         <a-form-item label="订购人">
           <a-input
-            v-model:value="searchForm.ordererName"
+            v-model:value="searchForm.orderer_name"
             placeholder="请输入订购人姓名"
             allow-clear
             style="width: 120px"
@@ -65,7 +65,7 @@
         </a-form-item>
         <a-form-item label="联系电话">
           <a-input
-            v-model:value="searchForm.contactPhone"
+            v-model:value="searchForm.contact_phone"
             placeholder="请输入联系电话"
             allow-clear
             style="width: 120px"
@@ -73,7 +73,7 @@
         </a-form-item>
         <a-form-item label="环境">
           <a-select
-            v-model:value="searchForm.environmentId"
+            v-model:value="searchForm.environment_id"
             placeholder="请选择"
             allow-clear
             style="width: 120px"
@@ -83,7 +83,7 @@
         </a-form-item>
         <a-form-item label="要求">
           <a-select
-            v-model:value="searchForm.requirementId"
+            v-model:value="searchForm.requirement_id"
             placeholder="请选择"
             allow-clear
             style="width: 120px"
@@ -152,13 +152,27 @@
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'animal_info'">
+          <div>品牌：{{ record.brand?.name }}</div>
+          <div>品系：{{ record.variety?.name }}</div>
+          <div>规格：{{ record.specification?.name }}</div>
+          <div>性别：{{ record.genderText || getGenderText(record.gender) }}</div>
+        </template>
+        <template v-if="column.key === 'orderer_info'">
+          <div>导师姓名：{{ record.supervisor_name }}</div>
+          <div>订购人：{{ record.orderer_name }}</div>
+          <div>联系电话：{{ record.contact_phone }}</div>
+          <div>地址：{{ record.province?.name }} {{ record.city?.name }} {{ record.district?.name }} {{ record.address }}</div>
+        </template>
+        <template v-if="column.key === 'requirement_info'">
+          <div>环境：{{ record.environment?.name }}</div>
+          <div>要求：{{ record.requirement?.name }}</div>
+          <div>到货日期：{{ record.delivery_date }}</div>
+        </template>
         <template v-if="column.key === 'status'">
           <a-tag :color="getStatusColor(record.status)">
             {{ getStatusText(record.status) }}
           </a-tag>
-        </template>
-        <template v-else-if="column.key === 'gender'">
-          <a-tag>{{ record.genderText || getGenderText(record.gender) }}</a-tag>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -223,12 +237,13 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="预约用户" name="userId">
+        <a-form-item label="用户" name="user_id">
           <a-select
-            v-model:value="formData.userId"
-            placeholder="请选择用户"
+            v-model:value="formData.user_id"
+            placeholder="请输入用户姓名/手机号搜索"
             show-search
             :filter-option="false"
+            :not-found-content="null"
             @search="handleUserSearch"
           >
             <a-select-option
@@ -240,27 +255,27 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="品牌" name="brandId">
+        <a-form-item label="品牌" name="brand_id">
           <a-select
-            v-model:value="formData.brandId"
+            v-model:value="formData.brand_id"
             placeholder="请选择品牌"
             :options="brandOptions"
             :field-names="{ label: 'name', value: 'id' }"
             @change="handleFormBrandChange"
           />
         </a-form-item>
-        <a-form-item label="品系" name="varietyId">
+        <a-form-item label="品系" name="variety_id">
           <a-select
-            v-model:value="formData.varietyId"
+            v-model:value="formData.variety_id"
             placeholder="请先选择品牌"
             :options="formVarietyOptions"
             :field-names="{ label: 'name', value: 'id' }"
-            :disabled="!formData.brandId"
+            :disabled="!formData.brand_id"
           />
         </a-form-item>
-        <a-form-item label="规格" name="specificationId">
+        <a-form-item label="规格" name="specification_id">
           <a-select
-            v-model:value="formData.specificationId"
+            v-model:value="formData.specification_id"
             placeholder="请选择规格"
             :options="specificationOptions"
             :field-names="{ label: 'name', value: 'id' }"
@@ -276,69 +291,57 @@
             <a-select-option :value="2">不限</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="导师姓名" name="supervisorName">
+        <a-form-item label="导师姓名" name="supervisor_name">
           <a-input
-            v-model:value="formData.supervisorName"
+            v-model:value="formData.supervisor_name"
             placeholder="请输入导师姓名"
           />
         </a-form-item>
-        <a-form-item label="订购人姓名" name="ordererName">
+        <a-form-item label="订购人姓名" name="orderer_name">
           <a-input
-            v-model:value="formData.ordererName"
+            v-model:value="formData.orderer_name"
             placeholder="请输入订购人姓名"
           />
         </a-form-item>
-        <a-form-item label="联系电话" name="contactPhone">
+        <a-form-item label="联系电话" name="contact_phone">
           <a-input
-            v-model:value="formData.contactPhone"
+            v-model:value="formData.contact_phone"
             placeholder="请输入联系电话（11位）"
-            maxlength="11"
+            :maxlength="11"
           />
         </a-form-item>
-        <a-form-item label="到货日期" name="deliveryDate">
+        <a-form-item label="到货日期" name="delivery_date">
           <a-date-picker
-            v-model:value="formData.deliveryDate"
+            v-model:value="formData.delivery_date"
             format="YYYY-MM-DD"
             :value-format="'YYYY-MM-DD'"
             :disabled-date="disabledDate"
             style="width: 100%"
           />
         </a-form-item>
-        <a-form-item label="省份" name="province">
-          <a-input
-            v-model:value="formData.province"
-            placeholder="请输入省份"
+        <a-form-item label="地区" name="region">
+          <RegionCascader
+            v-model:province-id="formData.province_id"
+            v-model:city-id="formData.city_id"
+            v-model:district-id="formData.district_id"
+            select-width="162px"
+            @change="handleRegionChange"
           />
         </a-form-item>
-        <a-form-item label="城市" name="city">
-          <a-input
-            v-model:value="formData.city"
-            placeholder="请输入城市"
-          />
+        <a-form-item label="详细地址">
+          <a-textarea v-model:value="formData.address" :rows="2" placeholder="请输入详细地址" allow-clear />
         </a-form-item>
-        <a-form-item label="区县" name="district">
-          <a-input
-            v-model:value="formData.district"
-            placeholder="请输入区县"
-          />
-        </a-form-item>
-        <a-form-item label="详细地址" name="address">
-          <a-input
-            v-model:value="formData.address"
-            placeholder="请输入详细地址"
-          />
-        </a-form-item>
-        <a-form-item label="环境" name="environmentId">
+        <a-form-item label="环境" name="environment_id">
           <a-select
-            v-model:value="formData.environmentId"
+            v-model:value="formData.environment_id"
             placeholder="请选择环境"
             :options="environmentOptions"
             :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
-        <a-form-item label="要求" name="requirementId">
+        <a-form-item label="要求" name="requirement_id">
           <a-select
-            v-model:value="formData.requirementId"
+            v-model:value="formData.requirement_id"
             placeholder="请选择要求"
             :options="requirementOptions"
             :field-names="{ label: 'name', value: 'id' }"
@@ -422,10 +425,10 @@
         <a-descriptions-item label="性别">
           {{ detailData.genderText || getGenderText(detailData.gender) }}
         </a-descriptions-item>
-        <a-descriptions-item label="导师姓名">{{ detailData.supervisorName || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="订购人">{{ detailData.ordererName || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="联系电话">{{ detailData.contactPhone || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="到货日期">{{ detailData.deliveryDate || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="导师姓名">{{ detailData.supervisor_name || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="订购人">{{ detailData.orderer_name || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="联系电话">{{ detailData.contact_phone || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="到货日期">{{ detailData.delivery_date || '-' }}</a-descriptions-item>
         <a-descriptions-item label="省份">{{ detailData.province || '-' }}</a-descriptions-item>
         <a-descriptions-item label="城市">{{ detailData.city || '-' }}</a-descriptions-item>
         <a-descriptions-item label="区县">{{ detailData.district || '-' }}</a-descriptions-item>
@@ -470,21 +473,22 @@ import {
 import { getEnvironmentTypeOptions, getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
 import { useUserStore } from '@/store'
+import RegionCascader from '@/components/RegionCascader.vue'
 
 const userStore = useUserStore()
 
 // ========== 搜索表单 ==========
 
 const searchForm = reactive({
-  brandId: undefined,
-  varietyId: undefined,
-  specificationId: undefined,
+  brand_id: undefined,
+  variety_id: undefined,
+  specification_id: undefined,
   gender: undefined,
-  supervisorName: '',
-  ordererName: '',
-  contactPhone: '',
-  environmentId: undefined,
-  requirementId: undefined,
+  supervisor_name: '',
+  orderer_name: '',
+  contact_phone: '',
+  environment_id: undefined,
+  requirement_id: undefined,
   status: undefined
 })
 
@@ -503,15 +507,15 @@ const handleSearch = () => {
  */
 const handleReset = () => {
   Object.assign(searchForm, {
-    brandId: undefined,
-    varietyId: undefined,
-    specificationId: undefined,
+    brand_id: undefined,
+    variety_id: undefined,
+    specification_id: undefined,
     gender: undefined,
-    supervisorName: '',
-    ordererName: '',
-    contactPhone: '',
-    environmentId: undefined,
-    requirementId: undefined,
+    supervisor_name: '',
+    orderer_name: '',
+    contact_phone: '',
+    environment_id: undefined,
+    requirement_id: undefined,
     status: undefined
   })
   dateRange.value = []
@@ -522,9 +526,9 @@ const handleReset = () => {
  * 品牌变化
  */
 const handleBrandChange = () => {
-  searchForm.varietyId = undefined
-  if (searchForm.brandId) {
-    loadVarietyOptions(searchForm.brandId)
+  searchForm.variety_id = undefined
+  if (searchForm.brand_id) {
+    loadVarietyOptions(searchForm.brand_id)
   } else {
     varietyOptions.value = []
   }
@@ -546,16 +550,9 @@ const pagination = reactive({
  * 表格列配置
  */
 const columns = [
-  { title: '品牌', dataIndex: ['brand', 'name'], width: 120 },
-  { title: '品系', dataIndex: ['variety', 'name'], width: 120 },
-  { title: '规格', dataIndex: ['specification', 'name'], width: 100 },
-  { title: '性别', key: 'gender', width: 80 },
-  { title: '导师姓名', dataIndex: 'supervisorName', width: 100 },
-  { title: '订购人', dataIndex: 'ordererName', width: 100 },
-  { title: '联系电话', dataIndex: 'contactPhone', width: 120 },
-  { title: '到货日期', dataIndex: 'deliveryDate', width: 120 },
-  { title: '环境', dataIndex: ['environment', 'name'], width: 100 },
-  { title: '要求', dataIndex: ['requirement', 'name'], width: 100 },
+  { title: '动物信息', key: 'animal_info', width: 120 },
+  { title: '订购人信息', key: 'orderer_info', width: 120 },
+  { title: '要求信息', key: 'requirement_info', width: 120 },
   { title: '状态', key: 'status', width: 100 },
   { title: '创建时间', dataIndex: 'created_at', width: 160 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
@@ -644,43 +641,64 @@ const modalTitle = ref('新增订单')
 const formRef = ref()
 const formData = reactive({
   id: null,
-  userId: undefined,
-  brandId: undefined,
-  varietyId: undefined,
-  specificationId: undefined,
+  user_id: undefined,
+  brand_id: undefined,
+  variety_id: undefined,
+  specification_id: undefined,
   gender: undefined,
-  supervisorName: '',
-  ordererName: '',
-  contactPhone: '',
-  deliveryDate: null,
-  province: '',
-  city: '',
-  district: '',
+  supervisor_name: '',
+  orderer_name: '',
+  contact_phone: '',
+  delivery_date: null,
+  // 省市区ID（用于RegionCascader组件绑定和提交到后端）
+  province_id: undefined,
+  city_id: undefined,
+  district_id: undefined,
   address: '',
-  environmentId: undefined,
-  requirementId: undefined,
+  environment_id: undefined,
+  requirement_id: undefined,
   remark: ''
 })
 
 const formRules = {
-  userId: [{ required: true, message: '请选择用户', trigger: 'change' }],
-  brandId: [{ required: true, message: '请选择品牌', trigger: 'change' }],
-  varietyId: [{ required: true, message: '请选择品系', trigger: 'change' }],
-  specificationId: [{ required: true, message: '请选择规格', trigger: 'change' }],
+  user_id: [{ required: true, message: '请选择用户', trigger: 'change' }],
+  brand_id: [{ required: true, message: '请选择品牌', trigger: 'change' }],
+  variety_id: [{ required: true, message: '请选择品系', trigger: 'change' }],
+  specification_id: [{ required: true, message: '请选择规格', trigger: 'change' }],
   gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
-  supervisorName: [{ required: true, message: '请输入导师姓名', trigger: 'blur' }],
-  ordererName: [{ required: true, message: '请输入订购人姓名', trigger: 'blur' }],
-  contactPhone: [
+  supervisor_name: [{ required: true, message: '请输入导师姓名', trigger: 'blur' }],
+  orderer_name: [{ required: true, message: '请输入订购人姓名', trigger: 'blur' }],
+  contact_phone: [
     { required: true, message: '请输入联系电话', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
   ],
-  deliveryDate: [{ required: true, message: '请选择到货日期', trigger: 'change' }],
-  province: [{ required: true, message: '请输入省份', trigger: 'blur' }],
-  city: [{ required: true, message: '请输入城市', trigger: 'blur' }],
-  district: [{ required: true, message: '请输入区县', trigger: 'blur' }],
+  delivery_date: [{ required: true, message: '请选择到货日期', trigger: 'change' }],
+  region: [
+    {
+      validator: (rule, value) => {
+        // 省市区是可选的，但必须同时提供或同时不提供
+        const hasProvince = !!formData.province_id
+        const hasCity = !!formData.city_id
+        const hasDistrict = !!formData.district_id
+        
+        // 如果都没有，则通过验证
+        if (!hasProvince && !hasCity && !hasDistrict) {
+          return Promise.resolve()
+        }
+        
+        // 如果有部分填写，必须全部填写
+        if (!hasProvince || !hasCity || !hasDistrict) {
+          return Promise.reject('请选择完整的省市区信息，或全部不选')
+        }
+        
+        return Promise.resolve()
+      },
+      trigger: 'change'
+    }
+  ],
   address: [{ required: true, message: '请输入详细地址', trigger: 'blur' }],
-  environmentId: [{ required: true, message: '请选择环境', trigger: 'change' }],
-  requirementId: [{ required: true, message: '请选择要求', trigger: 'change' }]
+  environment_id: [{ required: true, message: '请选择环境', trigger: 'change' }],
+  requirement_id: [{ required: true, message: '请选择要求', trigger: 'change' }]
 }
 
 // 选项数据
@@ -708,21 +726,21 @@ const handleAdd = () => {
   formRef.value?.resetFields()
   Object.assign(formData, {
     id: null,
-    userId: undefined,
-    brandId: undefined,
-    varietyId: undefined,
-    specificationId: undefined,
+    user_id: undefined,
+    brand_id: undefined,
+    variety_id: undefined,
+    specification_id: undefined,
     gender: undefined,
-    supervisorName: '',
-    ordererName: '',
-    contactPhone: '',
-    deliveryDate: null,
-    province: '',
-    city: '',
-    district: '',
+    supervisor_name: '',
+    orderer_name: '',
+    contact_phone: '',
+    delivery_date: null,
+    province_id: undefined,
+    city_id: undefined,
+    district_id: undefined,
     address: '',
-    environmentId: undefined,
-    requirementId: undefined,
+    environment_id: undefined,
+    requirement_id: undefined,
     remark: ''
   })
   varietyOptions.value = []
@@ -736,21 +754,22 @@ const handleEdit = (record) => {
   modalVisible.value = true
   Object.assign(formData, {
     id: record.id,
-    userId: record.user?.id,
-    brandId: record.brand?.id,
-    varietyId: record.variety?.id,
-    specificationId: record.specification?.id,
+    user_id: record.user?.id,
+    brand_id: record.brand?.id,
+    variety_id: record.variety?.id,
+    specification_id: record.specification?.id,
     gender: record.gender,
-    supervisorName: record.supervisorName,
-    ordererName: record.ordererName,
-    contactPhone: record.contactPhone,
-    deliveryDate: record.deliveryDate,
-    province: record.province,
-    city: record.city,
-    district: record.district,
+    supervisor_name: record.supervisor_name,
+    orderer_name: record.orderer_name,
+    contact_phone: record.contact_phone,
+    delivery_date: record.delivery_date,
+    // 从响应数据中获取省市区ID
+    province_id: record.province_id,
+    city_id: record.city_id,
+    district_id: record.district_id,
     address: record.address,
-    environmentId: record.environment?.id,
-    requirementId: record.requirement?.id,
+    environment_id: record.environment?.id,
+    requirement_id: record.requirement?.id,
     remark: record.remark
   })
   // 设置用户选项
@@ -770,22 +789,26 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     const data = {
-      userId: formData.userId,
-      brandId: formData.brandId,
-      varietyId: formData.varietyId,
-      specificationId: formData.specificationId,
+      user_id: formData.user_id,
+      brand_id: formData.brand_id,
+      variety_id: formData.variety_id,
+      specification_id: formData.specification_id,
       gender: formData.gender,
-      supervisorName: formData.supervisorName,
-      ordererName: formData.ordererName,
-      contactPhone: formData.contactPhone,
-      deliveryDate: formData.deliveryDate,
-      province: formData.province,
-      city: formData.city,
-      district: formData.district,
+      supervisor_name: formData.supervisor_name,
+      orderer_name: formData.orderer_name,
+      contact_phone: formData.contact_phone,
+      delivery_date: formData.delivery_date,
       address: formData.address,
-      environmentId: formData.environmentId,
-      requirementId: formData.requirementId,
+      environment_id: formData.environment_id,
+      requirement_id: formData.requirement_id,
       remark: formData.remark
+    }
+
+    // 省市区ID（可选，但必须同时提供或不提供）
+    if (formData.province_id && formData.city_id && formData.district_id) {
+      data.province_id = formData.province_id
+      data.city_id = formData.city_id
+      data.district_id = formData.district_id
     }
     
     if (formData.id) {
@@ -815,12 +838,20 @@ const handleModalCancel = () => {
 }
 
 /**
+ * 地区变化
+ */
+const handleRegionChange = () => {
+  // 手动触发表单验证
+  formRef.value?.validateFields(['region']).catch(() => {})
+}
+
+/**
  * 表单中品牌变化
  */
 const handleFormBrandChange = () => {
-  formData.varietyId = undefined
-  if (formData.brandId) {
-    loadVarietyOptions(formData.brandId)
+  formData.variety_id = undefined
+  if (formData.brand_id) {
+    loadVarietyOptions(formData.brand_id)
   } else {
     varietyOptions.value = []
   }
@@ -835,7 +866,7 @@ const handleUserSearch = async (value) => {
     return
   }
   try {
-    const res = await getUserList({ phone: value, pageSize: 20 })
+    const res = await getUserList({ keyword: value, pageSize: 20 })
     userOptions.value = res.data.list
   } catch (error) {
     console.error('搜索用户失败：', error)
@@ -967,13 +998,13 @@ const handleView = async (record) => {
 /**
  * 加载品系选项（根据品牌）
  */
-const loadVarietyOptions = async (brandId) => {
-  if (!brandId) {
+const loadVarietyOptions = async (brand_id) => {
+  if (!brand_id) {
     varietyOptions.value = []
     return
   }
   try {
-    const res = await getAnimalVarietyOptions({ brandId })
+    const res = await getAnimalVarietyOptions({ brand_id })
     varietyOptions.value = res.data
   } catch (error) {
     console.error('获取品系选项失败：', error)

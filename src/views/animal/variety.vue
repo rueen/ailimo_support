@@ -3,10 +3,10 @@
     <!-- 搜索表单 -->
     <div class="search-form">
       <a-form layout="inline" :model="searchForm">
-        <a-form-item label="品牌">
+        <a-form-item label="所属品牌">
           <a-select
-            v-model:value="searchForm.brandId"
-            placeholder="请选择品牌"
+            v-model:value="searchForm.brand_id"
+            placeholder="选择所属品牌"
             allow-clear
             style="width: 200px"
             :options="brandOptions"
@@ -16,7 +16,7 @@
         <a-form-item label="品系名称">
           <a-input
             v-model:value="searchForm.name"
-            placeholder="请输入品系名称"
+            placeholder="输入品系名称"
             allow-clear
             style="width: 150px"
           />
@@ -97,9 +97,9 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="品牌" name="brandId">
+        <a-form-item label="品牌" name="brand_id">
           <a-select
-            v-model:value="formData.brandId"
+            v-model:value="formData.brand_id"
             placeholder="请选择品牌"
             :options="brandOptions"
             :field-names="{ label: 'name', value: 'id' }"
@@ -139,7 +139,7 @@ const userStore = useUserStore()
 
 const searchForm = reactive({
   name: '',
-  brandId: undefined
+  brand_id: undefined
 })
 
 /**
@@ -156,7 +156,7 @@ const handleSearch = () => {
 const handleReset = () => {
   Object.assign(searchForm, {
     name: '',
-    brandId: undefined
+    brand_id: undefined
   })
   handleSearch()
 }
@@ -226,12 +226,12 @@ const formRef = ref()
 const formData = reactive({
   id: null,
   name: '',
-  brandId: undefined
+  brand_id: undefined
 })
 
 const formRules = {
   name: [{ required: true, message: '请输入品系名称', trigger: 'blur' }],
-  brandId: [{ required: true, message: '请选择品牌', trigger: 'change' }]
+  brand_id: [{ required: true, message: '请选择品牌', trigger: 'change' }]
 }
 
 /**
@@ -244,7 +244,7 @@ const handleAdd = () => {
   Object.assign(formData, {
     id: null,
     name: '',
-    brandId: undefined
+    brand_id: undefined
   })
 }
 
@@ -257,7 +257,7 @@ const handleEdit = (record) => {
   Object.assign(formData, {
     id: record.id,
     name: record.name,
-    brandId: record.brand?.id
+    brand_id: record.brand?.id
   })
 }
 
@@ -269,7 +269,7 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     const data = {
       name: formData.name,
-      brandId: formData.brandId
+      brand_id: formData.brand_id
     }
     
     if (formData.id) {
