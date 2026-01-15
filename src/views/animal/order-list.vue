@@ -147,7 +147,6 @@
       :data-source="tableData"
       :loading="loading"
       :pagination="pagination"
-      :scroll="{ x: 1800 }"
       row-key="id"
       @change="handleTableChange"
     >
@@ -198,16 +197,26 @@
               size="small"
               @click="handleApprove(record)"
             >
-              审核
+              审核通过
             </a-button>
             <a-button
-              v-if="record.status === 1 && userStore.hasPermission('animal_order:complete')"
+              v-if="record.status === 0 && userStore.hasPermission('animal_order:audit')"
               type="link"
+              danger
               size="small"
-              @click="handleComplete(record)"
+              @click="handleReject(record)"
             >
-              完成
+              审核拒绝
             </a-button>
+            <a-popconfirm
+              v-if="record.status === 1 && userStore.hasPermission('animal_order:complete')"
+              title="确定完成该订单吗？"
+              @confirm="handleComplete(record)"
+            >
+              <a-button type="link" danger size="small">
+                完成
+              </a-button>
+            </a-popconfirm>
             <a-popconfirm
               v-if="record.status === 1 && userStore.hasPermission('animal_order:cancel')"
               title="确定取消该订单吗？"
@@ -357,52 +366,35 @@
       </a-form>
     </a-modal>
 
-    <!-- 审核订单对话框 -->
+    <!-- 审核通过对话框 -->
     <a-modal
       v-model:open="approveModalVisible"
-      title="审核订单"
-      :width="500"
+      title="审核通过"
       @ok="handleApproveSubmit"
-      @cancel="approveModalVisible = false"
     >
-      <a-form
-        ref="approveFormRef"
-        :model="approveFormData"
-        :label-col="{ span: 6 }"
-        :wrapper-col="{ span: 16 }"
-      >
-        <a-form-item label="审核结果" name="result">
-          <a-radio-group v-model:value="approveFormData.result">
-            <a-radio value="approve">通过</a-radio>
-            <a-radio value="reject">拒绝</a-radio>
-          </a-radio-group>
-        </a-form-item>
-        <a-form-item
-          v-if="approveFormData.result === 'approve'"
-          label="负责人"
-          name="handlerId"
-          :rules="[{ required: true, message: '请选择负责人' }]"
-        >
-          <a-select
-            v-model:value="approveFormData.handlerId"
-            placeholder="请选择负责人"
-            :options="handlerOptions"
-            :field-names="{ label: 'name', value: 'id' }"
-          />
-        </a-form-item>
-        <a-form-item
-          v-if="approveFormData.result === 'reject'"
-          label="拒绝原因"
-          name="rejectReason"
-          :rules="[{ required: true, message: '请输入拒绝原因' }]"
-        >
-          <a-textarea
-            v-model:value="approveFormData.rejectReason"
-            placeholder="请输入拒绝原因"
-            :rows="4"
-          />
-        </a-form-item>
-      </a-form>
+      <a-form-item label="负责人" name="handler_id">
+        <a-select
+          v-model:value="handler_id"
+          placeholder="请选择负责人"
+          :options="handlerOptions"
+          :field-names="{ label: 'name', value: 'id' }"
+        />
+      </a-form-item>
+    </a-modal>
+
+    <!-- 审核拒绝对话框 -->
+    <a-modal
+      v-model:open="rejectModalVisible"
+      title="审核拒绝"
+      @ok="handleRejectSubmit"
+    >
+      <a-form-item label="拒绝原因">
+        <a-textarea
+          v-model:value="reject_reason"
+          :rows="4"
+          placeholder="请输入拒绝原因"
+        />
+      </a-form-item>
     </a-modal>
 
     <!-- 订单详情对话框 -->
@@ -429,20 +421,21 @@
         <a-descriptions-item label="订购人">{{ detailData.orderer_name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="联系电话">{{ detailData.contact_phone || '-' }}</a-descriptions-item>
         <a-descriptions-item label="到货日期">{{ detailData.delivery_date || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="省份">{{ detailData.province || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="城市">{{ detailData.city || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="区县">{{ detailData.district || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="详细地址" :span="2">{{ detailData.address || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="地址" :span="2">{{ detailData.province?.name }} {{ detailData.city?.name }} {{ detailData.district?.name }} {{ detailData.address || '-' }}</a-descriptions-item>
         <a-descriptions-item label="环境">{{ detailData.environment?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="要求">{{ detailData.requirement?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="用户">{{ detailData.user?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="用户手机号">{{ detailData.user?.phone || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="负责人">{{ detailData.handler?.remark || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="拒绝原因" :span="2">{{ detailData.rejectReason || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="负责人">{{ detailData.handler?.name || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="拒绝原因" :span="2">{{ detailData.reject_reason || '-' }}</a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">{{ detailData.remark || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="审核人">
+          {{ detailData.audit_by?.username || '-' }}
+        </a-descriptions-item>
+        <a-descriptions-item label="审核时间">{{ detailData.audit_time || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="完成时间">{{ detailData.completed_time || '-' }}</a-descriptions-item>
         <a-descriptions-item label="创建时间">{{ detailData.created_at || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="审核时间">{{ detailData.auditTime || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="完成时间">{{ detailData.completedTime || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="更新时间">{{ detailData.updated_at || '-' }}</a-descriptions-item>
       </a-descriptions>
     </a-modal>
   </div>
@@ -550,11 +543,11 @@ const pagination = reactive({
  * 表格列配置
  */
 const columns = [
-  { title: '动物信息', key: 'animal_info', width: 120 },
-  { title: '订购人信息', key: 'orderer_info', width: 120 },
-  { title: '要求信息', key: 'requirement_info', width: 120 },
+  { title: '动物信息', key: 'animal_info', width: 100 },
+  { title: '订购人信息', key: 'orderer_info', width: 100 },
+  { title: '要求信息', key: 'requirement_info', width: 100 },
   { title: '状态', key: 'status', width: 100 },
-  { title: '创建时间', dataIndex: 'created_at', width: 160 },
+  { title: '创建时间', dataIndex: 'created_at', width: 120 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 
@@ -707,7 +700,6 @@ const varietyOptions = ref([])
 const specificationOptions = ref([])
 const requirementOptions = ref([])
 const environmentOptions = ref([])
-const handlerOptions = ref([])
 const userOptions = ref([])
 
 /**
@@ -880,67 +872,87 @@ const disabledDate = (current) => {
   return current && current < dayjs().startOf('day')
 }
 
-// ========== 审核订单 ==========
+/**
+ * 加载负责人选项
+ */
+const loadHandlerOptions = async () => {
+  try {
+    const res = await getHandlerOptions()
+    handlerOptions.value = res.data
+  } catch (error) {
+    console.error('获取负责人选项失败：', error)
+  }
+}
+
+// ========== 审核 ==========
 
 const approveModalVisible = ref(false)
-const approveFormRef = ref()
-const approveFormData = reactive({
-  id: null,
-  result: 'approve',
-  handlerId: undefined,
-  rejectReason: ''
-})
+const handler_id = ref(undefined)
+const handlerOptions = ref([])
+const currentRecord = ref(null)
 
 /**
- * 审核
+ * 审核通过
  */
 const handleApprove = (record) => {
+  currentRecord.value = record
+  handler_id.value = undefined
   approveModalVisible.value = true
-  Object.assign(approveFormData, {
-    id: record.id,
-    result: 'approve',
-    handlerId: undefined,
-    rejectReason: ''
-  })
+  // 加载负责人选项
+  loadHandlerOptions()
 }
 
 /**
- * 提交审核
+ * 提交审核通过
  */
 const handleApproveSubmit = async () => {
+  if (!handler_id.value) {
+    message.warning('请选择负责人')
+    return
+  }
   try {
-    await approveFormRef.value?.validate()
-    
-    if (approveFormData.result === 'approve') {
-      if (!approveFormData.handlerId) {
-        message.warning('请选择负责人')
-        return
-      }
-      await auditAnimalOrder(approveFormData.id, {
-        status: 1,
-        handlerId: approveFormData.handlerId
-      })
-      message.success('审核通过')
-    } else {
-      if (!approveFormData.rejectReason) {
-        message.warning('请输入拒绝原因')
-        return
-      }
-      await auditAnimalOrder(approveFormData.id, {
-        status: 2,
-        rejectReason: approveFormData.rejectReason
-      })
-      message.success('已拒绝')
-    }
-    
+    await auditAnimalOrder(currentRecord.value.id, {
+      status: 1,
+      handler_id: handler_id.value
+    })
+    message.success('审核通过')
     approveModalVisible.value = false
     fetchTableData()
   } catch (error) {
-    if (error.errorFields) {
-      return
-    }
     console.error('审核失败：', error)
-    message.error(error.message || '审核失败')
+  }
+}
+
+const rejectModalVisible = ref(false)
+const reject_reason = ref('')
+
+/**
+ * 审核拒绝
+ */
+const handleReject = (record) => {
+  currentRecord.value = record
+  reject_reason.value = ''
+  rejectModalVisible.value = true
+}
+
+/**
+ * 提交审核拒绝
+ */
+const handleRejectSubmit = async () => {
+  if (!reject_reason.value) {
+    message.warning('请输入拒绝原因')
+    return
+  }
+  try {
+    await auditAnimalOrder(currentRecord.value.id, {
+      status: 2,
+      reject_reason: reject_reason.value
+    })
+    message.success('已拒绝')
+    rejectModalVisible.value = false
+    fetchTableData()
+  } catch (error) {
+    console.error('拒绝失败：', error)
   }
 }
 
