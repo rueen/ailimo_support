@@ -88,23 +88,6 @@ export function updateCompanyInfo(data) {
   })
 }
 
-// ========== 文件上传 ==========
-
-/**
- * 上传图片
- * @param {FormData} formData - 表单数据
- */
-export function uploadImage(formData) {
-  return request({
-    url: '/support/upload/image',
-    method: 'POST',
-    data: formData,
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  })
-}
-
 // ========== 统计数据 ==========
 
 /**

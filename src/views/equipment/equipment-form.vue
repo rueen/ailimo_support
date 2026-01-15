@@ -35,17 +35,21 @@
         <a-upload
           v-model:file-list="fileList"
           list-type="picture-card"
+          :custom-request="handleUpload"
           :before-upload="beforeUpload"
           @preview="handlePreview"
           @remove="handleRemove"
+          accept="image/*"
+          :multiple="true"
         >
-          <div v-if="fileList.length < 5">
-            <PlusOutlined />
-            <div style="margin-top: 8px">上传</div>
+          <div v-if="fileList.length < 10">
+            <LoadingOutlined v-if="uploading" />
+            <PlusOutlined v-else />
+            <div style="margin-top: 8px">{{ uploading ? '上传中' : '上传' }}</div>
           </div>
         </a-upload>
         <div style="color: #999; margin-top: 8px">
-          最多上传5张图片，单张图片不超过5MB
+          最多上传10张图片，支持 jpg、png、gif、webp 格式，单张图片不超过5MB，上传前会自动压缩
         </div>
       </a-form-item>
       
@@ -77,13 +81,15 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { useRoute, useRouter } from 'vue-router'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, LoadingOutlined } from '@ant-design/icons-vue'
 import PageHeader from '@/components/PageHeader.vue'
 import {
   getEquipmentDetail,
   createEquipment,
   updateEquipment
 } from '@/api/equipment'
+import { uploadImage } from '@/api/upload'
+import { compressImage } from '@/utils/imageCompress'
 
 const route = useRoute()
 const router = useRouter()
@@ -110,6 +116,7 @@ const formRules = {
 }
 
 const fileList = ref([])
+const uploading = ref(false)
 
 /**
  * 加载设备详情（编辑时）
@@ -200,23 +207,77 @@ const previewVisible = ref(false)
 const previewImage = ref('')
 
 /**
- * 上传前处理
+ * 上传前校验
  */
 const beforeUpload = (file) => {
+  // 检查文件类型
   const isImage = file.type.startsWith('image/')
   if (!isImage) {
     message.error('只能上传图片文件！')
     return false
   }
+  
+  // 检查文件格式
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    message.error('只支持 jpg、png、gif、webp 格式的图片！')
+    return false
+  }
+  
+  // 检查文件大小
   const isLt5M = file.size / 1024 / 1024 < 5
   if (!isLt5M) {
     message.error('图片大小不能超过 5MB！')
     return false
   }
   
-  // TODO: 实现实际的图片上传逻辑
-  message.warning('图片上传功能需要配置 OSS')
-  return false
+  // 检查数量
+  if (fileList.value.length >= 5) {
+    message.error('最多只能上传 5 张图片！')
+    return false
+  }
+  
+  return true
+}
+
+/**
+ * 自定义上传
+ */
+const handleUpload = async ({ file, onProgress, onSuccess, onError }) => {
+  try {
+    uploading.value = true
+    
+    // 压缩图片
+    message.loading({ content: '正在压缩图片...', key: 'compress', duration: 0 })
+    const compressedFile = await compressImage(file, {
+      maxWidth: 1920,
+      maxHeight: 1080,
+      quality: 0.8,
+      maxSize: 500 // 压缩到 500KB 以内
+    })
+    message.destroy('compress')
+    
+    // 上传图片
+    const res = await uploadImage(compressedFile, {
+      directory: 'equipment',
+      onProgress: (percent) => {
+        onProgress({ percent })
+      }
+    })
+    
+    if (res.code === 200 && res.data?.url) {
+      onSuccess(res.data)
+      message.success('上传成功')
+    } else {
+      throw new Error(res.message || '上传失败')
+    }
+  } catch (error) {
+    console.error('上传失败：', error)
+    message.error(error.message || '上传失败')
+    onError(error)
+  } finally {
+    uploading.value = false
+  }
 }
 
 /**
