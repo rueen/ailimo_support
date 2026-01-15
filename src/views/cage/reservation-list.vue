@@ -100,13 +100,30 @@
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'user_info'">
+          <div>{{ record.user?.name }}</div>
+          <div>{{ record.user?.phone }}</div>
+        </template>
+        <template v-if="column.key === 'cage_info'">
+          <div>动物类型：{{ record.animal_type?.name }}</div>
+          <div>环境类型：{{ record.environment?.name }}</div>
+          <div>笼位数量：{{ record.quantity }}</div>
+        </template>
+        <template v-if="column.key === 'time_slots'">
+          <div>{{ record.reservation_date }}</div>
+          <a-tag
+            v-for="(slot, index) in record.time_slots"
+            :key="index"
+            color="blue"
+            style="margin-bottom: 4px"
+          >
+            {{ slot }}
+          </a-tag>
+        </template>
         <template v-if="column.key === 'status'">
           <a-tag :color="getStatusColor(record.status)">
             {{ getStatusText(record.status) }}
           </a-tag>
-        </template>
-        <template v-else-if="column.key === 'time_slots'">
-          {{ record.time_slots?.join(', ') || '-' }}
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -132,7 +149,16 @@
               size="small"
               @click="handleApprove(record)"
             >
-              审核
+              审核通过
+            </a-button>
+            <a-button
+              v-if="record.status === 0 && userStore.hasPermission('cage_reservation:audit')"
+              type="link"
+              danger
+              size="small"
+              @click="handleReject(record)"
+            >
+              审核拒绝
             </a-button>
             <a-button
               v-if="record.status === 1 && userStore.hasPermission('cage_reservation:complete')"
@@ -273,51 +299,35 @@
       </a-form>
     </a-modal>
 
-    <!-- 审核对话框 -->
+    <!-- 审核通过对话框 -->
     <a-modal
       v-model:open="approveModalVisible"
-      title="审核订单"
-      :width="600"
+      title="审核通过"
       @ok="handleApproveSubmit"
     >
-      <a-form
-        ref="approveFormRef"
-        :model="approveFormData"
-        :label-col="{ span: 6 }"
-        :wrapper-col="{ span: 16 }"
-      >
-        <a-form-item label="审核结果">
-          <a-radio-group v-model:value="approveFormData.result">
-            <a-radio :value="'approve'">通过</a-radio>
-            <a-radio :value="'reject'">拒绝</a-radio>
-          </a-radio-group>
-        </a-form-item>
-        <a-form-item
-          v-if="approveFormData.result === 'approve'"
-          label="负责人"
-          name="handlerId"
-          :rules="[{ required: true, message: '请选择负责人' }]"
-        >
-          <a-select
-            v-model:value="approveFormData.handlerId"
-            placeholder="请选择负责人"
-            :options="handlerOptions"
-            :field-names="{ label: 'username', value: 'id' }"
-          />
-        </a-form-item>
-        <a-form-item
-          v-if="approveFormData.result === 'reject'"
-          label="拒绝原因"
-          name="rejectReason"
-          :rules="[{ required: true, message: '请输入拒绝原因' }]"
-        >
-          <a-textarea
-            v-model:value="approveFormData.rejectReason"
-            :rows="4"
-            placeholder="请输入拒绝原因"
-          />
-        </a-form-item>
-      </a-form>
+      <a-form-item label="负责人" name="handler_id">
+        <a-select
+          v-model:value="handler_id"
+          placeholder="请选择负责人"
+          :options="handlerOptions"
+          :field-names="{ label: 'name', value: 'id' }"
+        />
+      </a-form-item>
+    </a-modal>
+
+    <!-- 审核拒绝对话框 -->
+    <a-modal
+      v-model:open="rejectModalVisible"
+      title="审核拒绝"
+      @ok="handleRejectSubmit"
+    >
+      <a-form-item label="拒绝原因">
+        <a-textarea
+          v-model:value="reject_reason"
+          :rows="4"
+          placeholder="请输入拒绝原因"
+        />
+      </a-form-item>
     </a-modal>
 
     <!-- 详情对话框 -->
@@ -395,6 +405,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
+import dayjs from 'dayjs'
 import {
   SearchOutlined,
   ReloadOutlined,
@@ -409,12 +420,12 @@ import {
   completeCageReservation,
   cancelCageReservation,
   getCagePurposeOptions,
-  getCageTimeSlotOptions,
   getEnvironmentsByAnimalType,
   getCageAvailableTimeSlots
 } from '@/api/cage'
 import { getAnimalTypeOptions, getEnvironmentTypeOptions, getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
+import { getAdvanceDays } from '@/api/content'
 import { useUserStore } from '@/store'
 
 const userStore = useUserStore()
@@ -461,17 +472,14 @@ const pagination = reactive({
 })
 
 const columns = [
-  { title: '用户姓名', dataIndex: ['user', 'name'], width: 120 },
-  { title: '联系电话', dataIndex: ['user', 'phone'], width: 130 },
-  { title: '动物类型', dataIndex: ['animal_type', 'name'], width: 100 },
-  { title: '环境类型', dataIndex: ['environment', 'name'], width: 100 },
-  { title: '笼位数量', dataIndex: 'quantity', width: 100 },
+  { title: '用户信息', key: 'user_info', width: 120 },
+  { title: '笼位信息', key: 'cage_info', width: 120 },
   { title: '用途', dataIndex: ['purpose', 'name'], width: 100 },
-  { title: '预约日期', dataIndex: 'reservation_date', width: 120 },
-  { title: '预约时段', key: 'time_slots', width: 180 },
+  { title: '预约时间', key: 'time_slots', width: 100 },
   { title: '状态', key: 'status', width: 100 },
-  { title: '创建时间', dataIndex: 'created_at', width: 170 },
-  { title: '操作', key: 'action', fixed: 'right', width: 240 }
+  { title: '创建时间', dataIndex: 'created_at', width: 150 },
+  { title: '更新时间', dataIndex: 'updated_at', width: 150 },
+  { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 
 const fetchTableData = async () => {
@@ -484,8 +492,8 @@ const fetchTableData = async () => {
     }
     
     if (dateRange.value && dateRange.value.length === 2) {
-      params.startDate = dateRange.value[0]
-      params.endDate = dateRange.value[1]
+      params.start_date = dateRange.value[0]
+      params.end_date = dateRange.value[1]
     }
     
     const res = await getCageReservationList(params)
@@ -580,7 +588,6 @@ const timeSlotOptions = ref([])
 const timeSlotQuantityMap = ref({}) // 时间段可用数量映射
 const totalCageQuantity = ref(0) // 总笼位数量
 const userOptions = ref([])
-const handlerOptions = ref([])
 
 const handleAdd = () => {
   modalTitle.value = '新增订单'
@@ -785,56 +792,116 @@ const getMaxQuantity = () => {
 }
 
 /**
- * 禁用日期
+ * 禁用日期（根据系统配置的提前预约天数）
  */
-const disabledDate = (current) => {
-  // 禁用今天之前的日期
-  return current && current < new Date().setHours(0, 0, 0, 0)
+ const disabledDate = (current) => {
+  if (!current) return false
+  
+  const today = dayjs().startOf('day')
+  const maxDate = today.add(advanceDays.value.cage_advance_days, 'day')
+  
+  // 不能选择今天之前的日期，也不能选择超过最大提前预约天数的日期
+  return current < today || current > maxDate
 }
 
-// ========== 审核订单 ==========
+/**
+ * 加载负责人选项
+ */
+ const loadHandlerOptions = async () => {
+  try {
+    const res = await getHandlerOptions()
+    handlerOptions.value = res.data
+  } catch (error) {
+    console.error('获取负责人选项失败：', error)
+  }
+}
+
+const advanceDays = ref({
+  cage_advance_days: 7  // 笼位默认提前7天
+})
+/**
+ * 加载提前预约天数配置
+ */
+ const loadAdvanceDays = async () => {
+  try {
+    const res = await getAdvanceDays()
+    if (res.data) {
+      advanceDays.value = res.data
+    }
+  } catch (error) {
+    console.error('获取提前预约天数配置失败：', error)
+  }
+}
+
+// ========== 审核 ==========
 
 const approveModalVisible = ref(false)
-const approveFormRef = ref()
-const approveFormData = reactive({
-  id: null,
-  result: 'approve',
-  handlerId: undefined,
-  rejectReason: ''
-})
+const handler_id = ref(undefined)
+const handlerOptions = ref([])
+const currentRecord = ref(null)
 
+/**
+ * 审核通过
+ */
 const handleApprove = (record) => {
+  currentRecord.value = record
+  handler_id.value = undefined
   approveModalVisible.value = true
-  Object.assign(approveFormData, {
-    id: record.id,
-    result: 'approve',
-    handlerId: undefined,
-    rejectReason: ''
-  })
+  // 加载负责人选项
+  loadHandlerOptions()
 }
 
+/**
+ * 提交审核通过
+ */
 const handleApproveSubmit = async () => {
+  if (!handler_id.value) {
+    message.warning('请选择负责人')
+    return
+  }
   try {
-    await approveFormRef.value?.validate()
-    
-    if (approveFormData.result === 'approve') {
-      await auditCageReservation(approveFormData.id, {
-        status: 1,
-        handlerId: approveFormData.handlerId
-      })
-      message.success('审核通过')
-    } else {
-      await auditCageReservation(approveFormData.id, {
-        status: 2,
-        rejectReason: approveFormData.rejectReason
-      })
-      message.success('已拒绝')
-    }
-    
+    await auditCageReservation(currentRecord.value.id, {
+      status: 1,
+      handler_id: handler_id.value
+    })
+    message.success('审核通过')
     approveModalVisible.value = false
     fetchTableData()
   } catch (error) {
     console.error('审核失败：', error)
+  }
+}
+
+const rejectModalVisible = ref(false)
+const reject_reason = ref('')
+
+/**
+ * 审核拒绝
+ */
+const handleReject = (record) => {
+  currentRecord.value = record
+  reject_reason.value = ''
+  rejectModalVisible.value = true
+}
+
+/**
+ * 提交审核拒绝
+ */
+const handleRejectSubmit = async () => {
+  if (!reject_reason.value) {
+    message.warning('请输入拒绝原因')
+    return
+  }
+  try {
+    await auditCageReservation(currentRecord.value.id, {
+      status: 2,
+      reject_reason: reject_reason.value
+    })
+    message.success('已拒绝')
+    rejectModalVisible.value = false
+    fetchTableData()
+  } catch (error) {
+    console.error('拒绝失败：', error)
   }
 }
 
@@ -962,6 +1029,7 @@ const loadAvailableTimeSlots = async () => {
 onMounted(() => {
   fetchTableData()
   loadOptions()
+  loadAdvanceDays()
 })
 </script>
 

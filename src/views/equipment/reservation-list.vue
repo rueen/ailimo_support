@@ -355,9 +355,9 @@ const columns = [
     customRender: ({ record }) => record.equipment?.name || '-'
   },
   {
-    title: '用户',
-    width: 120,
+    title: '用户信息',
     key: 'user_info',
+    width: 120,
   },
   { title: '预约时间', key: 'time_slots', width: 100 },
   { title: '备注', dataIndex: 'remark', width: 150 },
