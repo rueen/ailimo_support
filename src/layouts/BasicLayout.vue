@@ -177,6 +177,10 @@ const hasPermission = (permission) => {
 const generateMenuItems = (routes) => {
   return routes
     .filter((route) => {
+      // 过滤掉隐藏的菜单项
+      if (route.meta?.hideInMenu) {
+        return false
+      }
       // 过滤掉没有权限的路由
       if (route.meta?.permission !== null && route.meta?.permission !== undefined) {
         return hasPermission(route.meta.permission)

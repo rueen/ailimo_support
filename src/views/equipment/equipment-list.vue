@@ -42,7 +42,7 @@
       <a-button
         v-if="userStore.hasPermission('equipment:create')"
         type="primary"
-        @click="handleAdd"
+        @click="router.push('/equipment/form')"
       >
         <PlusOutlined />
         新增设备
@@ -73,7 +73,7 @@
               v-if="userStore.hasPermission('equipment:update')"
               type="link"
               size="small"
-              @click="handleEdit(record)"
+              @click="router.push(`/equipment/form/${record.id}`)"
             >
               编辑
             </a-button>
@@ -91,65 +91,6 @@
       </template>
     </a-table>
 
-    <!-- 新增/编辑设备对话框 -->
-    <a-modal
-      v-model:open="modalVisible"
-      :title="modalTitle"
-      :width="700"
-      @ok="handleSubmit"
-      @cancel="handleCancel"
-    >
-      <a-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        :label-col="{ span: 6 }"
-        :wrapper-col="{ span: 16 }"
-      >
-        <a-form-item label="设备名称" name="name">
-          <a-input v-model:value="formData.name" placeholder="请输入设备名称" />
-        </a-form-item>
-        <a-form-item label="基本信息" name="baseInfo">
-          <a-textarea
-            v-model:value="formData.details.base_info"
-            :rows="3"
-            placeholder="请输入设备基本信息"
-          />
-        </a-form-item>
-        <a-form-item label="规格参数" name="specs">
-          <a-textarea
-            v-model:value="formData.details.specs"
-            :rows="3"
-            placeholder="请输入设备规格参数"
-          />
-        </a-form-item>
-        <a-form-item label="设备图片" name="images">
-          <a-upload
-            v-model:file-list="fileList"
-            list-type="picture-card"
-            :before-upload="beforeUpload"
-            @preview="handlePreview"
-            @remove="handleRemove"
-          >
-            <div v-if="fileList.length < 5">
-              <PlusOutlined />
-              <div style="margin-top: 8px">上传</div>
-            </div>
-          </a-upload>
-        </a-form-item>
-        <a-form-item label="状态" name="status">
-          <a-radio-group v-model:value="formData.status">
-            <a-radio :value="1">启用</a-radio>
-            <a-radio :value="0">禁用</a-radio>
-          </a-radio-group>
-        </a-form-item>
-      </a-form>
-    </a-modal>
-
-    <!-- 图片预览 -->
-    <a-modal v-model:open="previewVisible" :footer="null">
-      <img :src="previewImage" style="width: 100%" />
-    </a-modal>
   </div>
 </template>
 
@@ -161,15 +102,15 @@ import {
   ReloadOutlined,
   PlusOutlined
 } from '@ant-design/icons-vue'
+import { useRouter } from 'vue-router'
 import {
   getEquipmentList,
-  createEquipment,
-  updateEquipment,
   deleteEquipment
 } from '@/api/equipment'
 import { useUserStore } from '@/store'
 
 const userStore = useUserStore()
+const router = useRouter()
 
 // ========== 搜索表单 ==========
 
@@ -269,115 +210,6 @@ const handleStatusChange = async (record, checked) => {
   }
 }
 
-// ========== 新增/编辑设备 ==========
-
-const modalVisible = ref(false)
-const modalTitle = ref('新增设备')
-const formRef = ref()
-const formData = reactive({
-  id: null,
-  name: '',
-  details: {
-    base_info: '',
-    specs: '',
-    image: []
-  },
-  status: 1
-})
-
-const formRules = {
-  name: [{ required: true, message: '请输入设备名称', trigger: 'blur' }]
-}
-
-const fileList = ref([])
-
-/**
- * 新增
- */
-const handleAdd = () => {
-  modalTitle.value = '新增设备'
-  modalVisible.value = true
-  formRef.value?.resetFields()
-  Object.assign(formData, {
-    id: null,
-    name: '',
-    details: {
-      base_info: '',
-      specs: '',
-      image: []
-    },
-    status: 1
-  })
-  fileList.value = []
-}
-
-/**
- * 编辑
- */
-const handleEdit = (record) => {
-  modalTitle.value = '编辑设备'
-  modalVisible.value = true
-  Object.assign(formData, {
-    id: record.id,
-    name: record.name,
-    details: {
-      base_info: record.details?.base_info || '',
-      specs: record.details?.specs || '',
-      image: record.details?.image || []
-    },
-    status: record.status
-  })
-  
-  // 设置文件列表
-  fileList.value = (record.details?.image || []).map((url, index) => ({
-    uid: `-${index}`,
-    name: `image-${index}.jpg`,
-    status: 'done',
-    url
-  }))
-}
-
-/**
- * 提交
- */
-const handleSubmit = async () => {
-  try {
-    await formRef.value.validate()
-    
-    // 从文件列表中提取图片URL
-    const imageUrls = fileList.value.map((file) => file.url || file.response?.url).filter(Boolean)
-    
-    const data = {
-      name: formData.name,
-      details: {
-        ...formData.details,
-        image: imageUrls
-      },
-      status: formData.status
-    }
-    
-    if (formData.id) {
-      await updateEquipment(formData.id, data)
-      message.success('更新成功')
-    } else {
-      await createEquipment(data)
-      message.success('创建成功')
-    }
-    
-    modalVisible.value = false
-    fetchTableData()
-  } catch (error) {
-    console.error('提交失败：', error)
-  }
-}
-
-/**
- * 取消
- */
-const handleCancel = () => {
-  formRef.value?.resetFields()
-}
-
 /**
  * 删除
  */
@@ -388,49 +220,6 @@ const handleDelete = async (record) => {
     fetchTableData()
   } catch (error) {
     console.error('删除失败：', error)
-  }
-}
-
-// ========== 图片上传 ==========
-
-const previewVisible = ref(false)
-const previewImage = ref('')
-
-/**
- * 上传前处理
- */
-const beforeUpload = (file) => {
-  const isImage = file.type.startsWith('image/')
-  if (!isImage) {
-    message.error('只能上传图片文件！')
-    return false
-  }
-  const isLt5M = file.size / 1024 / 1024 < 5
-  if (!isLt5M) {
-    message.error('图片大小不能超过 5MB！')
-    return false
-  }
-  
-  // TODO: 实现实际的图片上传逻辑
-  message.warning('图片上传功能需要配置 OSS')
-  return false
-}
-
-/**
- * 预览图片
- */
-const handlePreview = (file) => {
-  previewImage.value = file.url || file.thumbUrl
-  previewVisible.value = true
-}
-
-/**
- * 移除图片
- */
-const handleRemove = (file) => {
-  const index = fileList.value.indexOf(file)
-  if (index > -1) {
-    fileList.value.splice(index, 1)
   }
 }
 

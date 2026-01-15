@@ -72,6 +72,18 @@ const routes = [
             meta: { title: '设备管理', permission: 'equipment:list' }
           },
           {
+            path: 'form',
+            name: 'EquipmentForm',
+            component: () => import('@/views/equipment/equipment-form.vue'),
+            meta: { title: '新增设备', permission: 'equipment:create', hideInMenu: true }
+          },
+          {
+            path: 'form/:id',
+            name: 'EquipmentEdit',
+            component: () => import('@/views/equipment/equipment-form.vue'),
+            meta: { title: '编辑设备', permission: 'equipment:update', hideInMenu: true }
+          },
+          {
             path: 'time-slots',
             name: 'EquipmentTimeSlotList',
             component: () => import('@/views/equipment/time-slot.vue'),
