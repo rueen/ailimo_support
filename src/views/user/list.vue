@@ -3,12 +3,20 @@
     <!-- 搜索表单 -->
     <div class="search-form">
       <a-form layout="inline" :model="searchForm">
-        <a-form-item label="姓名/手机号">
+        <a-form-item label="姓名">
           <a-input
-            v-model:value="searchForm.keyword"
-            placeholder="请输入姓名/手机号"
+            v-model:value="searchForm.name"
+            placeholder="请输入姓名"
             allow-clear
-            style="width: 180px"
+            style="width: 150px"
+          />
+        </a-form-item>
+        <a-form-item label="手机号">
+          <a-input
+            v-model:value="searchForm.phone"
+            placeholder="请输入手机号"
+            allow-clear
+            style="width: 150px"
           />
         </a-form-item>
         <a-form-item label="组织机构">
@@ -16,7 +24,7 @@
             v-model:value="searchForm.organization_id"
             placeholder="请选择组织机构"
             allow-clear
-            style="width: 200px"
+            style="width: 150px"
             :options="organizationOptions"
             :field-names="{ label: 'name', value: 'id' }"
           />
@@ -247,7 +255,8 @@ const userStore = useUserStore()
 // ========== 搜索表单 ==========
 
 const searchForm = reactive({
-  keyword: '',
+  name: '',
+  phone: '',
   organization_id: undefined,
   audit_status: undefined
 })
@@ -265,7 +274,8 @@ const handleSearch = () => {
  */
 const handleReset = () => {
   Object.assign(searchForm, {
-    keyword: '',
+    name: '',
+    phone: '',
     organization_id: undefined,
     audit_status: undefined
   })

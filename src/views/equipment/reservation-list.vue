@@ -16,10 +16,18 @@
             style="width: 150px"
           />
         </a-form-item>
-        <a-form-item label="用户">
+        <a-form-item label="用户姓名">
           <a-input
-            v-model:value="searchForm.user_keyword"
-            placeholder="用户姓名/手机号"
+            v-model:value="searchForm.user_name"
+            placeholder="请输入用户姓名"
+            allow-clear
+            style="width: 150px"
+          />
+        </a-form-item>
+        <a-form-item label="用户手机号">
+          <a-input
+            v-model:value="searchForm.user_phone"
+            placeholder="请输入用户手机号"
             allow-clear
             style="width: 150px"
           />
@@ -295,7 +303,8 @@ const userStore = useUserStore()
 
 const searchForm = reactive({
   equipment_id: undefined,
-  user_keyword: '',
+  user_name: '',
+  user_phone: '',
   status: undefined
 })
 
@@ -315,7 +324,8 @@ const handleSearch = () => {
 const handleReset = () => {
   Object.assign(searchForm, {
     equipment_id: undefined,
-    user_keyword: '',
+    user_name: '',
+    user_phone: '',
     status: undefined
   })
   dateRange.value = []
@@ -371,7 +381,8 @@ const fetchTableData = async () => {
       page: pagination.current,
       pageSize: pagination.pageSize,
       equipment_id: searchForm.equipment_id,
-      user_keyword: searchForm.user_keyword,
+      user_name: searchForm.user_name,
+      user_phone: searchForm.user_phone,
       status: searchForm.status
     }
     if (dateRange.value && dateRange.value.length === 2) {
@@ -585,7 +596,7 @@ const handleUserSearch = async (value) => {
     return
   }
   try {
-    const res = await getUserList({ phone: value, pageSize: 20 })
+    const res = await getUserList({ keyword: value, pageSize: 20 })
     userOptions.value = res.data.list
   } catch (error) {
     console.error('搜索用户失败：', error)
