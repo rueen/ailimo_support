@@ -3,6 +3,14 @@
     <!-- 搜索表单 -->
     <div class="search-form">
       <a-form layout="inline" :model="searchForm">
+        <a-form-item label="订单号">
+          <a-input
+            v-model:value="searchForm.order_sn"
+            placeholder="输入订单号"
+            allow-clear
+            style="width: 150px"
+          />
+        </a-form-item>
         <a-form-item label="试剂名称">
           <a-input
             v-model:value="searchForm.name"
@@ -387,6 +395,7 @@ const userStore = useUserStore()
 // ========== 搜索表单 ==========
 
 const searchForm = reactive({
+  order_sn: '',
   name: '',
   brand_id: undefined,
   specification_id: undefined,
@@ -410,6 +419,7 @@ const handleSearch = () => {
  */
 const handleReset = () => {
   Object.assign(searchForm, {
+    order_sn: '',
     name: '',
     brand_id: undefined,
     specification_id: undefined,
@@ -437,6 +447,7 @@ const pagination = reactive({
  * 表格列配置
  */
 const columns = [
+  { title: '订单号', dataIndex: 'order_sn', width: 150 },
   { title: '产品信息', key: 'product_info', width: 120 },
   { title: '订购人', key: 'orderer_info', width: 100 },
   { title: '到货日期', dataIndex: 'delivery_date', width: 120 },
