@@ -651,14 +651,11 @@ const loadAvailableSlots = async () => {
     }
     
     const res = await getEquipmentAvailableSlots(formData.equipment_id, params)
-    console.log('时段数据响应：', res.data)
     
     // 根据实际API返回的数据结构调整
     availableTimeSlots.value = res.data.allSlots || res.data.available_slots || res.data || []
     bookedTimeSlots.value = res.data.bookedSlots || res.data.booked_slots || []
     
-    console.log('可用时段：', availableTimeSlots.value)
-    console.log('已预订时段：', bookedTimeSlots.value)
   } catch (error) {
     console.error('获取可用时间段失败：', error)
     availableTimeSlots.value = []

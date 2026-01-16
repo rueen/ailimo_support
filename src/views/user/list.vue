@@ -104,6 +104,14 @@
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
+            <a-button
+              v-if="userStore.hasPermission('user:detail')"
+              type="link"
+              size="small"
+              @click="handleView(record)"
+            >
+              详情
+            </a-button>
             <a-popconfirm
               v-if="record.audit_status === 0 && userStore.hasPermission('user:audit')"
               title="确定审核通过吗？"
@@ -228,6 +236,73 @@
         />
       </a-form-item>
     </a-modal>
+
+    <!-- 用户详情对话框 -->
+    <a-modal
+      v-model:open="detailModalVisible"
+      title="用户详情"
+      :width="700"
+      :footer="null"
+    >
+      <a-spin :spinning="detailLoading">
+        <a-descriptions :column="2" bordered>
+          <a-descriptions-item label="用户ID">{{ userDetail.id || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="姓名">{{ userDetail.name || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="手机号">{{ userDetail.phone || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="状态">
+            <a-badge
+              :status="userDetail.status === 1 ? 'success' : 'default'"
+              :text="userDetail.status === 1 ? '启用' : '禁用'"
+            />
+          </a-descriptions-item>
+          <a-descriptions-item label="省份">
+            {{ userDetail.province?.name || '-' }}
+          </a-descriptions-item>
+          <a-descriptions-item label="城市">
+            {{ userDetail.city?.name || '-' }}
+          </a-descriptions-item>
+          <a-descriptions-item label="区县">
+            {{ userDetail.district?.name || '-' }}
+          </a-descriptions-item>
+          <a-descriptions-item label="详细地址">
+            {{ userDetail.address || '-' }}
+          </a-descriptions-item>
+          <a-descriptions-item label="组织机构">
+            {{ userDetail.organization?.name || '-' }}
+          </a-descriptions-item>
+          <a-descriptions-item label="课题组">
+            {{ userDetail.research_group?.name || '-' }}
+          </a-descriptions-item>
+          <a-descriptions-item label="审核状态">
+            <a-tag v-if="userDetail.audit_status === 0" color="orange">待审核</a-tag>
+            <a-tag v-else-if="userDetail.audit_status === 1" color="green">审核通过</a-tag>
+            <a-tag v-else-if="userDetail.audit_status === 2" color="red">审核拒绝</a-tag>
+            <span v-else>-</span>
+          </a-descriptions-item>
+          <a-descriptions-item
+            v-if="userDetail.audit_status === 2"
+            label="拒绝原因"
+            :span="2"
+          >
+            {{ userDetail.reject_reason || '-' }}
+          </a-descriptions-item>
+          <template v-if="userDetail.audit_status !== 0">
+            <a-descriptions-item label="审核时间">
+              {{ userDetail.audit_time || '-' }}
+            </a-descriptions-item>
+            <a-descriptions-item label="审核人">
+              {{ userDetail.audit_by?.username || '-' }}
+            </a-descriptions-item>
+          </template>
+          <a-descriptions-item label="创建时间">
+            {{ userDetail.created_at || '-' }}
+          </a-descriptions-item>
+          <a-descriptions-item label="更新时间">
+            {{ userDetail.updated_at || '-' }}
+          </a-descriptions-item>
+        </a-descriptions>
+      </a-spin>
+    </a-modal>
   </div>
 </template>
 
@@ -241,6 +316,7 @@ import {
 } from '@ant-design/icons-vue'
 import {
   getUserList,
+  getUserDetail,
   createUser,
   updateUser,
   deleteUser,
@@ -555,6 +631,12 @@ const loadResearchGroupOptions = async (organizationId) => {
   }
 }
 
+// ========== 详情 ==========
+
+const detailModalVisible = ref(false)
+const detailLoading = ref(false)
+const userDetail = ref({})
+
 // ========== 审核 ==========
 
 const rejectModalVisible = ref(false)
@@ -601,6 +683,24 @@ const handleRejectSubmit = async () => {
     fetchTableData()
   } catch (error) {
     console.error('拒绝失败：', error)
+  }
+}
+
+/**
+ * 查看详情
+ */
+const handleView = async (record) => {
+  try {
+    detailModalVisible.value = true
+    detailLoading.value = true
+    const res = await getUserDetail(record.id)
+    userDetail.value = res.data
+  } catch (error) {
+    console.error('获取用户详情失败：', error)
+    message.error('获取用户详情失败')
+    detailModalVisible.value = false
+  } finally {
+    detailLoading.value = false
   }
 }
 
