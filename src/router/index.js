@@ -25,13 +25,13 @@ const routes = [
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
-        meta: { title: '工作台', icon: 'HomeOutlined', permission: 'dashboard:view' }
+        meta: { title: '工作台', icon: 'HomeOutlined', permission: 'dashboard' }
       },
       // 用户管理
       {
         path: 'users',
         name: 'UserManagement',
-        meta: { title: '用户管理', icon: 'UserOutlined', permission: 'user:list' },
+        meta: { title: '用户管理', icon: 'UserOutlined' },
         children: [
           {
             path: 'list',
@@ -57,7 +57,7 @@ const routes = [
       {
         path: 'equipment',
         name: 'EquipmentManagement',
-        meta: { title: '设备租赁', icon: 'ExperimentOutlined', permission: 'equipment_reservation:list' },
+        meta: { title: '设备租赁', icon: 'ExperimentOutlined' },
         children: [
           {
             path: 'reservations',
@@ -95,7 +95,7 @@ const routes = [
       {
         path: 'cage',
         name: 'CageManagement',
-        meta: { title: '笼位租赁', icon: 'HomeOutlined', permission: 'cage_reservation:list' },
+        meta: { title: '笼位租赁', icon: 'HomeOutlined' },
         children: [
           {
             path: 'reservations',
@@ -127,7 +127,7 @@ const routes = [
       {
         path: 'experiment',
         name: 'ExperimentManagement',
-        meta: { title: '实验代操作', icon: 'ExperimentOutlined', permission: 'experiment_operation:list' },
+        meta: { title: '实验代操作', icon: 'ExperimentOutlined' },
         children: [
           {
             path: 'operations',
@@ -153,7 +153,7 @@ const routes = [
       {
         path: 'animal',
         name: 'AnimalOrderManagement',
-        meta: { title: '动物订购', icon: 'ShoppingOutlined', permission: 'animal_order:list' },
+        meta: { title: '动物订购', icon: 'ShoppingOutlined' },
         children: [
           {
             path: 'orders',
@@ -191,7 +191,7 @@ const routes = [
       {
         path: 'reagent',
         name: 'ReagentOrderManagement',
-        meta: { title: '试剂耗材订购', icon: 'MedicineBoxOutlined', permission: 'reagent_order:list' },
+        meta: { title: '试剂耗材订购', icon: 'MedicineBoxOutlined' },
         children: [
           {
             path: 'orders',
@@ -217,7 +217,7 @@ const routes = [
       {
         path: 'content',
         name: 'ContentManagement',
-        meta: { title: '内容管理', icon: 'FileTextOutlined', permission: 'case:list' },
+        meta: { title: '内容管理', icon: 'FileTextOutlined' },
         children: [
           {
             path: 'cases',
@@ -229,7 +229,7 @@ const routes = [
             path: 'company-info',
             name: 'CompanyInfo',
             component: () => import('@/views/content/company-info.vue'),
-            meta: { title: '公司信息', permission: 'company_info:view' }
+            meta: { title: '公司信息', permission: 'company_info' }
           }
         ]
       },
@@ -237,7 +237,7 @@ const routes = [
       {
         path: 'config',
         name: 'ConfigManagement',
-        meta: { title: '通用配置管理', icon: 'ToolOutlined', permission: 'handler:list' },
+        meta: { title: '通用配置管理', icon: 'ToolOutlined' },
         children: [
           {
             path: 'handlers',
@@ -263,7 +263,7 @@ const routes = [
       {
         path: 'system',
         name: 'SystemManagement',
-        meta: { title: '系统管理', icon: 'SettingOutlined', permission: 'administrator:list' },
+        meta: { title: '系统管理', icon: 'SettingOutlined' },
         children: [
           {
             path: 'administrators',
@@ -278,16 +278,10 @@ const routes = [
             meta: { title: '角色管理', permission: 'role:list' }
           },
           {
-            path: 'permissions',
-            name: 'PermissionList',
-            component: () => import('@/views/system/permission-list.vue'),
-            meta: { title: '权限管理', permission: 'permission:list' }
-          },
-          {
             path: 'system-configs',
             name: 'SystemConfigList',
             component: () => import('@/views/system/system-config.vue'),
-            meta: { title: '系统配置', permission: 'system_config:list' }
+            meta: { title: '系统配置', permission: 'system_config' }
           }
         ]
       }
