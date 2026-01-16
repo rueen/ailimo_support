@@ -70,13 +70,10 @@
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'">
-          <a-switch
-            v-if="userStore.hasPermission('administrator:update')"
-            :checked="record.status === 1"
-            :disabled="record.username === 'admin'"
-            @change="(checked) => handleStatusChange(record, checked)"
+          <a-badge
+            :status="record.status === 1 ? 'success' : 'default'"
+            :text="record.status === 1 ? '启用' : '禁用'"
           />
-          <span v-else>{{ record.status === 1 ? '启用' : '禁用' }}</span>
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -261,19 +258,6 @@ const handleTableChange = (pag) => {
   pagination.current = pag.current
   pagination.pageSize = pag.pageSize
   fetchTableData()
-}
-
-/**
- * 状态变化
- */
-const handleStatusChange = async (record, checked) => {
-  try {
-    await updateAdministrator(record.id, { status: checked ? 1 : 0 })
-    message.success('状态更新成功')
-    fetchTableData()
-  } catch (error) {
-    console.error('状态更新失败：', error)
-  }
 }
 
 // ========== 新增/编辑管理员 ==========
