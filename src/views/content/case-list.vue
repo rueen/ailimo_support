@@ -59,9 +59,6 @@
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'project_summary'">
-          <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ record.project_summary }}</div>
-        </template>
         <template v-if="column.key === 'status'">
           <a-badge
             :status="record.status === 1 ? 'success' : 'default'"
@@ -217,7 +214,7 @@ const pagination = reactive({
 
 const columns = [
   { title: '项目名称', dataIndex: 'project_name', width: 200 },
-  { title: '项目概述', key: 'project_summary', width: 200 },
+  { title: '项目概述', dataIndex: 'project_summary', ellipsis: true, width: 200 },
   { title: '状态', key: 'status', width: 80 },
   { title: '创建时间', dataIndex: 'created_at', width: 180 },
   { title: '更新时间', dataIndex: 'updated_at', width: 180 },

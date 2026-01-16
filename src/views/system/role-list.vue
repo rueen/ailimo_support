@@ -134,8 +134,9 @@ const pagination = reactive({
  */
 const columns = [
   { title: '角色名称', dataIndex: 'name', width: 150 },
-  { title: '角色描述', dataIndex: 'description' },
+  { title: '角色描述', dataIndex: 'description', ellipsis: true, width: 200 },
   { title: '创建时间', dataIndex: 'created_at', width: 180 },
+  { title: '更新时间', dataIndex: 'updated_at', width: 180 },
   { title: '操作', key: 'action', fixed: 'right', width: 250 }
 ]
 
