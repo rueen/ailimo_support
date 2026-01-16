@@ -1,6 +1,6 @@
 <template>
   <div class="page-header">
-    <ArrowLeftOutlined class="page-header-back" @click="handleBack" />
+    <ArrowLeftOutlined class="page-header-back" @click="handleBack" v-if="backPath" />
     <h2 class="page-header-title">
       <slot>{{ title }}</slot>
     </h2>
