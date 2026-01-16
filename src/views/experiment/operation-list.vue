@@ -317,8 +317,8 @@
       :footer="null"
     >
       <a-descriptions bordered :column="2">
-        <a-descriptions-item label="订单ID">
-          {{ detailData.id }}
+        <a-descriptions-item label="订单号">
+          {{ detailData.order_sn }}
         </a-descriptions-item>
         <a-descriptions-item label="订单状态">
           <a-tag :color="getStatusColor(detailData.status)">
@@ -344,7 +344,14 @@
           {{ detailData.reservation_date || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="预约时段" :span="2">
-          {{ detailData.time_slots?.join(', ') || '-' }}
+          <a-tag
+            v-for="(slot, index) in detailData.time_slots"
+            :key="index"
+            color="blue"
+            style="margin-right: 4px; margin-bottom: 4px"
+          >
+            {{ slot }}
+          </a-tag>
         </a-descriptions-item>
         <a-descriptions-item label="负责人">
           {{ detailData.handler?.name || '-' }}
@@ -462,8 +469,6 @@ const columns = [
   },
   { title: '预约时间', key: 'time_slots', width: 100 },
   { title: '状态', key: 'status', width: 100 },
-  { title: '创建时间', dataIndex: 'created_at', width: 150 },
-  { title: '更新时间', dataIndex: 'updated_at', width: 150 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 

@@ -335,7 +335,7 @@
       :footer="null"
     >
       <a-descriptions :column="2" bordered>
-        <a-descriptions-item label="订单ID">{{ detailData.id }}</a-descriptions-item>
+        <a-descriptions-item label="订单号">{{ detailData.order_sn }}</a-descriptions-item>
         <a-descriptions-item label="订单状态">
           <a-tag :color="getStatusColor(detailData.status)">
             {{ getStatusText(detailData.status) }}
@@ -360,6 +360,7 @@
         <a-descriptions-item label="审核时间">{{ detailData.audit_time || '-' }}</a-descriptions-item>
         <a-descriptions-item label="完成时间">{{ detailData.completed_time || '-' }}</a-descriptions-item>
         <a-descriptions-item label="创建时间">{{ detailData.created_at || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="更新时间">{{ detailData.updated_at || '-' }}</a-descriptions-item>
       </a-descriptions>
     </a-modal>
   </div>
@@ -452,7 +453,6 @@ const columns = [
   { title: '订购人', key: 'orderer_info', width: 100 },
   { title: '到货日期', dataIndex: 'delivery_date', width: 120 },
   { title: '状态', key: 'status', width: 100 },
-  { title: '创建时间', dataIndex: 'created_at', width: 160 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 

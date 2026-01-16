@@ -297,7 +297,7 @@
     >
       <a-spin :spinning="detailLoading">
         <a-descriptions :column="2" bordered>
-          <a-descriptions-item label="订单ID">{{ orderDetail.id || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="订单号">{{ orderDetail.order_sn || '-' }}</a-descriptions-item>
           <a-descriptions-item label="订单状态">
             <a-tag v-if="orderDetail.status === 0" color="orange">待审核</a-tag>
             <a-tag v-else-if="orderDetail.status === 1" color="blue">进行中</a-tag>
@@ -472,8 +472,6 @@ const columns = [
     title: '负责人', key: 'handler', width: 80,
     customRender: ({ record }) => record.handler?.name || '-'
   },
-  { title: '创建时间', dataIndex: 'created_at', width: 150 },
-  { title: '更新时间', dataIndex: 'updated_at', width: 150 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 

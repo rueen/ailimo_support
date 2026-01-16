@@ -246,7 +246,7 @@
     >
       <a-spin :spinning="detailLoading">
         <a-descriptions :column="2" bordered>
-          <a-descriptions-item label="用户ID">{{ userDetail.id || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="用户ID">{{ userDetail.user_no || '-' }}</a-descriptions-item>
           <a-descriptions-item label="姓名">{{ userDetail.name || '-' }}</a-descriptions-item>
           <a-descriptions-item label="手机号">{{ userDetail.phone || '-' }}</a-descriptions-item>
           <a-descriptions-item label="状态">
@@ -255,17 +255,8 @@
               :text="userDetail.status === 1 ? '启用' : '禁用'"
             />
           </a-descriptions-item>
-          <a-descriptions-item label="省份">
-            {{ userDetail.province?.name || '-' }}
-          </a-descriptions-item>
-          <a-descriptions-item label="城市">
-            {{ userDetail.city?.name || '-' }}
-          </a-descriptions-item>
-          <a-descriptions-item label="区县">
-            {{ userDetail.district?.name || '-' }}
-          </a-descriptions-item>
-          <a-descriptions-item label="详细地址">
-            {{ userDetail.address || '-' }}
+          <a-descriptions-item label="地址" :span="2">
+            {{ userDetail.province?.name }} {{ userDetail.city?.name }} {{ userDetail.district?.name }} {{ userDetail.address || '-' }}
           </a-descriptions-item>
           <a-descriptions-item label="组织机构">
             {{ userDetail.organization?.name || '-' }}
@@ -393,8 +384,6 @@ const columns = [
     width: 200
   },
   { title: '状态', key: 'status', width: 80 },
-  { title: '创建时间', dataIndex: 'created_at', width: 150 },
-  { title: '更新时间', dataIndex: 'updated_at', width: 150 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 

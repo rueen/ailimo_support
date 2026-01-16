@@ -413,7 +413,7 @@
       :footer="null"
     >
       <a-descriptions :column="2" bordered>
-        <a-descriptions-item label="订单ID">{{ detailData.id }}</a-descriptions-item>
+        <a-descriptions-item label="订单号">{{ detailData.order_sn }}</a-descriptions-item>
         <a-descriptions-item label="订单状态">
           <a-tag :color="getStatusColor(detailData.status)">
             {{ getStatusText(detailData.status) }}
@@ -558,7 +558,6 @@ const columns = [
   { title: '订购人信息', key: 'orderer_info', width: 100 },
   { title: '要求信息', key: 'requirement_info', width: 100 },
   { title: '状态', key: 'status', width: 100 },
-  { title: '创建时间', dataIndex: 'created_at', width: 120 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 

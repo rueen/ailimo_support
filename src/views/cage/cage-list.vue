@@ -211,6 +211,7 @@ const columns = [
   { title: '笼位数量', dataIndex: 'quantity', width: 150 },
   { title: '状态', key: 'status', width: 100 },
   { title: '创建时间', dataIndex: 'created_at', width: 180 },
+  { title: '更新时间', dataIndex: 'updated_at', width: 180 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 
