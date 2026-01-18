@@ -244,18 +244,6 @@
             @change="handleEnvironmentChange"
           />
         </a-form-item>
-        <a-form-item label="笼位数量" name="quantity">
-          <a-input-number
-            v-model:value="formData.quantity"
-            :min="1"
-            placeholder="请输入数量"
-            style="width: 100%"
-            @change="handleQuantityChange"
-          />
-          <div v-if="formData.id === null && getMinAvailableQuantity() !== null" style="color: #999; margin-top: 4px">
-            所选时段剩余笼位：{{ getMinAvailableQuantity() }}
-          </div>
-        </a-form-item>
         <a-form-item label="用途" name="purpose_id">
           <a-select
             v-model:value="formData.purpose_id"
@@ -293,6 +281,18 @@
               {{ slot.display_time }} (可用:{{ slot.available_quantity }})
             </a-select-option>
           </a-select>
+        </a-form-item>
+        <a-form-item label="笼位数量" name="quantity">
+          <a-input-number
+            v-model:value="formData.quantity"
+            :min="1"
+            placeholder="请输入数量"
+            style="width: 100%"
+            @change="handleQuantityChange"
+          />
+          <div v-if="formData.id === null && getMinAvailableQuantity() !== null" style="color: #999; margin-top: 4px">
+            所选时段可用笼位数量：{{ getMinAvailableQuantity() }}
+          </div>
         </a-form-item>
         <a-form-item label="备注" name="remark">
           <a-textarea

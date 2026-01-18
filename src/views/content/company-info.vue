@@ -44,9 +44,9 @@
           :before-upload="beforeUpload"
           @preview="handlePreview"
           accept="image/*"
-          :multiple="true"
+          :multiple="false"
         >
-          <div v-if="fileList.length + uploadingCount < 10">
+          <div v-if="fileList.length + uploadingCount < 1">
             <LoadingOutlined v-if="uploadingCount > 0" />
             <PlusOutlined v-else />
             <div style="margin-top: 8px">
@@ -54,9 +54,6 @@
             </div>
           </div>
         </a-upload>
-        <div style="color: #999; margin-top: 8px">
-          最多上传10张图片，支持 jpg、png、gif、webp 格式，单张图片不超过5MB，上传前会自动压缩
-        </div>
       </a-form-item>
       <a-form-item label="视频链接" name="video_url">
         <a-input
