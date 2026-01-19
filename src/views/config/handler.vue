@@ -28,14 +28,23 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button
-        v-if="userStore.hasPermission('handler:create')"
-        type="primary"
-        @click="handleAdd"
-      >
-        <PlusOutlined />
-        新增负责人
-      </a-button>
+      <a-space>
+        <a-button
+          v-if="userStore.hasPermission('handler:create')"
+          type="primary"
+          @click="handleAdd"
+        >
+          <PlusOutlined />
+          新增负责人
+        </a-button>
+        <a-button
+          v-if="userStore.hasPermission('statistics:handler_completion')"
+          @click="handleStatistics"
+        >
+          <BarChartOutlined />
+          统计
+        </a-button>
+      </a-space>
     </div>
 
     <!-- 数据表格 -->
@@ -96,8 +105,9 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { PlusOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, SearchOutlined, ReloadOutlined, BarChartOutlined } from '@ant-design/icons-vue'
 import {
   getHandlerList,
   createHandler,
@@ -107,6 +117,7 @@ import {
 import { useUserStore } from '@/store'
 
 const userStore = useUserStore()
+const router = useRouter()
 
 const loading = ref(false)
 const tableData = ref([])
@@ -268,6 +279,13 @@ const handleDelete = async (record) => {
     console.error('删除失败：', error)
     message.error(error.message || '删除失败')
   }
+}
+
+/**
+ * 跳转到统计页面
+ */
+const handleStatistics = () => {
+  router.push('/config/handler-statistics')
 }
 
 // ========== 初始化 ==========

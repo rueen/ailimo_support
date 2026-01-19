@@ -246,6 +246,12 @@ const routes = [
             meta: { title: '负责人管理', permission: 'handler:list' }
           },
           {
+            path: 'handler-statistics',
+            name: 'HandlerStatistics',
+            component: () => import('@/views/config/handler-statistics.vue'),
+            meta: { title: '负责人统计', permission: 'statistics:handler_completion', hideInMenu: true }
+          },
+          {
             path: 'environment-types',
             name: 'EnvironmentTypeList',
             component: () => import('@/views/config/environment-type.vue'),

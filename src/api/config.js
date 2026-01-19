@@ -74,6 +74,18 @@ export function getHandlerDetail(id) {
   })
 }
 
+/**
+ * 获取负责人完成订单统计
+ * @param {Object} params - 查询参数
+ */
+export function getHandlerStatistics(params) {
+  return request({
+    url: '/support/handlers/statistics',
+    method: 'GET',
+    params
+  })
+}
+
 // ========== 环境类型管理 ==========
 
 /**
