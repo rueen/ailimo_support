@@ -416,6 +416,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import {
@@ -441,6 +442,7 @@ import { getAdvanceDays } from '@/api/content'
 import { useUserStore } from '@/store'
 
 const userStore = useUserStore()
+const route = useRoute()
 
 // ========== 搜索表单 ==========
 
@@ -1052,6 +1054,11 @@ const loadAvailableTimeSlots = async () => {
 // ========== 初始化 ==========
 
 onMounted(() => {
+  // 检查路由参数，如果有 status 参数则自动筛选
+  if (route.query.status !== undefined) {
+    searchForm.status = Number(route.query.status)
+  }
+  
   fetchTableData()
   loadOptions()
   loadAdvanceDays()

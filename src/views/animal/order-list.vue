@@ -451,6 +451,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import {
@@ -477,6 +478,7 @@ import { useUserStore } from '@/store'
 import RegionCascader from '@/components/RegionCascader.vue'
 
 const userStore = useUserStore()
+const route = useRoute()
 
 // ========== 搜索表单 ==========
 
@@ -1060,6 +1062,11 @@ const loadOptions = async () => {
 // ========== 初始化 ==========
 
 onMounted(() => {
+  // 检查路由参数，如果有 status 参数则自动筛选
+  if (route.query.status !== undefined) {
+    searchForm.status = Number(route.query.status)
+  }
+  
   fetchTableData()
   loadOptions()
 })

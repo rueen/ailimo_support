@@ -3,7 +3,7 @@
     <!-- 统计数据 -->
     <a-row :gutter="16" class="stats-row" v-if="userStore.hasPermission('statistics:overview')">
       <a-col :xs="24" :sm="12" :lg="8" :xl="4">
-        <a-card hoverable :loading="loading">
+        <a-card hoverable :loading="loading" @click="handleNavigate('/users/list', 'audit_status')">
           <a-statistic
             title="新用户"
             :value="statistics.pendingUsers"
@@ -12,7 +12,7 @@
         </a-card>
       </a-col>
       <a-col :xs="24" :sm="12" :lg="8" :xl="4">
-        <a-card hoverable :loading="loading">
+        <a-card hoverable :loading="loading" @click="handleNavigate('/equipment/reservations', 'status')">
           <a-statistic
             title="设备预约"
             :value="statistics.pendingEquipmentReservations"
@@ -21,7 +21,7 @@
         </a-card>
       </a-col>
       <a-col :xs="24" :sm="12" :lg="8" :xl="4">
-        <a-card hoverable :loading="loading">
+        <a-card hoverable :loading="loading" @click="handleNavigate('/cage/reservations', 'status')">
           <a-statistic
             title="笼位预约"
             :value="statistics.pendingCageReservations"
@@ -30,7 +30,7 @@
         </a-card>
       </a-col>
       <a-col :xs="24" :sm="12" :lg="8" :xl="4">
-        <a-card hoverable :loading="loading">
+        <a-card hoverable :loading="loading" @click="handleNavigate('/experiment/operations', 'status')">
           <a-statistic
             title="实验代操作"
             :value="statistics.pendingExperimentOperations"
@@ -39,7 +39,7 @@
         </a-card>
       </a-col>
       <a-col :xs="24" :sm="12" :lg="8" :xl="4">
-        <a-card hoverable :loading="loading">
+        <a-card hoverable :loading="loading" @click="handleNavigate('/animal/orders', 'status')">
           <a-statistic
             title="动物订单"
             :value="statistics.pendingAnimalOrders"
@@ -48,7 +48,7 @@
         </a-card>
       </a-col>
       <a-col :xs="24" :sm="12" :lg="8" :xl="4">
-        <a-card hoverable :loading="loading">
+        <a-card hoverable :loading="loading" @click="handleNavigate('/reagent/orders', 'status')">
           <a-statistic
             title="试剂耗材订单"
             :value="statistics.pendingReagentOrders"
@@ -62,10 +62,12 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getStatisticsOverview } from '@/api/content'
 import { useUserStore } from '@/store'
 
 const userStore = useUserStore()
+const router = useRouter()
 /**
  * 统计数据
  */
@@ -111,6 +113,18 @@ const fetchStatistics = async () => {
 }
 
 /**
+ * 跳转到列表页并筛选待审核状态
+ */
+const handleNavigate = (path, statusKey) => {
+  router.push({
+    path,
+    query: {
+      [statusKey]: 0 // 待审核状态
+    }
+  })
+}
+
+/**
  * 初始化
  */
 onMounted(() => {
@@ -123,6 +137,16 @@ onMounted(() => {
   .stats-row {
     .ant-col {
       margin-bottom: 16px;
+    }
+
+    .ant-card {
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+      }
     }
   }
 
