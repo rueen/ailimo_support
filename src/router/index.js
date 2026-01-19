@@ -229,7 +229,7 @@ const routes = [
             path: 'company-info',
             name: 'CompanyInfo',
             component: () => import('@/views/content/company-info.vue'),
-            meta: { title: '公司信息', permission: 'company_info' }
+            meta: { title: '公司信息', permission: 'company_info:view' }
           }
         ]
       },
