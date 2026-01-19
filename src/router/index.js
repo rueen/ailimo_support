@@ -53,11 +53,11 @@ const routes = [
           }
         ]
       },
-      // 设备租赁管理
+      // 设备预约管理
       {
         path: 'equipment',
         name: 'EquipmentManagement',
-        meta: { title: '设备租赁', icon: 'ExperimentOutlined' },
+        meta: { title: '设备预约', icon: 'ExperimentOutlined' },
         children: [
           {
             path: 'reservations',

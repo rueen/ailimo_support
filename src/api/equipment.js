@@ -1,12 +1,12 @@
 /**
- * 设备租赁管理接口
+ * 设备预约管理接口
  */
 import request from '@/utils/request'
 
-// ========== 设备租赁订单接口 ==========
+// ========== 设备预约订单接口 ==========
 
 /**
- * 获取设备租赁订单列表
+ * 获取设备预约订单列表
  * @param {Object} params - 查询参数
  */
 export function getEquipmentReservationList(params) {
@@ -18,7 +18,7 @@ export function getEquipmentReservationList(params) {
 }
 
 /**
- * 获取设备租赁订单详情
+ * 获取设备预约订单详情
  * @param {number} id - 订单ID
  */
 export function getEquipmentReservationDetail(id) {
@@ -29,7 +29,7 @@ export function getEquipmentReservationDetail(id) {
 }
 
 /**
- * 创建设备租赁订单
+ * 创建设备预约订单
  * @param {Object} data - 订单信息
  */
 export function createEquipmentReservation(data) {
@@ -41,7 +41,7 @@ export function createEquipmentReservation(data) {
 }
 
 /**
- * 更新设备租赁订单
+ * 更新设备预约订单
  * @param {number} id - 订单ID
  * @param {Object} data - 订单信息
  */
@@ -54,7 +54,7 @@ export function updateEquipmentReservation(id, data) {
 }
 
 /**
- * 审核设备租赁订单
+ * 审核设备预约订单
  * @param {number} id - 订单ID
  * @param {Object} data - 审核信息（status: 1-通过 2-拒绝, handlerId/rejectReason）
  */
@@ -67,7 +67,7 @@ export function auditEquipmentReservation(id, data) {
 }
 
 /**
- * 完成设备租赁订单
+ * 完成设备预约订单
  * @param {number} id - 订单ID
  */
 export function completeEquipmentReservation(id) {
@@ -78,7 +78,7 @@ export function completeEquipmentReservation(id) {
 }
 
 /**
- * 取消设备租赁订单
+ * 取消设备预约订单
  * @param {number} id - 订单ID
  */
 export function cancelEquipmentReservation(id) {

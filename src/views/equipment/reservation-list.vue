@@ -516,7 +516,7 @@ const handleTableChange = (pag) => {
 // ========== 新增/编辑订单 ==========
 
 const modalVisible = ref(false)
-const modalTitle = ref('新增设备租赁订单')
+const modalTitle = ref('新增设备预约订单')
 const formRef = ref()
 const formData = reactive({
   id: null,
@@ -538,7 +538,7 @@ const userOptions = ref([])
 const availableTimeSlots = ref([])
 const bookedTimeSlots = ref([])
 const advanceDays = ref({
-  equipment_advance_days: 7  // 设备租赁默认提前7天
+  equipment_advance_days: 7  // 设备预约默认提前7天
 })
 
 /**
@@ -573,7 +573,7 @@ const timeSlotOptions = computed(() => {
  * 新增
  */
 const handleAdd = () => {
-  modalTitle.value = '新增设备租赁订单'
+  modalTitle.value = '新增设备预约订单'
   modalVisible.value = true
   formRef.value?.resetFields()
   Object.assign(formData, {
@@ -593,7 +593,7 @@ const handleAdd = () => {
  * 编辑
  */
 const handleEdit = (record) => {
-  modalTitle.value = '编辑设备租赁订单'
+  modalTitle.value = '编辑设备预约订单'
   modalVisible.value = true
   formRef.value?.resetFields()
   
