@@ -63,7 +63,7 @@ const routes = [
             path: 'reservations',
             name: 'EquipmentReservationList',
             component: () => import('@/views/equipment/reservation-list.vue'),
-            meta: { title: '租赁订单', permission: 'equipment_reservation:list' }
+            meta: { title: '预约订单', permission: 'equipment_reservation:list' }
           },
           {
             path: 'list',
@@ -101,7 +101,7 @@ const routes = [
             path: 'reservations',
             name: 'CageReservationList',
             component: () => import('@/views/cage/reservation-list.vue'),
-            meta: { title: '租赁订单', permission: 'cage_reservation:list' }
+            meta: { title: '预约订单', permission: 'cage_reservation:list' }
           },
           {
             path: 'cages',
