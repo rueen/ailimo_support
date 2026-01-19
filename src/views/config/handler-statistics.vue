@@ -39,6 +39,15 @@
       </a-form>
     </div>
 
+    <!-- 显示选项 -->
+    <div class="display-options">
+      <a-checkbox-group v-model:value="displayOptions">
+        <a-checkbox value="total">总数</a-checkbox>
+        <a-checkbox value="completed">完成</a-checkbox>
+        <a-checkbox value="in_progress">进行中</a-checkbox>
+      </a-checkbox-group>
+    </div>
+
     <!-- 统计表格 -->
     <a-table
       :columns="columns"
@@ -46,7 +55,7 @@
       :loading="loading"
       :pagination="pagination"
       :scroll="{ x: 1500 }"
-      row-key="handler.id"
+      :row-key="(record, index) => record.handler_id || index"
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
@@ -54,34 +63,34 @@
           {{ record.handler_name || '-' }}
         </template>
         <template v-else-if="column.key === 'equipment'">
-          <div>总数：{{ record.equipment?.total || 0 }}</div>
-          <div style="color: #52c41a">完成：{{ record.equipment?.completed || 0 }}</div>
-          <div style="color: #1890ff">进行中：{{ record.equipment?.in_progress || 0 }}</div>
+          <div v-if="displayOptions.includes('total')">总数：{{ record.equipment?.total || 0 }}</div>
+          <div v-if="displayOptions.includes('completed')" style="color: #52c41a">完成：{{ record.equipment?.completed || 0 }}</div>
+          <div v-if="displayOptions.includes('in_progress')" style="color: #1890ff">进行中：{{ record.equipment?.in_progress || 0 }}</div>
         </template>
         <template v-else-if="column.key === 'cage'">
-          <div>总数：{{ record.cage?.total || 0 }}</div>
-          <div style="color: #52c41a">完成：{{ record.cage?.completed || 0 }}</div>
-          <div style="color: #1890ff">进行中：{{ record.cage?.in_progress || 0 }}</div>
+          <div v-if="displayOptions.includes('total')">总数：{{ record.cage?.total || 0 }}</div>
+          <div v-if="displayOptions.includes('completed')" style="color: #52c41a">完成：{{ record.cage?.completed || 0 }}</div>
+          <div v-if="displayOptions.includes('in_progress')" style="color: #1890ff">进行中：{{ record.cage?.in_progress || 0 }}</div>
         </template>
         <template v-else-if="column.key === 'experiment'">
-          <div>总数：{{ record.experiment?.total || 0 }}</div>
-          <div style="color: #52c41a">完成：{{ record.experiment?.completed || 0 }}</div>
-          <div style="color: #1890ff">进行中：{{ record.experiment?.in_progress || 0 }}</div>
+          <div v-if="displayOptions.includes('total')">总数：{{ record.experiment?.total || 0 }}</div>
+          <div v-if="displayOptions.includes('completed')" style="color: #52c41a">完成：{{ record.experiment?.completed || 0 }}</div>
+          <div v-if="displayOptions.includes('in_progress')" style="color: #1890ff">进行中：{{ record.experiment?.in_progress || 0 }}</div>
         </template>
         <template v-else-if="column.key === 'animal'">
-          <div>总数：{{ record.animal?.total || 0 }}</div>
-          <div style="color: #52c41a">完成：{{ record.animal?.completed || 0 }}</div>
-          <div style="color: #1890ff">进行中：{{ record.animal?.in_progress || 0 }}</div>
+          <div v-if="displayOptions.includes('total')">总数：{{ record.animal?.total || 0 }}</div>
+          <div v-if="displayOptions.includes('completed')" style="color: #52c41a">完成：{{ record.animal?.completed || 0 }}</div>
+          <div v-if="displayOptions.includes('in_progress')" style="color: #1890ff">进行中：{{ record.animal?.in_progress || 0 }}</div>
         </template>
         <template v-else-if="column.key === 'reagent'">
-          <div>总数：{{ record.reagent?.total || 0 }}</div>
-          <div style="color: #52c41a">完成：{{ record.reagent?.completed || 0 }}</div>
-          <div style="color: #1890ff">进行中：{{ record.reagent?.in_progress || 0 }}</div>
+          <div v-if="displayOptions.includes('total')">总数：{{ record.reagent?.total || 0 }}</div>
+          <div v-if="displayOptions.includes('completed')" style="color: #52c41a">完成：{{ record.reagent?.completed || 0 }}</div>
+          <div v-if="displayOptions.includes('in_progress')" style="color: #1890ff">进行中：{{ record.reagent?.in_progress || 0 }}</div>
         </template>
         <template v-else-if="column.key === 'summary'">
-          <div><strong>总订单：{{ record.summary?.total_orders || 0 }}</strong></div>
-          <div style="color: #52c41a"><strong>已完成：{{ record.summary?.completed_orders || 0 }}</strong></div>
-          <div style="color: #1890ff"><strong>进行中：{{ record.summary?.in_progress_orders || 0 }}</strong></div>
+          <div v-if="displayOptions.includes('total')"><strong>总订单：{{ record.summary?.total_orders || 0 }}</strong></div>
+          <div v-if="displayOptions.includes('completed')" style="color: #52c41a"><strong>已完成：{{ record.summary?.completed_orders || 0 }}</strong></div>
+          <div v-if="displayOptions.includes('in_progress')" style="color: #1890ff"><strong>进行中：{{ record.summary?.in_progress_orders || 0 }}</strong></div>
         </template>
       </template>
     </a-table>
@@ -108,6 +117,10 @@ const searchForm = reactive({
 })
 
 const dateRange = ref([])
+
+// ========== 显示选项 ==========
+
+const displayOptions = ref(['total', 'completed', 'in_progress'])
 
 /**
  * 查询
@@ -256,6 +269,13 @@ onMounted(() => {
 .handler-statistics-container {
   .search-form {
     margin-bottom: 16px;
+  }
+
+  .display-options {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #fafafa;
+    border-radius: 4px;
   }
 }
 </style>
