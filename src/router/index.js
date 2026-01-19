@@ -91,11 +91,11 @@ const routes = [
           }
         ]
       },
-      // 笼位租赁管理
+      // 笼位预约管理
       {
         path: 'cage',
         name: 'CageManagement',
-        meta: { title: '笼位租赁', icon: 'HomeOutlined' },
+        meta: { title: '笼位预约', icon: 'HomeOutlined' },
         children: [
           {
             path: 'reservations',

@@ -1,12 +1,12 @@
 /**
- * 笼位租赁管理接口
+ * 笼位预约管理接口
  */
 import request from '@/utils/request'
 
-// ========== 笼位租赁订单管理 ==========
+// ========== 笼位预约订单管理 ==========
 
 /**
- * 获取笼位租赁订单列表
+ * 获取笼位预约订单列表
  * @param {Object} params - 查询参数
  */
 export function getCageReservationList(params) {
@@ -18,7 +18,7 @@ export function getCageReservationList(params) {
 }
 
 /**
- * 获取笼位租赁订单详情
+ * 获取笼位预约订单详情
  * @param {number} id - 订单ID
  */
 export function getCageReservationDetail(id) {
@@ -29,7 +29,7 @@ export function getCageReservationDetail(id) {
 }
 
 /**
- * 创建笼位租赁订单
+ * 创建笼位预约订单
  * @param {Object} data - 订单信息
  */
 export function createCageReservation(data) {
@@ -41,7 +41,7 @@ export function createCageReservation(data) {
 }
 
 /**
- * 更新笼位租赁订单
+ * 更新笼位预约订单
  * @param {number} id - 订单ID
  * @param {Object} data - 订单信息
  */
@@ -54,7 +54,7 @@ export function updateCageReservation(id, data) {
 }
 
 /**
- * 审核笼位租赁订单
+ * 审核笼位预约订单
  * @param {number} id - 订单ID
  * @param {Object} data - 审核信息（status: 1-通过 2-拒绝, handlerId/rejectReason）
  */
@@ -67,7 +67,7 @@ export function auditCageReservation(id, data) {
 }
 
 /**
- * 完成笼位租赁订单
+ * 完成笼位预约订单
  * @param {number} id - 订单ID
  */
 export function completeCageReservation(id) {
@@ -78,7 +78,7 @@ export function completeCageReservation(id) {
 }
 
 /**
- * 取消笼位租赁订单
+ * 取消笼位预约订单
  * @param {number} id - 订单ID
  */
 export function cancelCageReservation(id) {
@@ -89,7 +89,7 @@ export function cancelCageReservation(id) {
 }
 
 /**
- * 获取笼位租赁统计
+ * 获取笼位预约统计
  * @param {Object} params - 查询参数
  */
 export function getCageReservationStatistics(params) {
