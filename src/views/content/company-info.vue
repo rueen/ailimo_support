@@ -61,7 +61,7 @@
           placeholder="请输入视频链接URL，例如：https://example.com/video.mp4"
         />
       </a-form-item>
-      <a-form-item :wrapper-col="{ offset: 3 }">
+      <a-form-item :wrapper-col="{ offset: 3 }" v-if="userStore.hasPermission('company_info:update')">
         <a-space>
           <a-button type="primary" :loading="submitting" @click="handleSubmit">
             <SaveOutlined />
@@ -97,7 +97,9 @@ import {
   updateCompanyInfo
 } from '@/api/content'
 import { uploadImage } from '@/api/upload'
+import { useUserStore } from '@/store'
 
+const userStore = useUserStore()
 const loading = ref(false)
 const submitting = ref(false)
 const formRef = ref()

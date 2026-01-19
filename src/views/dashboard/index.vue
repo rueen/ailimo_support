@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-container">
     <!-- 统计数据 -->
-    <a-row :gutter="16" class="stats-row">
+    <a-row :gutter="16" class="stats-row" v-if="userStore.hasPermission('statistics:overview')">
       <a-col :xs="24" :sm="12" :lg="8" :xl="4">
         <a-card hoverable :loading="loading">
           <a-statistic
@@ -14,7 +14,7 @@
       <a-col :xs="24" :sm="12" :lg="8" :xl="4">
         <a-card hoverable :loading="loading">
           <a-statistic
-            title="仪器预约"
+            title="设备预约"
             :value="statistics.pendingEquipmentReservations"
             :value-style="{ color: '#faad14' }"
           />
@@ -63,7 +63,9 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { getStatisticsOverview } from '@/api/content'
+import { useUserStore } from '@/store'
 
+const userStore = useUserStore()
 /**
  * 统计数据
  */
@@ -87,11 +89,11 @@ const fetchStatistics = async () => {
     const data = res.data
     // 从返回的数据结构中提取待审核数量
     statistics.pendingUsers = data.users?.pending || 0
-    statistics.pendingEquipmentReservations = data.equipmentReservations?.pending || 0
-    statistics.pendingCageReservations = data.cageReservations?.pending || 0
-    statistics.pendingExperimentOperations = data.experimentOperations?.pending || 0
-    statistics.pendingAnimalOrders = data.animalOrders?.pending || 0
-    statistics.pendingReagentOrders = data.reagentOrders?.pending || 0
+    statistics.pendingEquipmentReservations = data.equipment_reservations?.pending || 0
+    statistics.pendingCageReservations = data.cage_reservations?.pending || 0
+    statistics.pendingExperimentOperations = data.experiment_operations?.pending || 0
+    statistics.pendingAnimalOrders = data.animal_orders?.pending || 0
+    statistics.pendingReagentOrders = data.reagent_orders?.pending || 0
   } catch (error) {
     console.error('获取统计数据失败：', error)
     // 使用模拟数据
