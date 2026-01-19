@@ -8,7 +8,7 @@
         <a-form-item label="负责人">
           <a-select
             v-model:value="searchForm.handler_id"
-            placeholder="请选择负责人（不选则统计全部）"
+            placeholder="请选择负责人"
             allow-clear
             style="width: 200px"
             :options="handlerOptions"
@@ -53,30 +53,30 @@
         <template v-if="column.key === 'handler'">
           {{ record.handler_name || '-' }}
         </template>
-        <template v-else-if="column.key === 'equipment_reservations'">
-          <div>总数：{{ record.equipment_reservations?.total || 0 }}</div>
-          <div style="color: #52c41a">完成：{{ record.equipment_reservations?.completed || 0 }}</div>
-          <div style="color: #1890ff">进行中：{{ record.equipment_reservations?.in_progress || 0 }}</div>
+        <template v-else-if="column.key === 'equipment'">
+          <div>总数：{{ record.equipment?.total || 0 }}</div>
+          <div style="color: #52c41a">完成：{{ record.equipment?.completed || 0 }}</div>
+          <div style="color: #1890ff">进行中：{{ record.equipment?.in_progress || 0 }}</div>
         </template>
-        <template v-else-if="column.key === 'cage_reservations'">
-          <div>总数：{{ record.cage_reservations?.total || 0 }}</div>
-          <div style="color: #52c41a">完成：{{ record.cage_reservations?.completed || 0 }}</div>
-          <div style="color: #1890ff">进行中：{{ record.cage_reservations?.in_progress || 0 }}</div>
+        <template v-else-if="column.key === 'cage'">
+          <div>总数：{{ record.cage?.total || 0 }}</div>
+          <div style="color: #52c41a">完成：{{ record.cage?.completed || 0 }}</div>
+          <div style="color: #1890ff">进行中：{{ record.cage?.in_progress || 0 }}</div>
         </template>
-        <template v-else-if="column.key === 'experiment_operations'">
-          <div>总数：{{ record.experiment_operations?.total || 0 }}</div>
-          <div style="color: #52c41a">完成：{{ record.experiment_operations?.completed || 0 }}</div>
-          <div style="color: #1890ff">进行中：{{ record.experiment_operations?.in_progress || 0 }}</div>
+        <template v-else-if="column.key === 'experiment'">
+          <div>总数：{{ record.experiment?.total || 0 }}</div>
+          <div style="color: #52c41a">完成：{{ record.experiment?.completed || 0 }}</div>
+          <div style="color: #1890ff">进行中：{{ record.experiment?.in_progress || 0 }}</div>
         </template>
-        <template v-else-if="column.key === 'animal_orders'">
-          <div>总数：{{ record.animal_orders?.total || 0 }}</div>
-          <div style="color: #52c41a">完成：{{ record.animal_orders?.completed || 0 }}</div>
-          <div style="color: #1890ff">进行中：{{ record.animal_orders?.in_progress || 0 }}</div>
+        <template v-else-if="column.key === 'animal'">
+          <div>总数：{{ record.animal?.total || 0 }}</div>
+          <div style="color: #52c41a">完成：{{ record.animal?.completed || 0 }}</div>
+          <div style="color: #1890ff">进行中：{{ record.animal?.in_progress || 0 }}</div>
         </template>
-        <template v-else-if="column.key === 'reagent_orders'">
-          <div>总数：{{ record.reagent_orders?.total || 0 }}</div>
-          <div style="color: #52c41a">完成：{{ record.reagent_orders?.completed || 0 }}</div>
-          <div style="color: #1890ff">进行中：{{ record.reagent_orders?.in_progress || 0 }}</div>
+        <template v-else-if="column.key === 'reagent'">
+          <div>总数：{{ record.reagent?.total || 0 }}</div>
+          <div style="color: #52c41a">完成：{{ record.reagent?.completed || 0 }}</div>
+          <div style="color: #1890ff">进行中：{{ record.reagent?.in_progress || 0 }}</div>
         </template>
         <template v-else-if="column.key === 'summary'">
           <div><strong>总订单：{{ record.summary?.total_orders || 0 }}</strong></div>
@@ -157,27 +157,27 @@ const columns = [
   },
   { 
     title: '设备预约', 
-    key: 'equipment_reservations', 
+    key: 'equipment', 
     width: 140
   },
   { 
     title: '笼位预约', 
-    key: 'cage_reservations', 
+    key: 'cage', 
     width: 140
   },
   { 
     title: '实验代操作', 
-    key: 'experiment_operations', 
+    key: 'experiment', 
     width: 140
   },
   { 
     title: '动物订单', 
-    key: 'animal_orders', 
+    key: 'animal', 
     width: 140
   },
   { 
     title: '试剂耗材订单', 
-    key: 'reagent_orders', 
+    key: 'reagent', 
     width: 140
   },
   { 
@@ -204,8 +204,8 @@ const fetchTableData = async () => {
     }
     
     if (dateRange.value && dateRange.value.length === 2) {
-      params.startDate = dateRange.value[0]
-      params.endDate = dateRange.value[1]
+      params.start_date = dateRange.value[0]
+      params.end_date = dateRange.value[1]
     }
     
     const res = await getHandlerStatistics(params)
