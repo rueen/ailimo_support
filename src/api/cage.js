@@ -185,18 +185,6 @@ export function getEnvironmentsByAnimalType(params) {
   })
 }
 
-/**
- * 查询笼位可用时间段
- * @param {Object} params - 查询参数 { animal_type_id, environment_id, date }
- */
-export function getCageAvailableTimeSlots(params) {
-  return request({
-    url: '/support/cages/available-time-slots',
-    method: 'GET',
-    params
-  })
-}
-
 // ========== 笼位用途管理 ==========
 
 /**
@@ -267,73 +255,3 @@ export function deleteCagePurpose(id) {
     method: 'DELETE'
   })
 }
-
-// ========== 笼位时间段管理 ==========
-
-/**
- * 获取笼位时间段列表
- */
-export function getCageTimeSlotList() {
-  return request({
-    url: '/support/cage-time-slots',
-    method: 'GET'
-  })
-}
-
-/**
- * 获取笼位时间段选项列表
- */
-export function getCageTimeSlotOptions() {
-  return request({
-    url: '/support/cage-time-slots/options',
-    method: 'GET'
-  })
-}
-
-/**
- * 获取笼位时间段详情
- * @param {number} id - 时间段ID
- */
-export function getCageTimeSlotDetail(id) {
-  return request({
-    url: `/support/cage-time-slots/${id}`,
-    method: 'GET'
-  })
-}
-
-/**
- * 创建笼位时间段
- * @param {Object} data - 时间段信息
- */
-export function createCageTimeSlot(data) {
-  return request({
-    url: '/support/cage-time-slots',
-    method: 'POST',
-    data
-  })
-}
-
-/**
- * 更新笼位时间段
- * @param {number} id - 时间段ID
- * @param {Object} data - 时间段信息
- */
-export function updateCageTimeSlot(id, data) {
-  return request({
-    url: `/support/cage-time-slots/${id}`,
-    method: 'PUT',
-    data
-  })
-}
-
-/**
- * 删除笼位时间段
- * @param {number} id - 时间段ID
- */
-export function deleteCageTimeSlot(id) {
-  return request({
-    url: `/support/cage-time-slots/${id}`,
-    method: 'DELETE'
-  })
-}
-

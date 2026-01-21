@@ -117,16 +117,8 @@
           <div>环境类型：{{ record.environment?.name }}</div>
           <div>笼位数量：{{ record.quantity }}</div>
         </template>
-        <template v-if="column.key === 'time_slots'">
-          <div>{{ record.reservation_date }}</div>
-          <a-tag
-            v-for="(slot, index) in record.time_slots"
-            :key="index"
-            color="blue"
-            style="margin-bottom: 4px"
-          >
-            {{ slot }}
-          </a-tag>
+        <template v-if="column.key === 'date_range'">
+          {{ formatDateRange(record.start_date, record.end_date) }}
         </template>
         <template v-if="column.key === 'status'">
           <a-tag :color="getStatusColor(record.status)">
@@ -252,35 +244,38 @@
             :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
-        <a-form-item label="预约日期" name="reservation_date">
+        <a-form-item label="预约开始日期" name="start_date">
           <a-date-picker
-            v-model:value="formData.reservation_date"
+            v-model:value="formData.start_date"
             format="YYYY-MM-DD"
-            :value-format="'YYYY-MM-DD'"
-            :disabled-date="disabledDate"
-            placeholder="请选择日期"
+            value-format="YYYY-MM-DD"
+            :disabled-date="disabledStartDate"
+            placeholder="请选择开始日期"
             style="width: 100%"
-            @change="handleDateChange"
+            @change="handleStartDateChange"
           />
         </a-form-item>
-        <a-form-item label="预约时段" name="time_slots">
-          <a-select
-            v-model:value="formData.time_slots"
-            mode="multiple"
-            placeholder="请选择时间段"
-            :disabled="!formData.environment_id || !formData.reservation_date"
-            :not-found-content="formData.environment_id && formData.reservation_date ? '暂无可用时段' : '请先选择环境类型和日期'"
-            @change="handleTimeSlotsChange"
-          >
-            <a-select-option
-              v-for="slot in timeSlotOptions"
-              :key="slot.display_time"
-              :value="slot.display_time"
-              :disabled="slot.available_quantity <= 0"
-            >
-              {{ slot.display_time }} (可用:{{ slot.available_quantity }})
-            </a-select-option>
-          </a-select>
+        <a-form-item label="预约结束日期" name="end_date">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <a-date-picker
+              v-model:value="formData.end_date"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              :disabled-date="disabledEndDate"
+              :disabled="formData.is_long_term"
+              placeholder="请选择结束日期"
+              style="flex: 1;"
+              @change="handleEndDateChange"
+            />
+            <a-form-item-rest>
+              <a-checkbox
+                v-model:checked="formData.is_long_term"
+                @change="handleLongTermChange"
+              >
+                长期预约
+              </a-checkbox>
+            </a-form-item-rest>
+          </div>
         </a-form-item>
         <a-form-item label="笼位数量" name="quantity">
           <a-input-number
@@ -288,10 +283,12 @@
             :min="1"
             placeholder="请输入数量"
             style="width: 100%"
-            @change="handleQuantityChange"
           />
-          <div v-if="formData.id === null && getMinAvailableQuantity() !== null" style="color: #999; margin-top: 4px">
-            所选时段可用笼位数量：{{ getMinAvailableQuantity() }}
+          <div v-if="availableQuantityInfo.total !== null" style="margin-top: 4px">
+            <a-spin v-if="availableQuantityLoading" size="small" />
+            <span v-else style="color: #999">
+              可用笼位：{{ availableQuantityInfo.available }} / {{ availableQuantityInfo.total }}
+            </span>
           </div>
         </a-form-item>
         <a-form-item label="备注" name="remark">
@@ -369,21 +366,11 @@
         <a-descriptions-item label="笼位数量">
           {{ detailData.quantity }}
         </a-descriptions-item>
-        <a-descriptions-item label="用途">
+        <a-descriptions-item label="用途" :span="2">
           {{ detailData.purpose?.name || '-' }}
         </a-descriptions-item>
-        <a-descriptions-item label="预约日期">
-          {{ detailData.reservation_date || '-' }}
-        </a-descriptions-item>
-        <a-descriptions-item label="预约时段" :span="2">
-          <a-tag
-            v-for="(slot, index) in detailData.time_slots"
-            :key="index"
-            color="blue"
-            style="margin-right: 4px; margin-bottom: 4px"
-          >
-            {{ slot }}
-          </a-tag>
+        <a-descriptions-item label="预约日期" :span="2">
+          {{ formatDateRange(detailData.start_date, detailData.end_date) }}
         </a-descriptions-item>
         <a-descriptions-item label="负责人">
           {{ detailData.handler?.name || '-' }}
@@ -434,8 +421,9 @@ import {
   cancelCageReservation,
   getCagePurposeOptions,
   getEnvironmentsByAnimalType,
-  getCageAvailableTimeSlots
+  getCageAvailableQuantity
 } from '@/api/cage'
+import { debounce } from 'lodash-es'
 import { getAnimalTypeOptions, getEnvironmentTypeOptions, getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
 import { getAdvanceDays } from '@/api/content'
@@ -492,7 +480,7 @@ const columns = [
   { title: '用户信息', key: 'user_info', width: 120 },
   { title: '笼位信息', key: 'cage_info', width: 120 },
   { title: '用途', dataIndex: ['purpose', 'name'], width: 100 },
-  { title: '预约时间', key: 'time_slots', width: 100 },
+  { title: '预约日期', key: 'date_range', width: 200 },
   { title: '状态', key: 'status', width: 100 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
@@ -567,8 +555,9 @@ const formData = reactive({
   environment_id: undefined,
   quantity: 1,
   purpose_id: undefined,
-  reservation_date: null,
-  time_slots: [],
+  start_date: null,
+  end_date: null,
+  is_long_term: false,
   remark: ''
 })
 
@@ -578,24 +567,35 @@ const formRules = {
   environment_id: [{ required: true, message: '请选择环境类型', trigger: 'change' }],
   quantity: [
     { required: true, message: '请输入数量', trigger: 'blur' },
-    { 
+    {
       validator: (rule, value) => {
-        // 编辑模式下不校验数量（已锁定的订单由接口端校验）
-        if (formData.id !== null) {
-          return Promise.resolve()
-        }
-        const maxQty = getMaxQuantity()
-        if (value > maxQty) {
-          return Promise.reject(`数量不能超过 ${maxQty}`)
+        if (availableQuantityInfo.available !== null && value > availableQuantityInfo.available) {
+          return Promise.reject(`可用笼位数量不足，当前可用：${availableQuantityInfo.available}`)
         }
         return Promise.resolve()
-      }, 
-      trigger: 'change' 
+      },
+      trigger: 'blur'
     }
   ],
   purpose_id: [{ required: true, message: '请选择用途', trigger: 'change' }],
-  reservation_date: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
-  time_slots: [{ required: true, message: '请选择预约时段', trigger: 'change', type: 'array', min: 1 }]
+  start_date: [{ required: true, message: '请选择预约开始日期', trigger: 'change' }],
+  end_date: [
+    {
+      validator: (rule, value) => {
+        if (formData.is_long_term) {
+          return Promise.resolve()
+        }
+        if (!value) {
+          return Promise.reject('请选择预约结束日期或勾选长期预约')
+        }
+        if (formData.start_date && value < formData.start_date) {
+          return Promise.reject('结束日期不能早于开始日期')
+        }
+        return Promise.resolve()
+      },
+      trigger: 'change'
+    }
+  ]
 }
 
 // 选项数据
@@ -603,10 +603,14 @@ const animalTypeOptions = ref([])
 const environmentTypeOptions = ref([]) // 所有环境类型（用于搜索）
 const dynamicEnvironmentOptions = ref([]) // 动态环境类型（根据动物类型筛选）
 const purposeOptions = ref([])
-const timeSlotOptions = ref([])
-const timeSlotQuantityMap = ref({}) // 时间段可用数量映射
-const totalCageQuantity = ref(0) // 总笼位数量
 const userOptions = ref([])
+
+// 可用数量信息
+const availableQuantityInfo = reactive({
+  total: null,
+  available: null
+})
+const availableQuantityLoading = ref(false)
 
 const handleAdd = () => {
   modalTitle.value = '新增订单'
@@ -619,21 +623,25 @@ const handleAdd = () => {
     environment_id: undefined,
     quantity: 1,
     purpose_id: undefined,
-    reservation_date: null,
-    time_slots: [],
+    start_date: null,
+    end_date: null,
+    is_long_term: false,
     remark: ''
   })
   // 重置动态数据
   userOptions.value = []
   dynamicEnvironmentOptions.value = []
-  timeSlotOptions.value = []
-  timeSlotQuantityMap.value = {}
-  totalCageQuantity.value = 0
+  availableQuantityInfo.total = null
+  availableQuantityInfo.available = null
+  availableQuantityLoading.value = false
 }
 
 const handleEdit = async (record) => {
   modalTitle.value = '编辑订单'
   modalVisible.value = true
+  
+  const isLongTerm = !record.end_date
+  
   Object.assign(formData, {
     id: record.id,
     user_id: record.user?.id,
@@ -641,10 +649,12 @@ const handleEdit = async (record) => {
     environment_id: record.environment?.id,
     quantity: record.quantity,
     purpose_id: record.purpose?.id,
-    reservation_date: record.reservation_date,
-    time_slots: record.time_slots || [],
+    start_date: record.start_date,
+    end_date: record.end_date,
+    is_long_term: isLongTerm,
     remark: record.remark
   })
+  
   // 设置用户选项（用于显示）
   if (record.user) {
     userOptions.value = [record.user]
@@ -655,23 +665,24 @@ const handleEdit = async (record) => {
     await loadEnvironmentsByAnimalType()
   }
   
-  // 加载可用时间段
-  if (formData.environment_id && formData.reservation_date) {
-    await loadAvailableTimeSlots()
+  // 查询可用数量
+  if (formData.animal_type_id && formData.environment_id && formData.start_date) {
+    await fetchAvailableQuantity()
   }
 }
 
 const handleSubmit = async () => {
   try {
     await formRef.value.validate()
+    
     const data = {
       user_id: formData.user_id,
       animal_type_id: formData.animal_type_id,
       environment_id: formData.environment_id,
       quantity: formData.quantity,
       purpose_id: formData.purpose_id,
-      reservation_date: formData.reservation_date,
-      time_slots: formData.time_slots,
+      start_date: formData.start_date,
+      end_date: formData.is_long_term ? null : formData.end_date,
       remark: formData.remark
     }
     
@@ -721,13 +732,11 @@ const handleUserChange = () => {
  * 动物类型改变
  */
 const handleAnimalTypeChange = async () => {
-  // 重置环境类型和时间段
+  // 重置环境类型和可用数量
   formData.environment_id = undefined
-  formData.time_slots = []
   dynamicEnvironmentOptions.value = []
-  timeSlotOptions.value = []
-  timeSlotQuantityMap.value = {}
-  totalCageQuantity.value = 0
+  availableQuantityInfo.total = null
+  availableQuantityInfo.available = null
   
   // 加载对应的环境类型
   if (formData.animal_type_id) {
@@ -739,89 +748,52 @@ const handleAnimalTypeChange = async () => {
  * 环境类型改变
  */
 const handleEnvironmentChange = async () => {
-  // 重置时间段
-  formData.time_slots = []
-  timeSlotOptions.value = []
-  timeSlotQuantityMap.value = {}
-  totalCageQuantity.value = 0
+  // 重置可用数量
+  availableQuantityInfo.total = null
+  availableQuantityInfo.available = null
   
-  // 如果环境和日期都已选择，加载可用时间段
-  if (formData.environment_id && formData.reservation_date) {
-    await loadAvailableTimeSlots()
-  }
+  // 触发可用数量查询
+  debouncedFetchAvailableQuantity()
 }
 
 /**
- * 日期改变
+ * 开始日期改变
  */
-const handleDateChange = async () => {
-  // 重置时间段
-  formData.time_slots = []
-  timeSlotOptions.value = []
-  timeSlotQuantityMap.value = {}
-  totalCageQuantity.value = 0
-  
-  // 如果环境和日期都已选择，加载可用时间段
-  if (formData.environment_id && formData.reservation_date) {
-    await loadAvailableTimeSlots()
-  }
-}
-
-/**
- * 时间段改变
- */
-const handleTimeSlotsChange = () => {
-  // 编辑模式下不校验数量（已锁定的订单由接口端校验）
-  if (formData.id !== null) {
-    return
-  }
-  // 校验数量是否超过最小可用数量
-  const minQty = getMinAvailableQuantity()
-  if (minQty !== null && formData.quantity > minQty) {
-    formData.quantity = minQty
-    message.warning(`笼位数量已自动调整为最大可用数量：${minQty}`)
-  }
-}
-
-/**
- * 数量改变
- */
-const handleQuantityChange = (value) => {
-  // 编辑模式下不校验数量（已锁定的订单由接口端校验）
-  if (formData.id !== null) {
-    return
-  }
-  const minQty = getMinAvailableQuantity()
-  if (minQty !== null && value > minQty) {
-    formData.quantity = minQty
-    message.warning(`笼位数量不能超过所选时段的剩余数量：${minQty}`)
-  }
-}
-
-/**
- * 获取所选时段的最小可用数量
- */
-const getMinAvailableQuantity = () => {
-  if (!formData.time_slots || formData.time_slots.length === 0) {
-    return null
+const handleStartDateChange = () => {
+  // 如果结束日期早于开始日期，清空结束日期
+  if (formData.end_date && formData.end_date < formData.start_date) {
+    formData.end_date = null
   }
   
-  const quantities = formData.time_slots.map(slot => timeSlotQuantityMap.value[slot] || 0)
-  return Math.min(...quantities)
+  // 触发可用数量查询
+  debouncedFetchAvailableQuantity()
 }
 
 /**
- * 获取最大可输入数量
+ * 结束日期改变
  */
-const getMaxQuantity = () => {
-  const minQty = getMinAvailableQuantity()
-  return minQty !== null ? minQty : 1000
+const handleEndDateChange = () => {
+  // 触发可用数量查询
+  debouncedFetchAvailableQuantity()
 }
 
 /**
- * 禁用日期（根据系统配置的提前预约天数）
+ * 长期预约改变
  */
- const disabledDate = (current) => {
+const handleLongTermChange = (e) => {
+  if (e.target.checked) {
+    // 勾选长期预约，清空结束日期
+    formData.end_date = null
+  }
+  
+  // 触发可用数量查询
+  debouncedFetchAvailableQuantity()
+}
+
+/**
+ * 禁用开始日期（根据系统配置的提前预约天数）
+ */
+const disabledStartDate = (current) => {
   if (!current) return false
   
   const today = dayjs().startOf('day')
@@ -829,6 +801,20 @@ const getMaxQuantity = () => {
   
   // 不能选择今天之前的日期，也不能选择超过最大提前预约天数的日期
   return current < today || current > maxDate
+}
+
+/**
+ * 禁用结束日期
+ */
+const disabledEndDate = (current) => {
+  if (!current) return false
+  
+  const today = dayjs().startOf('day')
+  const maxDate = today.add(advanceDays.value.cage_advance_days, 'day')
+  
+  // 不能选择今天之前的日期，不能选择早于开始日期的日期，也不能选择超过最大提前预约天数的日期
+  const minDate = formData.start_date ? dayjs(formData.start_date).startOf('day') : today
+  return current < minDate || current > maxDate
 }
 
 /**
@@ -1014,41 +1000,84 @@ const loadEnvironmentsByAnimalType = async () => {
 }
 
 /**
- * 加载可用时间段
+ * 查询可用数量
  */
-const loadAvailableTimeSlots = async () => {
-  if (!formData.animal_type_id || !formData.environment_id || !formData.reservation_date) {
-    timeSlotOptions.value = []
+const fetchAvailableQuantity = async () => {
+  // 检查必要条件
+  if (!formData.animal_type_id || !formData.environment_id || !formData.start_date) {
+    availableQuantityInfo.total = null
+    availableQuantityInfo.available = null
+    return
+  }
+  
+  // 如果未勾选长期预约且没有结束日期，不查询
+  if (!formData.is_long_term && !formData.end_date) {
+    availableQuantityInfo.total = null
+    availableQuantityInfo.available = null
     return
   }
   
   try {
-    const res = await getCageAvailableTimeSlots({
+    availableQuantityLoading.value = true
+    
+    const params = {
       animal_type_id: formData.animal_type_id,
       environment_id: formData.environment_id,
-      date: formData.reservation_date
-    })
+      start_date: formData.start_date
+    }
+    
+    // 如果不是长期预约，传递结束日期
+    if (!formData.is_long_term && formData.end_date) {
+      params.end_date = formData.end_date
+    }
+    
+    // 编辑模式下，排除当前订单（避免自己占用的数量被计算为不可用）
+    if (formData.id) {
+      params.exclude_reservation_id = formData.id
+    }
+    
+    const res = await getCageAvailableQuantity(params)
     
     if (res.data) {
-      totalCageQuantity.value = res.data.total_quantity || 0
-      timeSlotOptions.value = res.data.time_slots || []
-      
-      // 构建时间段可用数量映射
-      timeSlotQuantityMap.value = {}
-      timeSlotOptions.value.forEach(slot => {
-        timeSlotQuantityMap.value[slot.display_time] = slot.available_quantity
-      })
-      
-      if (timeSlotOptions.value.length === 0) {
-        message.warning('该日期暂无可用时段')
-      }
+      availableQuantityInfo.total = res.data.total_quantity
+      availableQuantityInfo.available = res.data.available_quantity
     }
   } catch (error) {
-    console.error('获取可用时间段失败：', error)
-    timeSlotOptions.value = []
-    timeSlotQuantityMap.value = {}
-    totalCageQuantity.value = 0
+    console.error('获取可用数量失败：', error)
+    availableQuantityInfo.total = null
+    availableQuantityInfo.available = null
+  } finally {
+    availableQuantityLoading.value = false
   }
+}
+
+/**
+ * 防抖查询可用数量
+ */
+const debouncedFetchAvailableQuantity = debounce(fetchAvailableQuantity, 300)
+
+/**
+ * 格式化日期范围显示
+ */
+const formatDateRange = (startDate, endDate) => {
+  if (!startDate) {
+    return '-'
+  }
+  
+  if (!endDate) {
+    return `${startDate} 至 长期`
+  }
+  
+  if (startDate === endDate) {
+    return `${startDate} 至 ${endDate} (1天)`
+  }
+  
+  // 计算天数
+  const start = dayjs(startDate)
+  const end = dayjs(endDate)
+  const days = end.diff(start, 'day') + 1
+  
+  return `${startDate} 至 ${endDate} (${days}天)`
 }
 
 // ========== 初始化 ==========

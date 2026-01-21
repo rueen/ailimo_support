@@ -114,12 +114,6 @@ const routes = [
             name: 'CagePurposeList',
             component: () => import('@/views/cage/purpose.vue'),
             meta: { title: '用途管理', permission: 'cage_purpose:list' }
-          },
-          {
-            path: 'time-slots',
-            name: 'CageTimeSlotList',
-            component: () => import('@/views/cage/time-slot.vue'),
-            meta: { title: '时间段管理', permission: 'cage_time_slot:list' }
           }
         ]
       },
