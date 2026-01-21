@@ -336,7 +336,7 @@
             style="width: 100%"
           />
         </a-form-item>
-        <a-form-item label="地区" name="region">
+        <a-form-item label="收货地址" name="region">
           <RegionCascader
             v-model:province-id="formData.province_id"
             v-model:city-id="formData.city_id"
@@ -842,7 +842,7 @@ const handleModalCancel = () => {
 }
 
 /**
- * 地区变化
+ * 收货地址变化
  */
 const handleRegionChange = () => {
   // 手动触发表单验证
