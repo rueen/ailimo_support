@@ -118,15 +118,18 @@
           <div>操作内容：{{ record.operation_content?.name }}</div>
         </template>
         <template v-if="column.key === 'time_slots'">
-          <div>{{ record.reservation_date }}</div>
-          <a-tag
-            v-for="(slot, index) in record.time_slots"
-            :key="index"
-            color="blue"
-            style="margin-bottom: 4px"
-          >
-            {{ slot }}
-          </a-tag>
+          <div v-for="(slots, date) in groupTimeSlotsByDate(record.time_slots)" :key="date">
+            <div style="font-weight: 500; margin-bottom: 4px">{{ date }}</div>
+            <a-tag
+              v-for="(slot, index) in slots"
+              :key="index"
+              color="blue"
+              style="margin-right: 4px; margin-bottom: 4px"
+            >
+              {{ slot }}
+            </a-tag>
+          </div>
+          <span v-if="!record.time_slots || record.time_slots.length === 0">-</span>
         </template>
         <template v-if="column.key === 'status'">
           <a-tag :color="getStatusColor(record.status)">
@@ -195,7 +198,7 @@
     <a-modal
       v-model:open="modalVisible"
       :title="modalTitle"
-      :width="800"
+      :width="900"
       @ok="handleSubmit"
       @cancel="handleModalCancel"
     >
@@ -249,25 +252,66 @@
             style="width: 100%"
           />
         </a-form-item>
-        <a-form-item label="预约日期" name="reservation_date">
-          <a-date-picker
-            v-model:value="formData.reservation_date"
-            format="YYYY-MM-DD"
-            :value-format="'YYYY-MM-DD'"
-            :disabled-date="disabledDate"
-            placeholder="请选择日期"
-            style="width: 100%"
-          />
+        
+        <!-- 多日期预约表单 -->
+        <a-form-item label="预约时段" name="selectedDates" required>
+          <div class="date-slots-container">
+            <div
+              v-for="(dateItem, index) in formData.selectedDates"
+              :key="index"
+              class="date-slot-item"
+            >
+              <a-card size="small" :title="`日期 ${index + 1}`" class="date-card">
+                <template #extra>
+                  <a-button
+                    type="link"
+                    danger
+                    size="small"
+                    @click="handleRemoveDate(index)"
+                  >
+                    删除
+                  </a-button>
+                </template>
+                
+                <a-form-item label="日期" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
+                  <a-date-picker
+                    v-model:value="dateItem.date"
+                    :disabled-date="disabledDate"
+                    format="YYYY-MM-DD"
+                    value-format="YYYY-MM-DD"
+                    placeholder="请选择日期"
+                    style="width: 100%"
+                    @change="() => handleDateChange(index)"
+                  />
+                </a-form-item>
+                
+                <a-form-item label="时间段" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
+                  <a-select
+                    v-model:value="dateItem.slots"
+                    mode="multiple"
+                    placeholder="请选择时间段"
+                    :options="dateItem.availableSlots"
+                  >
+                    <template #notFoundContent>
+                      <a-empty description="暂无可用时段" />
+                    </template>
+                  </a-select>
+                </a-form-item>
+              </a-card>
+            </div>
+            
+            <a-button
+              type="dashed"
+              block
+              @click="handleAddDate"
+              style="margin-top: 8px"
+            >
+              <PlusOutlined />
+              添加日期
+            </a-button>
+          </div>
         </a-form-item>
-        <a-form-item label="预约时段" name="time_slots">
-          <a-select
-            v-model:value="formData.time_slots"
-            mode="multiple"
-            placeholder="请选择时间段"
-            :options="timeSlotOptions"
-            :field-names="{ label: 'display_time', value: 'display_time' }"
-          />
-        </a-form-item>
+        
         <a-form-item label="备注" name="remark">
           <a-textarea
             v-model:value="formData.remark"
@@ -337,21 +381,28 @@
         <a-descriptions-item label="动物类型">
           {{ detailData.animal_type?.name || '-' }}
         </a-descriptions-item>
-        <a-descriptions-item label="动物数量">
+        <a-descriptions-item label="动物数量" :span="2">
           {{ detailData.quantity }}
         </a-descriptions-item>
-        <a-descriptions-item label="预约日期" :span="2">
-          {{ detailData.reservation_date || '-' }}
-        </a-descriptions-item>
         <a-descriptions-item label="预约时段" :span="2">
-          <a-tag
-            v-for="(slot, index) in detailData.time_slots"
-            :key="index"
-            color="blue"
-            style="margin-right: 4px; margin-bottom: 4px"
-          >
-            {{ slot }}
-          </a-tag>
+          <div v-if="detailData.time_slots && detailData.time_slots.length > 0">
+            <div
+              v-for="(slots, date) in groupTimeSlotsByDate(detailData.time_slots)"
+              :key="date"
+              style="margin-bottom: 8px"
+            >
+              <div style="font-weight: 500; margin-bottom: 4px">{{ date }}:</div>
+              <a-tag
+                v-for="(slot, index) in slots"
+                :key="index"
+                color="blue"
+                style="margin-right: 4px; margin-bottom: 4px"
+              >
+                {{ slot }}
+              </a-tag>
+            </div>
+          </div>
+          <span v-else>-</span>
         </a-descriptions-item>
         <a-descriptions-item label="负责人">
           {{ detailData.handler?.name || '-' }}
@@ -407,6 +458,11 @@ import { getAnimalTypeOptions, getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
 import { getAdvanceDays } from '@/api/content'
 import { useUserStore } from '@/store'
+import {
+  groupTimeSlotsByDate,
+  flattenTimeSlots,
+  extractDatesFromSlots
+} from '@/utils/timeSlot'
 
 const userStore = useUserStore()
 const route = useRoute()
@@ -543,9 +599,15 @@ const formData = reactive({
   operation_content_id: undefined,
   animal_type_id: undefined,
   quantity: 1,
-  reservation_date: null,
-  time_slots: [],
-  remark: ''
+  selectedDates: [
+    {
+      date: null,
+      slots: [],
+      availableSlots: []
+    }
+  ],
+  remark: '',
+  originalTimeSlots: null
 })
 
 const formRules = {
@@ -553,8 +615,29 @@ const formRules = {
   operation_content_id: [{ required: true, message: '请选择操作内容', trigger: 'change' }],
   animal_type_id: [{ required: true, message: '请选择动物类型', trigger: 'change' }],
   quantity: [{ required: true, message: '请输入动物数量', trigger: 'blur' }],
-  reservation_date: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
-  time_slots: [{ required: true, message: '请选择预约时段', trigger: 'change', type: 'array', min: 1 }]
+  selectedDates: [
+    {
+      required: true,
+      validator: (rule, value) => {
+        if (!value || value.length === 0) {
+          return Promise.reject('请至少添加一个预约日期')
+        }
+        
+        for (let i = 0; i < value.length; i++) {
+          const item = value[i]
+          if (!item.date) {
+            return Promise.reject(`请选择日期 ${i + 1}`)
+          }
+          if (!item.slots || item.slots.length === 0) {
+            return Promise.reject(`请选择日期 ${i + 1} 的时间段`)
+          }
+        }
+        
+        return Promise.resolve()
+      },
+      trigger: 'change'
+    }
+  ]
 }
 
 // 选项数据
@@ -563,6 +646,91 @@ const operationContentOptions = ref([])
 const timeSlotOptions = ref([])
 const userOptions = ref([])
 
+/**
+ * 添加日期
+ */
+const handleAddDate = () => {
+  formData.selectedDates.push({
+    date: null,
+    slots: [],
+    availableSlots: []
+  })
+}
+
+/**
+ * 删除日期
+ */
+const handleRemoveDate = (index) => {
+  if (formData.selectedDates.length === 1) {
+    message.warning('至少保留一个日期')
+    return
+  }
+  formData.selectedDates.splice(index, 1)
+}
+
+/**
+ * 日期变化 - 重新加载时间段选项
+ */
+const handleDateChange = (index) => {
+  const dateItem = formData.selectedDates[index]
+  dateItem.slots = []
+  loadTimeSlotOptionsForDate(index)
+}
+
+/**
+ * 加载时间段选项
+ */
+const loadTimeSlotOptionsForDate = async (index) => {
+  const dateItem = formData.selectedDates[index]
+  
+  if (!dateItem.date) {
+    dateItem.availableSlots = []
+    return
+  }
+  
+  try {
+    // 加载所有时间段选项
+    const res = await getExperimentTimeSlotOptions()
+    const allSlots = res.data || []
+    
+    // 编辑时，当前订单在该日期下已选择的时段不应被标记为已预订
+    let currentDateSlots = []
+    if (formData.id && formData.originalTimeSlots) {
+      currentDateSlots = formData.originalTimeSlots
+        .filter(slot => slot.startsWith(dateItem.date))
+        .map(slot => slot.split(' ')[1])
+    }
+    
+    dateItem.availableSlots = allSlots.map(slot => {
+      // 获取时间段值
+      const timeValue = slot.display_time || slot.name || slot.value || slot
+      
+      // 判断是否为当前订单已选择的时段
+      const isCurrentSelected = currentDateSlots.includes(timeValue)
+      
+      // 判断是否已被预订
+      // 1. 通过 available 字段判断
+      // 2. 通过 booked 字段判断
+      const isBooked = !isCurrentSelected && (
+        slot.available === false || 
+        slot.booked === true
+      )
+      
+      return {
+        label: isBooked ? `${timeValue} (已预约)` : timeValue,
+        value: timeValue,
+        disabled: isBooked
+      }
+    })
+  } catch (error) {
+    console.error('获取时间段选项失败：', error)
+    dateItem.availableSlots = []
+  }
+}
+
+/**
+ * 新增
+ */
 const handleAdd = () => {
   modalTitle.value = '新增订单'
   modalVisible.value = true
@@ -573,41 +741,100 @@ const handleAdd = () => {
     operation_content_id: undefined,
     animal_type_id: undefined,
     quantity: 1,
-    reservation_date: null,
-    time_slots: [],
-    remark: ''
+    selectedDates: [
+      {
+        date: null,
+        slots: [],
+        availableSlots: []
+      }
+    ],
+    remark: '',
+    originalTimeSlots: null
   })
+  userOptions.value = []
+  
+  // 加载第一个日期的时间段选项
+  loadTimeSlotOptionsForDate(0)
 }
 
-const handleEdit = (record) => {
+/**
+ * 编辑
+ */
+const handleEdit = async (record) => {
   modalTitle.value = '编辑订单'
   modalVisible.value = true
+  formRef.value?.resetFields()
+  
+  // 保存原始时间段数据
+  const originalTimeSlots = record.time_slots || []
+  
+  // 将 time_slots 解析成 selectedDates 格式
+  const grouped = groupTimeSlotsByDate(originalTimeSlots)
+  const selectedDates = []
+  
+  for (const date of Object.keys(grouped).sort()) {
+    selectedDates.push({
+      date: date,
+      slots: grouped[date],
+      availableSlots: []
+    })
+  }
+  
+  // 如果没有时间段，初始化一个空的日期项
+  if (selectedDates.length === 0) {
+    selectedDates.push({
+      date: null,
+      slots: [],
+      availableSlots: []
+    })
+  }
+  
+  // 填充表单数据
   Object.assign(formData, {
     id: record.id,
     user_id: record.user?.id,
     operation_content_id: record.operation_content?.id,
     animal_type_id: record.animal_type?.id,
     quantity: record.quantity,
-    reservation_date: record.reservation_date,
-    time_slots: record.time_slots || [],
-    remark: record.remark
+    selectedDates: selectedDates,
+    remark: record.remark || '',
+    originalTimeSlots: originalTimeSlots
   })
+  
   // 设置用户选项
   if (record.user) {
     userOptions.value = [record.user]
   }
+  
+  // 加载每个日期的时间段选项
+  for (let i = 0; i < formData.selectedDates.length; i++) {
+    await loadTimeSlotOptionsForDate(i)
+  }
 }
 
+/**
+ * 提交
+ */
 const handleSubmit = async () => {
   try {
     await formRef.value.validate()
+    
+    // 将 selectedDates 转换成 time_slots 格式
+    const timeSlots = []
+    formData.selectedDates.forEach(dateItem => {
+      if (dateItem.date && dateItem.slots && dateItem.slots.length > 0) {
+        dateItem.slots.forEach(slot => {
+          timeSlots.push(`${dateItem.date} ${slot}`)
+        })
+      }
+    })
+    
     const data = {
       user_id: formData.user_id,
       operation_content_id: formData.operation_content_id,
       animal_type_id: formData.animal_type_id,
       quantity: formData.quantity,
-      reservation_date: formData.reservation_date,
-      time_slots: formData.time_slots,
+      time_slots: timeSlots,
       remark: formData.remark
     }
     
@@ -836,6 +1063,36 @@ onMounted(() => {
 
   .action-bar {
     margin-bottom: 16px;
+  }
+}
+
+.date-slots-container {
+  .date-slot-item {
+    margin-bottom: 16px;
+    
+    .date-card {
+      :deep(.ant-card-head) {
+        min-height: 40px;
+        padding: 0 12px;
+        
+        .ant-card-head-title {
+          padding: 8px 0;
+          font-size: 14px;
+        }
+      }
+      
+      :deep(.ant-card-body) {
+        padding: 12px;
+      }
+      
+      :deep(.ant-form-item) {
+        margin-bottom: 12px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
   }
 }
 </style>

@@ -106,15 +106,18 @@
           <div>{{ record.user?.phone }}</div>
         </template>
         <template v-if="column.key === 'time_slots'">
-          <div>{{ record.reservation_date }}</div>
-          <a-tag
-            v-for="(slot, index) in record.time_slots"
-            :key="index"
-            color="blue"
-            style="margin-bottom: 4px"
-          >
-            {{ slot }}
-          </a-tag>
+          <div v-for="(slots, date) in groupTimeSlotsByDate(record.time_slots)" :key="date">
+            <div style="font-weight: 500; margin-bottom: 4px">{{ date }}</div>
+            <a-tag
+              v-for="(slot, index) in slots"
+              :key="index"
+              color="blue"
+              style="margin-right: 4px; margin-bottom: 4px"
+            >
+              {{ slot }}
+            </a-tag>
+          </div>
+          <span v-if="!record.time_slots || record.time_slots.length === 0">-</span>
         </template>
         <template v-else-if="column.key === 'status'">
           <a-tag v-if="record.status === 0" color="orange">待审核</a-tag>
@@ -188,7 +191,7 @@
     <a-modal
       v-model:open="modalVisible"
       :title="modalTitle"
-      :width="700"
+      :width="800"
       @ok="handleSubmit"
       @cancel="handleCancelModal"
     >
@@ -229,28 +232,68 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="预约日期" name="reservation_date">
-          <a-date-picker
-            v-model:value="formData.reservation_date"
-            :disabled-date="disabledDate"
-            style="width: 100%"
-            @change="handleDateChange"
-          />
+        
+        <!-- 多日期预约表单 -->
+        <a-form-item label="预约时段" name="selectedDates" required>
+          <div class="date-slots-container">
+            <div
+              v-for="(dateItem, index) in formData.selectedDates"
+              :key="index"
+              class="date-slot-item"
+            >
+              <a-card size="small" :title="`日期 ${index + 1}`" class="date-card">
+                <template #extra>
+                  <a-button
+                    type="link"
+                    danger
+                    size="small"
+                    @click="handleRemoveDate(index)"
+                  >
+                    删除
+                  </a-button>
+                </template>
+                
+                <a-form-item label="日期" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
+                  <a-date-picker
+                    v-model:value="dateItem.date"
+                    :disabled-date="disabledDate"
+                    format="YYYY-MM-DD"
+                    value-format="YYYY-MM-DD"
+                    placeholder="请选择日期"
+                    style="width: 100%"
+                    @change="() => handleDateChangeNew(index)"
+                  />
+                </a-form-item>
+                
+                <a-form-item label="时间段" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
+                  <a-select
+                    v-model:value="dateItem.slots"
+                    mode="multiple"
+                    placeholder="请先选择设备和日期"
+                    :options="dateItem.availableSlots"
+                    :disabled="!formData.equipment_id || !dateItem.date"
+                    :not-found-content="formData.equipment_id && dateItem.date ? '暂无可用时段' : '请先选择设备和日期'"
+                  >
+                    <template #notFoundContent>
+                      <a-empty :description="formData.equipment_id && dateItem.date ? '暂无可用时段' : '请先选择设备和日期'" />
+                    </template>
+                  </a-select>
+                </a-form-item>
+              </a-card>
+            </div>
+            
+            <a-button
+              type="dashed"
+              block
+              @click="handleAddDate"
+              style="margin-top: 8px"
+            >
+              <PlusOutlined />
+              添加日期
+            </a-button>
+          </div>
         </a-form-item>
-        <a-form-item label="预约时段" name="time_slots">
-          <a-select
-            v-model:value="formData.time_slots"
-            mode="multiple"
-            placeholder="请先选择设备和日期"
-            :options="timeSlotOptions"
-            :disabled="!formData.equipment_id || !formData.reservation_date"
-            :not-found-content="formData.equipment_id && formData.reservation_date ? '暂无可用时段' : '请先选择设备和日期'"
-          >
-            <template #notFoundContent>
-              <a-empty :description="formData.equipment_id && formData.reservation_date ? '暂无可用时段' : '请先选择设备和日期'" />
-            </template>
-          </a-select>
-        </a-form-item>
+        
         <a-form-item label="备注" name="remark">
           <a-textarea v-model:value="formData.remark" :rows="3" />
         </a-form-item>
@@ -306,22 +349,28 @@
             <a-tag v-else-if="orderDetail.status === 4" color="default">已取消</a-tag>
             <span v-else>-</span>
           </a-descriptions-item>
-          <a-descriptions-item label="设备名称">
+          <a-descriptions-item label="设备名称" :span="2">
             {{ orderDetail.equipment?.name || '-' }}
           </a-descriptions-item>
-          <a-descriptions-item label="预约日期">
-            {{ orderDetail.reservation_date || '-' }}
-          </a-descriptions-item>
           <a-descriptions-item label="预约时段" :span="2">
-            <a-tag
-              v-for="(slot, index) in orderDetail.time_slots"
-              :key="index"
-              color="blue"
-              style="margin-right: 4px; margin-bottom: 4px"
-            >
-              {{ slot }}
-            </a-tag>
-            <span v-if="!orderDetail.time_slots || orderDetail.time_slots.length === 0">-</span>
+            <div v-if="orderDetail.time_slots && orderDetail.time_slots.length > 0">
+              <div
+                v-for="(slots, date) in groupTimeSlotsByDate(orderDetail.time_slots)"
+                :key="date"
+                style="margin-bottom: 8px"
+              >
+                <div style="font-weight: 500; margin-bottom: 4px">{{ date }}:</div>
+                <a-tag
+                  v-for="(slot, index) in slots"
+                  :key="index"
+                  color="blue"
+                  style="margin-right: 4px; margin-bottom: 4px"
+                >
+                  {{ slot }}
+                </a-tag>
+              </div>
+            </div>
+            <span v-else>-</span>
           </a-descriptions-item>
           <a-descriptions-item label="用户姓名">
             {{ orderDetail.user?.name || '-' }}
@@ -400,6 +449,11 @@ import { getUserList } from '@/api/user'
 import { getHandlerOptions } from '@/api/config'
 import { getAdvanceDays } from '@/api/content'
 import { useUserStore } from '@/store'
+import {
+  groupTimeSlotsByDate,
+  flattenTimeSlots,
+  extractDatesFromSlots
+} from '@/utils/timeSlot'
 
 const userStore = useUserStore()
 const route = useRoute()
@@ -524,52 +578,153 @@ const formData = reactive({
   id: null,
   equipment_id: undefined,
   user_id: undefined,
-  time_slots: [],
+  selectedDates: [
+    {
+      date: null,
+      slots: [],
+      availableSlots: []
+    }
+  ],
   remark: ''
 })
 
 const formRules = {
   equipment_id: [{ required: true, message: '请选择设备', trigger: 'change' }],
   user_id: [{ required: true, message: '请选择用户', trigger: 'change' }],
-  reservation_date: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
-  time_slots: [{ required: true, message: '请选择预约时间段', trigger: 'change' }]
+  selectedDates: [
+    {
+      required: true,
+      validator: (rule, value) => {
+        if (!value || value.length === 0) {
+          return Promise.reject('请至少添加一个预约日期')
+        }
+        
+        for (let i = 0; i < value.length; i++) {
+          const item = value[i]
+          if (!item.date) {
+            return Promise.reject(`请选择日期 ${i + 1}`)
+          }
+          if (!item.slots || item.slots.length === 0) {
+            return Promise.reject(`请选择日期 ${i + 1} 的时间段`)
+          }
+        }
+        
+        return Promise.resolve()
+      },
+      trigger: 'change'
+    }
+  ]
 }
 
 const equipmentOptions = ref([])
 const userOptions = ref([])
-const availableTimeSlots = ref([])
-const bookedTimeSlots = ref([])
 const advanceDays = ref({
   equipment_advance_days: 7  // 设备预约默认提前7天
 })
 
 /**
- * 时段选项（计算属性）
- * 标记已被预订的时段为禁用状态
- * 编辑时，当前订单已选择的时段不会被禁用
+ * 添加日期
  */
-const timeSlotOptions = computed(() => {
-  // 安全检查：确保 availableTimeSlots 是数组
-  if (!Array.isArray(availableTimeSlots.value)) {
-    return []
+const handleAddDate = () => {
+  formData.selectedDates.push({
+    date: null,
+    slots: [],
+    availableSlots: []
+  })
+}
+
+/**
+ * 删除日期
+ */
+const handleRemoveDate = (index) => {
+  if (formData.selectedDates.length === 1) {
+    message.warning('至少保留一个日期')
+    return
+  }
+  formData.selectedDates.splice(index, 1)
+}
+
+/**
+ * 日期变化 - 加载可用时间段
+ */
+const handleDateChangeNew = async (index) => {
+  const dateItem = formData.selectedDates[index]
+  dateItem.slots = []
+  
+  if (!formData.equipment_id || !dateItem.date) {
+    dateItem.availableSlots = []
+    return
   }
   
-  // 编辑时，当前订单已选择的时段列表
-  const currentSelectedSlots = formData.id ? (formData.time_slots || []) : []
-  
-  return availableTimeSlots.value.map(slot => {
-    // 如果是编辑模式且该时段已被当前订单选择，则不禁用
-    const isCurrentSelected = formData.id && currentSelectedSlots.includes(slot.display_time)
-    // 检查是否被其他订单预订
-    const isBooked = !isCurrentSelected && (bookedTimeSlots.value?.some(booked => booked === slot.display_time) || false)
+  try {
+    const params = {
+      date: dateItem.date
+    }
     
-    return {
-      label: isBooked ? `${slot.display_time} (已预订)` : slot.display_time,
-      value: slot.display_time,
-      disabled: isBooked
+    // 编辑时，排除当前订单的时段
+    if (formData.id) {
+      params.exclude_reservation_id = formData.id
+    }
+    
+    const res = await getEquipmentAvailableSlots(formData.equipment_id, params)
+    
+    // 根据实际API返回的数据结构调整
+    const allSlots = res.data.allSlots || res.data.available_slots || res.data || []
+    const bookedSlots = res.data.bookedSlots || res.data.booked_slots || []
+    
+    // 编辑时，当前订单在该日期下已选择的时段不应被标记为已预订
+    let currentDateSlots = []
+    if (formData.id && formData.originalTimeSlots) {
+      currentDateSlots = formData.originalTimeSlots
+        .filter(slot => slot.startsWith(dateItem.date))
+        .map(slot => slot.split(' ')[1])
+    }
+    
+    dateItem.availableSlots = allSlots.map(slot => {
+      // 获取时间段值
+      const timeValue = slot.display_time || slot.value || slot
+      
+      // 判断是否为当前订单已选择的时段
+      const isCurrentSelected = currentDateSlots.includes(timeValue)
+      
+      // 判断是否已被预订（三种判断方式）
+      // 1. 通过 available 字段判断
+      // 2. 通过 bookedSlots 数组判断
+      // 3. 通过 slot.booked 字段判断
+      const isBooked = !isCurrentSelected && (
+        slot.available === false || 
+        bookedSlots.includes(timeValue) || 
+        slot.booked === true
+      )
+      
+      return {
+        label: isBooked ? `${timeValue} (已预约)` : timeValue,
+        value: timeValue,
+        disabled: isBooked
+      }
+    })
+  } catch (error) {
+    console.error('获取可用时间段失败：', error)
+    dateItem.availableSlots = []
+  }
+}
+
+/**
+ * 设备变化 - 清空所有日期的时间段
+ */
+const handleEquipmentChange = () => {
+  formData.selectedDates.forEach(dateItem => {
+    dateItem.slots = []
+    dateItem.availableSlots = []
+  })
+  
+  // 重新加载已选日期的可用时间段
+  formData.selectedDates.forEach((dateItem, index) => {
+    if (dateItem.date) {
+      handleDateChangeNew(index)
     }
   })
-})
+}
 
 /**
  * 新增
@@ -582,31 +737,59 @@ const handleAdd = () => {
     id: null,
     equipment_id: undefined,
     user_id: undefined,
-    reservation_date: null,
-    time_slots: [],
-    remark: ''
+    selectedDates: [
+      {
+        date: null,
+        slots: [],
+        availableSlots: []
+      }
+    ],
+    remark: '',
+    originalTimeSlots: null
   })
-  availableTimeSlots.value = []
-  bookedTimeSlots.value = []
   userOptions.value = []
 }
 
 /**
  * 编辑
  */
-const handleEdit = (record) => {
+const handleEdit = async (record) => {
   modalTitle.value = '编辑设备预约订单'
   modalVisible.value = true
   formRef.value?.resetFields()
+  
+  // 保存原始时间段数据，用于编辑时排除已预订判断
+  const originalTimeSlots = record.time_slots || []
+  
+  // 将 time_slots 解析成 selectedDates 格式
+  const grouped = groupTimeSlotsByDate(originalTimeSlots)
+  const selectedDates = []
+  
+  for (const date of Object.keys(grouped).sort()) {
+    selectedDates.push({
+      date: date,
+      slots: grouped[date],
+      availableSlots: []
+    })
+  }
+  
+  // 如果没有时间段，初始化一个空的日期项
+  if (selectedDates.length === 0) {
+    selectedDates.push({
+      date: null,
+      slots: [],
+      availableSlots: []
+    })
+  }
   
   // 填充表单数据
   Object.assign(formData, {
     id: record.id,
     equipment_id: record.equipment?.id,
     user_id: record.user?.id,
-    reservation_date: record.reservation_date ? dayjs(record.reservation_date) : null,
-    time_slots: record.time_slots || [],
-    remark: record.remark || ''
+    selectedDates: selectedDates,
+    remark: record.remark || '',
+    originalTimeSlots: originalTimeSlots
   })
   
   // 设置用户选项（用于显示）
@@ -614,12 +797,9 @@ const handleEdit = (record) => {
     userOptions.value = [record.user]
   }
   
-  // 如果有设备和日期，加载可用时段
-  if (formData.equipment_id && formData.reservation_date) {
-    loadAvailableSlots()
-  } else {
-    availableTimeSlots.value = []
-    bookedTimeSlots.value = []
+  // 加载每个日期的可用时间段
+  for (let i = 0; i < formData.selectedDates.length; i++) {
+    await handleDateChangeNew(i)
   }
 }
 
@@ -629,11 +809,21 @@ const handleEdit = (record) => {
 const handleSubmit = async () => {
   try {
     await formRef.value.validate()
+    
+    // 将 selectedDates 转换成 time_slots 格式
+    const timeSlots = []
+    formData.selectedDates.forEach(dateItem => {
+      if (dateItem.date && dateItem.slots && dateItem.slots.length > 0) {
+        dateItem.slots.forEach(slot => {
+          timeSlots.push(`${dateItem.date} ${slot}`)
+        })
+      }
+    })
+    
     const data = {
       equipment_id: formData.equipment_id,
       user_id: formData.user_id,
-      reservation_date: dayjs(formData.reservation_date).format('YYYY-MM-DD'),
-      time_slots: formData.time_slots,
+      time_slots: timeSlots,
       remark: formData.remark
     }
     
@@ -675,26 +865,6 @@ const disabledDate = (current) => {
 }
 
 /**
- * 设备变化
- */
-const handleEquipmentChange = () => {
-  formData.time_slots = []
-  if (formData.equipment_id && formData.reservation_date) {
-    loadAvailableSlots()
-  }
-}
-
-/**
- * 日期变化
- */
-const handleDateChange = () => {
-  formData.time_slots = []
-  if (formData.equipment_id && formData.reservation_date) {
-    loadAvailableSlots()
-  }
-}
-
-/**
  * 用户搜索
  */
 const handleUserSearch = async (value) => {
@@ -728,33 +898,6 @@ const loadEquipmentOptions = async () => {
 const filterEquipmentOption = (input, option) => {
   const name = option.name || ''
   return name.toLowerCase().includes(input.toLowerCase())
-}
-
-/**
- * 加载可用时间段
- */
-const loadAvailableSlots = async () => {
-  try {
-    const params = {
-      date: dayjs(formData.reservation_date).format('YYYY-MM-DD')
-    }
-    
-    // 编辑时，排除当前订单的时段（避免自己的时段被标记为已预订）
-    if (formData.id) {
-      params.exclude_reservation_id = formData.id
-    }
-    
-    const res = await getEquipmentAvailableSlots(formData.equipment_id, params)
-    
-    // 根据实际API返回的数据结构调整
-    availableTimeSlots.value = res.data.allSlots || res.data.available_slots || res.data || []
-    bookedTimeSlots.value = res.data.bookedSlots || res.data.booked_slots || []
-    
-  } catch (error) {
-    console.error('获取可用时间段失败：', error)
-    availableTimeSlots.value = []
-    bookedTimeSlots.value = []
-  }
 }
 
 /**
@@ -927,6 +1070,36 @@ onMounted(() => {
 
   .action-bar {
     margin-bottom: 16px;
+  }
+}
+
+.date-slots-container {
+  .date-slot-item {
+    margin-bottom: 16px;
+    
+    .date-card {
+      :deep(.ant-card-head) {
+        min-height: 40px;
+        padding: 0 12px;
+        
+        .ant-card-head-title {
+          padding: 8px 0;
+          font-size: 14px;
+        }
+      }
+      
+      :deep(.ant-card-body) {
+        padding: 12px;
+      }
+      
+      :deep(.ant-form-item) {
+        margin-bottom: 12px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
   }
 }
 </style>
