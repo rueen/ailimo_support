@@ -46,6 +46,12 @@ const routes = [
             meta: { title: '组织机构', permission: 'organization:list' }
           },
           {
+            path: 'departments',
+            name: 'DepartmentList',
+            component: () => import('@/views/user/department.vue'),
+            meta: { title: '学院管理', permission: 'department:list' }
+          },
+          {
             path: 'research-groups',
             name: 'ResearchGroupList',
             component: () => import('@/views/user/research-group.vue'),

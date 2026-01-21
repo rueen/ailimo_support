@@ -27,6 +27,18 @@
             style="width: 150px"
             :options="organizationOptions"
             :field-names="{ label: 'name', value: 'id' }"
+            @change="handleSearchOrganizationChange"
+          />
+        </a-form-item>
+        <a-form-item label="学院">
+          <a-select
+            v-model:value="searchForm.department_id"
+            placeholder="请选择学院"
+            allow-clear
+            style="width: 150px"
+            :options="searchDepartmentOptions"
+            :field-names="{ label: 'name', value: 'id' }"
+            :disabled="!searchForm.organization_id"
           />
         </a-form-item>
         <a-form-item label="审核状态">
@@ -86,6 +98,7 @@
         </template>
         <template v-if="column.key === 'organization_info'">
           <div>{{ record.organization?.name }}</div>
+          <div>{{ record.department?.name }}</div>
           <div>{{ record.research_group?.name }}</div>
         </template>
         <template v-if="column.key === 'audit_info'">
@@ -196,12 +209,24 @@
             allow-clear
           />
         </a-form-item>
+        <a-form-item label="学院" name="department_id">
+          <a-select
+            v-model:value="formData.department_id"
+            :options="departmentOptions"
+            :field-names="{ label: 'name', value: 'id' }"
+            @change="handleDepartmentChange"
+            placeholder="请选择学院"
+            :disabled="!formData.organization_id"
+            allow-clear
+          />
+        </a-form-item>
         <a-form-item label="课题组" name="research_group_id">
           <a-select
             v-model:value="formData.research_group_id"
             :options="researchGroupOptions"
             :field-names="{ label: 'name', value: 'id' }"
             placeholder="请选择课题组"
+            :disabled="!formData.department_id"
             allow-clear
           />
         </a-form-item>
@@ -261,7 +286,10 @@
           <a-descriptions-item label="组织机构">
             {{ userDetail.organization?.name || '-' }}
           </a-descriptions-item>
-          <a-descriptions-item label="课题组">
+          <a-descriptions-item label="学院">
+            {{ userDetail.department?.name || '-' }}
+          </a-descriptions-item>
+          <a-descriptions-item label="课题组" :span="2">
             {{ userDetail.research_group?.name || '-' }}
           </a-descriptions-item>
           <a-descriptions-item label="审核状态">
@@ -314,7 +342,11 @@ import {
   deleteUser,
   auditUser
 } from '@/api/user'
-import { getOrganizationOptions, getResearchGroupOptions } from '@/api/organization'
+import { 
+  getOrganizationOptions, 
+  getDepartmentOptions,
+  getResearchGroupOptions 
+} from '@/api/organization'
 import { useUserStore } from '@/store'
 import RegionCascader from '@/components/RegionCascader.vue'
 
@@ -327,6 +359,7 @@ const searchForm = reactive({
   name: '',
   phone: '',
   organization_id: undefined,
+  department_id: undefined,
   audit_status: undefined
 })
 
@@ -346,9 +379,22 @@ const handleReset = () => {
     name: '',
     phone: '',
     organization_id: undefined,
+    department_id: undefined,
     audit_status: undefined
   })
+  searchDepartmentOptions.value = []
   handleSearch()
+}
+
+/**
+ * 搜索表单组织机构变化
+ */
+const handleSearchOrganizationChange = (value) => {
+  searchForm.department_id = undefined
+  searchDepartmentOptions.value = []
+  if (value) {
+    loadSearchDepartmentOptions(value)
+  }
 }
 
 // ========== 数据表格 ==========
@@ -434,6 +480,7 @@ const formData = reactive({
   district_id: undefined,
   address: '',
   organization_id: undefined,
+  department_id: undefined,
   research_group_id: undefined,
   // 新增用户时的审核状态
   audit_status: 1,
@@ -471,10 +518,13 @@ const formRules = {
     }
   ],
   organization_id: [{ required: true, message: '请选择组织机构', trigger: 'change' }],
+  department_id: [{ required: true, message: '请选择学院', trigger: 'change' }],
   research_group_id: [{ required: true, message: '请选择课题组', trigger: 'change' }]
 }
 
 const organizationOptions = ref([])
+const searchDepartmentOptions = ref([])
+const departmentOptions = ref([])
 const researchGroupOptions = ref([])
 
 /**
@@ -493,16 +543,20 @@ const handleAdd = () => {
     district_id: undefined,
     address: '',
     organization_id: undefined,
+    department_id: undefined,
     research_group_id: undefined,
     audit_status: 1,  // 新增时默认审核通过
     status: 1
   })
+  // 清空选项列表
+  departmentOptions.value = []
+  researchGroupOptions.value = []
 }
 
 /**
  * 编辑
  */
-const handleEdit = (record) => {
+const handleEdit = async (record) => {
   modalTitle.value = '编辑用户'
   modalVisible.value = true
   Object.assign(formData, {
@@ -515,13 +569,17 @@ const handleEdit = (record) => {
     district_id: record.district_id,
     address: record.address,
     organization_id: record.organization?.id,
+    department_id: record.department?.id,
     research_group_id: record.research_group?.id,
     audit_status: record.audit_status,  // 仅用于显示，不会提交
     status: record.status  // 编辑时可以修改状态
   })
-  // 加载课题组选项
+  // 依次加载学院和课题组选项
   if (record.organization?.id) {
-    loadResearchGroupOptions(record.organization.id)
+    await loadDepartmentOptions(record.organization.id)
+  }
+  if (record.department?.id) {
+    await loadResearchGroupOptions(record.department.id)
   }
 }
 
@@ -537,6 +595,7 @@ const handleSubmit = async () => {
       name: formData.name,
       phone: formData.phone,
       organization_id: formData.organization_id,
+      department_id: formData.department_id,
       research_group_id: formData.research_group_id
     }
     
@@ -587,14 +646,26 @@ const handleRegionChange = () => {
 }
 
 /**
- * 组织机构变化
+ * 组织机构变化（表单）
  */
 const handleOrganizationChange = (value) => {
+  formData.department_id = undefined
   formData.research_group_id = undefined
+  departmentOptions.value = []
+  researchGroupOptions.value = []
+  if (value) {
+    loadDepartmentOptions(value)
+  }
+}
+
+/**
+ * 学院变化（表单）
+ */
+const handleDepartmentChange = (value) => {
+  formData.research_group_id = undefined
+  researchGroupOptions.value = []
   if (value) {
     loadResearchGroupOptions(value)
-  } else {
-    researchGroupOptions.value = []
   }
 }
 
@@ -611,11 +682,35 @@ const loadOrganizationOptions = async () => {
 }
 
 /**
+ * 加载搜索表单的学院选项
+ */
+const loadSearchDepartmentOptions = async (organizationId) => {
+  try {
+    const res = await getDepartmentOptions({ organization_id: organizationId })
+    searchDepartmentOptions.value = res.data
+  } catch (error) {
+    console.error('获取学院选项失败：', error)
+  }
+}
+
+/**
+ * 加载表单的学院选项
+ */
+const loadDepartmentOptions = async (organizationId) => {
+  try {
+    const res = await getDepartmentOptions({ organization_id: organizationId })
+    departmentOptions.value = res.data
+  } catch (error) {
+    console.error('获取学院选项失败：', error)
+  }
+}
+
+/**
  * 加载课题组选项
  */
-const loadResearchGroupOptions = async (organizationId) => {
+const loadResearchGroupOptions = async (departmentId) => {
   try {
-    const res = await getResearchGroupOptions({ organization_id: organizationId })
+    const res = await getResearchGroupOptions({ department_id: departmentId })
     researchGroupOptions.value = res.data
   } catch (error) {
     console.error('获取课题组选项失败：', error)
