@@ -230,6 +230,24 @@ const routes = [
             name: 'CompanyInfo',
             component: () => import('@/views/content/company-info.vue'),
             meta: { title: '公司信息', permission: 'company_info:view' }
+          },
+          {
+            path: 'other-service/list',
+            name: 'OtherServiceList',
+            component: () => import('@/views/content/other-service-list.vue'),
+            meta: { title: '其他服务', permission: 'other_service:list' }
+          },
+          {
+            path: 'other-service/form',
+            name: 'OtherServiceForm',
+            component: () => import('@/views/content/other-service-form.vue'),
+            meta: { title: '新增其他服务', permission: 'other_service:create', hideInMenu: true }
+          },
+          {
+            path: 'other-service/form/:id',
+            name: 'OtherServiceEdit',
+            component: () => import('@/views/content/other-service-form.vue'),
+            meta: { title: '编辑其他服务', permission: 'other_service:update', hideInMenu: true }
           }
         ]
       },
