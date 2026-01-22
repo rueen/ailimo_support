@@ -59,7 +59,7 @@
                   :colspan="user.operations.length"
                   class="user-header"
                 >
-                  {{ user.name }}
+                  {{ getUserDisplayName(user) }}
                 </th>
                 <th rowspan="2" class="total-column">合计</th>
               </tr>
@@ -227,6 +227,18 @@ const fetchStatisticsData = async () => {
 }
 
 /**
+ * 格式化用户显示名称
+ * @param {Object} user - 用户对象
+ * @returns {string} 格式化后的用户名称
+ */
+const getUserDisplayName = (user) => {
+  if (user.research_group && user.research_group.name) {
+    return `${user.name}(${user.research_group.name})`
+  }
+  return user.name
+}
+
+/**
  * 格式化日期显示
  * @param {string} date - 日期字符串 YYYY-MM-DD
  */
@@ -328,7 +340,7 @@ const handleExport = async () => {
     // 第一行：用户名（合并单元格）
     const headerRow1 = ['日期']
     statisticsData.value.users.forEach(user => {
-      headerRow1.push(user.name)
+      headerRow1.push(getUserDisplayName(user))
       // 填充空白列以实现合并效果
       for (let i = 1; i < user.operations.length; i++) {
         headerRow1.push('')
