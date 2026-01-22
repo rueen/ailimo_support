@@ -136,6 +136,12 @@ const routes = [
             meta: { title: '代操作订单', permission: 'experiment_operation:list' }
           },
           {
+            path: 'statistics',
+            name: 'ExperimentOperationStatistics',
+            component: () => import('@/views/experiment/operation-statistics.vue'),
+            meta: { title: '代操作统计', permission: 'experiment_operation:statistics', hideInMenu: true }
+          },
+          {
             path: 'operation-contents',
             name: 'OperationContentList',
             component: () => import('@/views/experiment/operation-content.vue'),

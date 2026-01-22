@@ -87,14 +87,23 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button
-        v-if="userStore.hasPermission('experiment_operation:create')"
-        type="primary"
-        @click="handleAdd"
-      >
-        <PlusOutlined />
-        新增订单
-      </a-button>
+      <a-space>
+        <a-button
+          v-if="userStore.hasPermission('experiment_operation:create')"
+          type="primary"
+          @click="handleAdd"
+        >
+          <PlusOutlined />
+          新增订单
+        </a-button>
+        <a-button
+          v-if="userStore.hasPermission('experiment_operation:statistics')"
+          @click="handleGoToStatistics"
+        >
+          <BarChartOutlined />
+          代操作统计
+        </a-button>
+      </a-space>
     </div>
 
     <!-- 数据表格 -->
@@ -435,13 +444,14 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import {
   SearchOutlined,
   ReloadOutlined,
-  PlusOutlined
+  PlusOutlined,
+  BarChartOutlined
 } from '@ant-design/icons-vue'
 import {
   getExperimentOperationList,
@@ -466,6 +476,16 @@ import {
 
 const userStore = useUserStore()
 const route = useRoute()
+const router = useRouter()
+
+// ========== 跳转到统计页面 ==========
+
+/**
+ * 跳转到统计页面
+ */
+const handleGoToStatistics = () => {
+  router.push({ name: 'ExperimentOperationStatistics' })
+}
 
 // ========== 搜索表单 ==========
 
