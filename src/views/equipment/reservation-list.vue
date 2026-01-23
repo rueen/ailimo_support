@@ -372,14 +372,12 @@
             </div>
             <span v-else>-</span>
           </a-descriptions-item>
-          <a-descriptions-item label="用户姓名">
-            {{ orderDetail.user?.name || '-' }}
+          <a-descriptions-item label="备注" :span="2">
+            {{ orderDetail.remark || '-' }}
           </a-descriptions-item>
-          <a-descriptions-item label="用户手机号">
-            {{ orderDetail.user?.phone || '-' }}
-          </a-descriptions-item>
-          <a-descriptions-item label="所属机构">
-            {{ orderDetail.user?.organization?.name || '-' }}
+          <a-descriptions-item label="下单用户" :span="2">
+            <div>{{ orderDetail.user?.name || '-' }}</div>
+            <div>{{ orderDetail.user?.phone || '-' }}</div>
           </a-descriptions-item>
           <a-descriptions-item label="负责人">
             {{ orderDetail.handler?.name || orderDetail.handler?.username || '-' }}
@@ -409,9 +407,9 @@
           >
             {{ orderDetail.completed_time || '-' }}
           </a-descriptions-item>
-          <a-descriptions-item label="备注" :span="2">
-            {{ orderDetail.remark || '-' }}
-          </a-descriptions-item>
+          <a-descriptions-item v-if="orderDetail.cancel_time" label="取消时间">
+          {{ orderDetail.cancel_time || '-' }}
+        </a-descriptions-item>
           <a-descriptions-item label="创建时间">
             {{ orderDetail.created_at || '-' }}
           </a-descriptions-item>

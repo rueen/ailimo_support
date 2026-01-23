@@ -345,22 +345,27 @@
         <a-descriptions-item label="品牌">{{ detailData.brand?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="规格">{{ detailData.specification?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="数量">{{ detailData.quantity || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="订购人">{{ detailData.orderer_name || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="联系电话">{{ detailData.contact_phone || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="到货日期">{{ detailData.delivery_date || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="地址" :span="2">{{ detailData.province?.name }} {{ detailData.city?.name }} {{ detailData.district?.name }} {{ detailData.address || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="用户">{{ detailData.user?.name || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="用户手机号">{{ detailData.user?.phone || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="负责人">{{ detailData.handler?.name || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="拒绝原因" :span="2">{{ detailData.reject_reason || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="到货日期" :span="2">{{ detailData.delivery_date || '-' }}</a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">{{ detailData.remark || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="审核人">
+        <a-descriptions-item label="订购人" :span="2">
+          <div>{{ detailData.orderer_name || '-' }}</div>
+          <div>{{ detailData.contact_phone || '-' }}</div>
+          <div>{{ detailData.province?.name }} {{ detailData.city?.name }} {{ detailData.district?.name }} {{ detailData.address || '-' }}</div>
+        </a-descriptions-item>
+        <a-descriptions-item label="下单用户" :span="2">
+          <div>{{ detailData.user?.name || '-' }}</div>
+          <div>{{ detailData.user?.phone || '-' }}</div>
+        </a-descriptions-item>
+        <a-descriptions-item label="负责人">{{ detailData.handler?.name || '-' }}</a-descriptions-item>
+        <a-descriptions-item v-if="detailData.reject_reason" label="拒绝原因" :span="2">{{ detailData.reject_reason || '-' }}</a-descriptions-item>
+        <a-descriptions-item v-if="detailData.audit_by" label="审核人">
           {{ detailData.audit_by?.username || '-' }}
         </a-descriptions-item>
-        <a-descriptions-item label="审核时间">{{ detailData.audit_time || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="完成时间">{{ detailData.completed_time || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="创建时间">{{ detailData.created_at || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="更新时间">{{ detailData.updated_at || '-' }}</a-descriptions-item>
+        <a-descriptions-item v-if="detailData.audit_time" label="审核时间">{{ detailData.audit_time || '-' }}</a-descriptions-item>
+        <a-descriptions-item v-if="detailData.completed_time" label="完成时间">{{ detailData.completed_time || '-' }}</a-descriptions-item>
+        <a-descriptions-item v-if="detailData.cancel_time" label="取消时间">{{ detailData.cancel_time || '-' }}</a-descriptions-item>
+        <a-descriptions-item v-if="detailData.created_at" label="创建时间">{{ detailData.created_at || '-' }}</a-descriptions-item>
+        <a-descriptions-item v-if="detailData.updated_at" label="更新时间">{{ detailData.updated_at || '-' }}</a-descriptions-item>
       </a-descriptions>
     </a-modal>
   </div>

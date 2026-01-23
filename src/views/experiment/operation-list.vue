@@ -378,20 +378,14 @@
             {{ getStatusText(detailData.status) }}
           </a-tag>
         </a-descriptions-item>
-        <a-descriptions-item label="用户姓名">
-          {{ detailData.user?.name || '-' }}
-        </a-descriptions-item>
-        <a-descriptions-item label="联系电话">
-          {{ detailData.user?.phone || '-' }}
-        </a-descriptions-item>
-        <a-descriptions-item label="操作内容">
-          {{ detailData.operation_content?.name || '-' }}
-        </a-descriptions-item>
         <a-descriptions-item label="动物类型">
           {{ detailData.animal_type?.name || '-' }}
         </a-descriptions-item>
-        <a-descriptions-item label="动物数量" :span="2">
+        <a-descriptions-item label="动物数量">
           {{ detailData.quantity }}
+        </a-descriptions-item>
+        <a-descriptions-item label="操作内容" :span="2">
+          {{ detailData.operation_content?.name || '-' }}
         </a-descriptions-item>
         <a-descriptions-item label="预约时段" :span="2">
           <div v-if="detailData.time_slots && detailData.time_slots.length > 0">
@@ -413,28 +407,35 @@
           </div>
           <span v-else>-</span>
         </a-descriptions-item>
+        <a-descriptions-item label="备注" :span="2">
+          {{ detailData.remark || '-' }}
+        </a-descriptions-item>
+        <a-descriptions-item label="下单用户" :span="2">
+          <div>{{ detailData.user?.name || '-' }}</div>
+          <div>{{ detailData.user?.phone || '-' }}</div>
+        </a-descriptions-item>
         <a-descriptions-item label="负责人">
           {{ detailData.handler?.name || '-' }}
-        </a-descriptions-item>
-        <a-descriptions-item label="审核人">
-          {{ detailData.audit_by?.username || '-' }}
-        </a-descriptions-item>
-        <a-descriptions-item label="审核时间">
-          {{ detailData.audit_time || '-' }}
-        </a-descriptions-item>
-        <a-descriptions-item label="完成时间">
-          {{ detailData.completed_time || '-' }}
         </a-descriptions-item>
         <a-descriptions-item v-if="detailData.reject_reason" label="拒绝原因" :span="2">
           {{ detailData.reject_reason }}
         </a-descriptions-item>
-        <a-descriptions-item label="备注" :span="2">
-          {{ detailData.remark || '-' }}
+        <a-descriptions-item v-if="detailData.audit_by" label="审核人">
+          {{ detailData.audit_by?.username || '-' }}
         </a-descriptions-item>
-        <a-descriptions-item label="创建时间">
+        <a-descriptions-item v-if="detailData.audit_time" label="审核时间">
+          {{ detailData.audit_time || '-' }}
+        </a-descriptions-item>
+        <a-descriptions-item v-if="detailData.completed_time" label="完成时间">
+          {{ detailData.completed_time || '-' }}
+        </a-descriptions-item>
+        <a-descriptions-item v-if="detailData.cancel_time" label="取消时间">
+          {{ detailData.cancel_time || '-' }}
+        </a-descriptions-item>
+        <a-descriptions-item v-if="detailData.created_at" label="创建时间">
           {{ detailData.created_at }}
         </a-descriptions-item>
-        <a-descriptions-item label="更新时间">
+        <a-descriptions-item v-if="detailData.updated_at" label="更新时间">
           {{ detailData.updated_at }}
         </a-descriptions-item>
       </a-descriptions>
