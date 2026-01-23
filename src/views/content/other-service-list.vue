@@ -71,6 +71,14 @@
         <template v-else-if="column.key === 'action'">
           <a-space>
             <a-button
+              type="link"
+              size="small"
+              @click="handlePreview(record)"
+            >
+              <EyeOutlined />
+              预览
+            </a-button>
+            <a-button
               v-if="userStore.hasPermission('other_service:update')"
               type="link"
               size="small"
@@ -101,13 +109,15 @@ import { useRouter } from 'vue-router'
 import {
   SearchOutlined,
   ReloadOutlined,
-  PlusOutlined
+  PlusOutlined,
+  EyeOutlined
 } from '@ant-design/icons-vue'
 import {
   getOtherServiceList,
   deleteOtherService
 } from '@/api/other-service'
 import { useUserStore } from '@/store'
+import { getUserPreviewUrl } from '@/utils/config'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -156,7 +166,7 @@ const columns = [
   { title: '状态', key: 'status', width: 80 },
   { title: '创建时间', dataIndex: 'created_at', width: 180 },
   { title: '更新时间', dataIndex: 'updated_at', width: 180 },
-  { title: '操作', key: 'action', fixed: 'right', width: 150 }
+  { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 
 /**
@@ -220,6 +230,15 @@ const handleAdd = () => {
  */
 const handleEdit = (record) => {
   router.push(`/content/other-service/form/${record.id}`)
+}
+
+/**
+ * 预览
+ * @param {Object} record - 记录数据
+ */
+const handlePreview = (record) => {
+  const previewUrl = getUserPreviewUrl(`/services/other-services/${record.id}`)
+  window.open(previewUrl, '_blank')
 }
 
 /**

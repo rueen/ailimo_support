@@ -68,6 +68,14 @@
         <template v-else-if="column.key === 'action'">
           <a-space>
             <a-button
+              type="link"
+              size="small"
+              @click="handleCasePreview(record)"
+            >
+              <EyeOutlined />
+              预览
+            </a-button>
+            <a-button
               v-if="userStore.hasPermission('case:update')"
               type="link"
               size="small"
@@ -166,7 +174,8 @@ import {
   SearchOutlined,
   ReloadOutlined,
   PlusOutlined,
-  LoadingOutlined
+  LoadingOutlined,
+  EyeOutlined
 } from '@ant-design/icons-vue'
 import {
   getCaseList,
@@ -177,6 +186,7 @@ import {
 } from '@/api/content'
 import { uploadImage } from '@/api/upload'
 import { useUserStore } from '@/store'
+import { getUserPreviewUrl } from '@/utils/config'
 
 const userStore = useUserStore()
 
@@ -218,7 +228,7 @@ const columns = [
   { title: '状态', key: 'status', width: 80 },
   { title: '创建时间', dataIndex: 'created_at', width: 180 },
   { title: '更新时间', dataIndex: 'updated_at', width: 180 },
-  { title: '操作', key: 'action', fixed: 'right', width: 150 }
+  { title: '操作', key: 'action', fixed: 'right', width: 200 }
 ]
 
 const fetchTableData = async () => {
@@ -370,6 +380,15 @@ const handleSubmit = async () => {
 
 const handleCancel = () => {
   formRef.value?.resetFields()
+}
+
+/**
+ * 预览案例（在新窗口打开用户端预览页面）
+ * @param {Object} record - 记录数据
+ */
+const handleCasePreview = (record) => {
+  const previewUrl = getUserPreviewUrl(`/cases/${record.id}`)
+  window.open(previewUrl, '_blank')
 }
 
 const handleDelete = async (record) => {
