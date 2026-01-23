@@ -296,43 +296,45 @@
       <a-spin :spinning="detailLoading">
         <a-descriptions :column="2" bordered>
           <a-descriptions-item label="用户ID">{{ userDetail.user_no || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="姓名">{{ userDetail.name || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="手机号">{{ userDetail.phone || '-' }}</a-descriptions-item>
           <a-descriptions-item label="状态">
             <a-badge
               :status="userDetail.status === 1 ? 'success' : 'default'"
               :text="userDetail.status === 1 ? '启用' : '禁用'"
             />
           </a-descriptions-item>
-          <a-descriptions-item label="地址" :span="2">
-            {{ userDetail.province?.name }} {{ userDetail.city?.name }} {{ userDetail.district?.name }} {{ userDetail.address || '-' }}
+          <a-descriptions-item label="基本信息" :span="2">
+            <div>{{ userDetail.name || '-' }}</div>
+            <div>{{ userDetail.phone || '-' }}</div>
+            <div>{{ userDetail.province?.name }} {{ userDetail.city?.name }} {{ userDetail.district?.name }} {{ userDetail.address || '-' }}</div>
           </a-descriptions-item>
-          <a-descriptions-item label="组织机构">
-            <template v-if="userDetail.organization?.name">
-              {{ userDetail.organization.name }}
-            </template>
-            <template v-else-if="userDetail.user_input_organization_name">
-              <a-tag color="blue">用户输入</a-tag> {{ userDetail.user_input_organization_name }}
-            </template>
-            <template v-else>-</template>
-          </a-descriptions-item>
-          <a-descriptions-item label="学院">
-            <template v-if="userDetail.department?.name">
-              {{ userDetail.department.name }}
-            </template>
-            <template v-else-if="userDetail.user_input_department_name">
-              <a-tag color="blue">用户输入</a-tag> {{ userDetail.user_input_department_name }}
-            </template>
-            <template v-else>-</template>
-          </a-descriptions-item>
-          <a-descriptions-item label="课题组" :span="2">
-            <template v-if="userDetail.research_group?.name">
-              {{ userDetail.research_group.name }}
-            </template>
-            <template v-else-if="userDetail.user_input_research_group_name">
-              <a-tag color="blue">用户输入</a-tag> {{ userDetail.user_input_research_group_name }}
-            </template>
-            <template v-else>-</template>
+          <a-descriptions-item label="组织机构" :span="2">
+            <div>
+              <template v-if="userDetail.organization?.name">
+                {{ userDetail.organization.name }}
+              </template>
+              <template v-else-if="userDetail.user_input_organization_name">
+                <a-tag color="blue">用户输入</a-tag> {{ userDetail.user_input_organization_name }}
+              </template>
+              <template v-else>-</template>
+            </div>
+            <div>
+              <template v-if="userDetail.department?.name">
+                {{ userDetail.department.name }}
+              </template>
+              <template v-else-if="userDetail.user_input_department_name">
+                <a-tag color="blue">用户输入</a-tag> {{ userDetail.user_input_department_name }}
+              </template>
+              <template v-else>-</template>
+            </div>
+            <div>
+              <template v-if="userDetail.research_group?.name">
+                {{ userDetail.research_group.name }}
+              </template>
+              <template v-else-if="userDetail.user_input_research_group_name">
+                <a-tag color="blue">用户输入</a-tag> {{ userDetail.user_input_research_group_name }}
+              </template>
+              <template v-else>-</template>
+            </div>
           </a-descriptions-item>
           <a-descriptions-item label="审核状态">
             <a-tag v-if="userDetail.audit_status === 0" color="orange">待审核</a-tag>
