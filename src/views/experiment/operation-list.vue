@@ -737,7 +737,7 @@ const loadTimeSlotOptionsForDate = async (index) => {
       )
       
       return {
-        label: isBooked ? `${timeValue} (已预约)` : timeValue,
+        label: isBooked ? `${timeValue}  ${slot.description || ''} (已预约)` : `${timeValue} ${slot.description || ''}`,
         value: timeValue,
         disabled: isBooked
       }
