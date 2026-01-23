@@ -164,6 +164,7 @@
           <div>品系：{{ record.variety?.name }}</div>
           <div>规格：{{ record.specification?.name }}</div>
           <div>性别：{{ record.genderText || getGenderText(record.gender) }}</div>
+          <div>是否打耳标：{{ record.need_ear_tag ? '是' : '否' }}</div>
         </template>
         <template v-if="column.key === 'orderer_info'">
           <div>导师姓名：{{ record.supervisor_name }}</div>
@@ -308,6 +309,28 @@
             <a-select-option :value="2">不限</a-select-option>
           </a-select>
         </a-form-item>
+        <a-form-item label="环境" name="environment_id">
+          <a-select
+            v-model:value="formData.environment_id"
+            placeholder="请选择环境"
+            :options="environmentOptions"
+            :field-names="{ label: 'name', value: 'id' }"
+          />
+        </a-form-item>
+        <a-form-item label="要求" name="requirement_id">
+          <a-select
+            v-model:value="formData.requirement_id"
+            placeholder="请选择要求"
+            :options="requirementOptions"
+            :field-names="{ label: 'name', value: 'id' }"
+          />
+        </a-form-item>
+        <a-form-item label="是否打耳标" name="need_ear_tag">
+          <a-radio-group v-model:value="formData.need_ear_tag">
+            <a-radio :value="true">是</a-radio>
+            <a-radio :value="false">否</a-radio>
+          </a-radio-group>
+        </a-form-item>
         <a-form-item label="导师姓名" name="supervisor_name">
           <a-input
             v-model:value="formData.supervisor_name"
@@ -347,22 +370,6 @@
         </a-form-item>
         <a-form-item label="详细地址">
           <a-textarea v-model:value="formData.address" :rows="2" placeholder="请输入详细地址" allow-clear />
-        </a-form-item>
-        <a-form-item label="环境" name="environment_id">
-          <a-select
-            v-model:value="formData.environment_id"
-            placeholder="请选择环境"
-            :options="environmentOptions"
-            :field-names="{ label: 'name', value: 'id' }"
-          />
-        </a-form-item>
-        <a-form-item label="要求" name="requirement_id">
-          <a-select
-            v-model:value="formData.requirement_id"
-            placeholder="请选择要求"
-            :options="requirementOptions"
-            :field-names="{ label: 'name', value: 'id' }"
-          />
         </a-form-item>
         <a-form-item label="备注" name="remark">
           <a-textarea
@@ -424,6 +431,9 @@
         <a-descriptions-item label="规格">{{ detailData.specification?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="性别">
           {{ detailData.genderText || getGenderText(detailData.gender) }}
+        </a-descriptions-item>
+        <a-descriptions-item label="是否打耳标">
+          {{ detailData.need_ear_tag ? '是' : '否' }}
         </a-descriptions-item>
         <a-descriptions-item label="环境">{{ detailData.environment?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="要求">{{ detailData.requirement?.name || '-' }}</a-descriptions-item>
@@ -659,6 +669,7 @@ const formData = reactive({
   variety_id: undefined,
   specification_id: undefined,
   gender: undefined,
+  need_ear_tag: false,
   supervisor_name: '',
   orderer_name: '',
   contact_phone: '',
@@ -743,6 +754,7 @@ const handleAdd = () => {
     variety_id: undefined,
     specification_id: undefined,
     gender: undefined,
+    need_ear_tag: false,
     supervisor_name: '',
     orderer_name: '',
     contact_phone: '',
@@ -771,6 +783,7 @@ const handleEdit = (record) => {
     variety_id: record.variety?.id,
     specification_id: record.specification?.id,
     gender: record.gender,
+    need_ear_tag: !!record.need_ear_tag,
     supervisor_name: record.supervisor_name,
     orderer_name: record.orderer_name,
     contact_phone: record.contact_phone,
@@ -806,6 +819,7 @@ const handleSubmit = async () => {
       variety_id: formData.variety_id,
       specification_id: formData.specification_id,
       gender: formData.gender,
+      need_ear_tag: formData.need_ear_tag,
       supervisor_name: formData.supervisor_name,
       orderer_name: formData.orderer_name,
       contact_phone: formData.contact_phone,
