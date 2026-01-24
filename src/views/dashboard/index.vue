@@ -2,7 +2,7 @@
   <div class="dashboard-container">
     <!-- 统计数据 -->
     <a-row :gutter="16" class="stats-row" v-if="userStore.hasPermission('statistics:overview')">
-      <a-col :xs="24" :sm="12" :lg="8" :xl="4">
+      <!-- <a-col :xs="24" :sm="12" :lg="8" :xl="4">
         <a-card hoverable :loading="loading" @click="handleNavigate('/users/list', 'audit_status')">
           <a-statistic
             title="新用户"
@@ -10,7 +10,7 @@
             :value-style="{ color: '#cf1322' }"
           />
         </a-card>
-      </a-col>
+      </a-col> -->
       <a-col :xs="24" :sm="12" :lg="8" :xl="4">
         <a-card hoverable :loading="loading" @click="handleNavigate('/equipment/reservations', 'status')">
           <a-statistic

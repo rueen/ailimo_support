@@ -41,18 +41,7 @@
             :disabled="!searchForm.organization_id"
           />
         </a-form-item>
-        <a-form-item label="审核状态">
-          <a-select
-            v-model:value="searchForm.audit_status"
-            placeholder="请选择审核状态"
-            allow-clear
-            style="width: 150px"
-          >
-            <a-select-option :value="0">待审核</a-select-option>
-            <a-select-option :value="1">审核通过</a-select-option>
-            <a-select-option :value="2">审核拒绝</a-select-option>
-          </a-select>
-        </a-form-item>
+        
         <a-form-item>
           <a-space>
             <a-button type="primary" @click="handleSearch">
@@ -125,14 +114,7 @@
             <template v-else>-</template>
           </div>
         </template>
-        <template v-if="column.key === 'audit_info'">
-          <a-tag v-if="record.audit_status === 0" color="orange">待审核</a-tag>
-          <a-tag v-else-if="record.audit_status === 1" color="green">审核通过</a-tag>
-          <a-tag v-else-if="record.audit_status === 2" color="red">审核拒绝</a-tag>
-          <div v-if="record.audit_status === 2">拒绝原因：{{ record.reject_reason }}</div>
-          <div v-if="record.audit_status !== 0">审核时间：{{ record.audit_time }}</div>
-          <div v-if="record.audit_status !== 0">审核人：{{ record.audit_by?.username }}</div>
-        </template>
+        
         <template v-else-if="column.key === 'status'">
           <a-badge
             :status="record.status === 1 ? 'success' : 'default'"
@@ -149,25 +131,8 @@
             >
               详情
             </a-button>
-            <a-popconfirm
-              v-if="record.audit_status === 0 && userStore.hasPermission('user:audit')"
-              title="确定审核通过吗？"
-              @confirm="handleApprove(record)"
-            >
-              <a-button type="link" size="small">
-                审核通过
-              </a-button>
-            </a-popconfirm>
+            
 
-            <a-button
-              v-if="record.audit_status === 0 && userStore.hasPermission('user:audit')"
-              type="link"
-              danger
-              size="small"
-              @click="handleReject(record)"
-            >
-              审核拒绝
-            </a-button>
             <a-button
               v-if="userStore.hasPermission('user:update')"
               type="link"
@@ -254,15 +219,8 @@
             allow-clear
           />
         </a-form-item>
-        <!-- 新增用户时显示审核状态 -->
-        <a-form-item v-if="!formData.id" label="审核状态" name="audit_status">
-          <a-radio-group v-model:value="formData.audit_status">
-            <a-radio :value="0">待审核</a-radio>
-            <a-radio :value="1">审核通过</a-radio>
-          </a-radio-group>
-        </a-form-item>
         <!-- 编辑用户时显示启用状态 -->
-        <a-form-item v-else label="状态" name="status">
+        <a-form-item v-if="!!formData.id" label="状态" name="status">
           <a-radio-group v-model:value="formData.status">
             <a-radio :value="0">禁用</a-radio>
             <a-radio :value="1">启用</a-radio>
@@ -336,27 +294,6 @@
               <template v-else>-</template>
             </div>
           </a-descriptions-item>
-          <a-descriptions-item label="审核状态">
-            <a-tag v-if="userDetail.audit_status === 0" color="orange">待审核</a-tag>
-            <a-tag v-else-if="userDetail.audit_status === 1" color="green">审核通过</a-tag>
-            <a-tag v-else-if="userDetail.audit_status === 2" color="red">审核拒绝</a-tag>
-            <span v-else>-</span>
-          </a-descriptions-item>
-          <a-descriptions-item
-            v-if="userDetail.audit_status === 2"
-            label="拒绝原因"
-            :span="2"
-          >
-            {{ userDetail.reject_reason || '-' }}
-          </a-descriptions-item>
-          <template v-if="userDetail.audit_status !== 0">
-            <a-descriptions-item label="审核时间">
-              {{ userDetail.audit_time || '-' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="审核人">
-              {{ userDetail.audit_by?.username || '-' }}
-            </a-descriptions-item>
-          </template>
           <a-descriptions-item label="创建时间">
             {{ userDetail.created_at || '-' }}
           </a-descriptions-item>
@@ -404,7 +341,7 @@ const searchForm = reactive({
   phone: '',
   organization_id: undefined,
   department_id: undefined,
-  audit_status: undefined
+  audit_status: 1
 })
 
 /**
@@ -424,7 +361,7 @@ const handleReset = () => {
     phone: '',
     organization_id: undefined,
     department_id: undefined,
-    audit_status: undefined
+    audit_status: 1
   })
   searchDepartmentOptions.value = []
   handleSearch()
@@ -468,12 +405,6 @@ const columns = [
     dataIndex: 'organization_info', 
     key: 'organization_info', 
     width: 150
-  },
-  { 
-    title: '审核信息', 
-    dataIndex: 'audit_info', 
-    key: 'audit_info', 
-    width: 200
   },
   { title: '状态', key: 'status', width: 80 },
   { title: '操作', key: 'action', fixed: 'right', width: 200 }
