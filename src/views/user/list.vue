@@ -131,8 +131,24 @@
             >
               详情
             </a-button>
-            
-
+            <a-popconfirm
+              v-if="record.audit_status === 0 && userStore.hasPermission('user:audit')"
+              title="确定审核通过吗？"
+              @confirm="handleApprove(record)"
+            >
+              <a-button type="link" size="small">
+                审核通过
+              </a-button>
+            </a-popconfirm>
+            <a-button
+              v-if="record.audit_status === 0 && userStore.hasPermission('user:audit')"
+              type="link"
+              danger
+              size="small"
+              @click="handleReject(record)"
+            >
+              审核拒绝
+            </a-button>
             <a-button
               v-if="userStore.hasPermission('user:update')"
               type="link"
@@ -341,7 +357,7 @@ const searchForm = reactive({
   phone: '',
   organization_id: undefined,
   department_id: undefined,
-  audit_status: 1
+  audit_status: undefined
 })
 
 /**
@@ -361,7 +377,7 @@ const handleReset = () => {
     phone: '',
     organization_id: undefined,
     department_id: undefined,
-    audit_status: 1
+    audit_status: undefined
   })
   searchDepartmentOptions.value = []
   handleSearch()
