@@ -231,10 +231,10 @@ const handleSubmit = async () => {
     const data = { name: formData.name }
     
     if (formData.id) {
-      await updateAnimalType(formData.id, data)
+      await updateEnvironmentType(formData.id, data)
       message.success('更新成功')
     } else {
-      await createAnimalType(data)
+      await createEnvironmentType(data)
       message.success('创建成功')
     }
     
@@ -261,7 +261,7 @@ const handleCancel = () => {
  */
 const handleDelete = async (record) => {
   try {
-    await deleteAnimalType(record.id)
+    await deleteEnvironmentType(record.id)
     message.success('删除成功')
     fetchTableData()
   } catch (error) {
