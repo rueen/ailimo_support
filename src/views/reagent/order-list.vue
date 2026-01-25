@@ -20,23 +20,19 @@
           />
         </a-form-item>
         <a-form-item label="品牌">
-          <a-select
-            v-model:value="searchForm.brand_id"
-            placeholder="请选择"
+          <a-input
+            v-model:value="searchForm.brand_name"
+            placeholder="输入品牌名称"
             allow-clear
             style="width: 150px"
-            :options="brandOptions"
-            :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
         <a-form-item label="规格">
-          <a-select
-            v-model:value="searchForm.specification_id"
-            placeholder="请选择"
+          <a-input
+            v-model:value="searchForm.specification_name"
+            placeholder="输入规格名称"
             allow-clear
             style="width: 150px"
-            :options="specificationOptions"
-            :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
         <a-form-item label="订购人">
@@ -118,8 +114,8 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'product_info'">
           <div>名称：{{ record.name }}</div>
-          <div>品牌：{{ record.brand?.name }}</div>
-          <div>规格：{{ record.specification?.name }}</div>
+          <div>品牌：{{ record.brand_name }}</div>
+          <div>规格：{{ record.specification_name }}</div>
           <div>数量：{{ record.quantity }}</div>
         </template>
         <template v-if="column.key === 'orderer_info'">
@@ -228,20 +224,16 @@
             placeholder="请输入试剂耗材名称"
           />
         </a-form-item>
-        <a-form-item label="品牌" name="brand_id">
-          <a-select
-            v-model:value="formData.brand_id"
-            placeholder="请选择品牌"
-            :options="brandOptions"
-            :field-names="{ label: 'name', value: 'id' }"
+        <a-form-item label="品牌" name="brand_name">
+          <a-input
+            v-model:value="formData.brand_name"
+            placeholder="请输入品牌名称"
           />
         </a-form-item>
-        <a-form-item label="规格" name="specification_id">
-          <a-select
-            v-model:value="formData.specification_id"
-            placeholder="请选择规格"
-            :options="specificationOptions"
-            :field-names="{ label: 'name', value: 'id' }"
+        <a-form-item label="规格" name="specification_name">
+          <a-input
+            v-model:value="formData.specification_name"
+            placeholder="请输入规格名称"
           />
         </a-form-item>
         <a-form-item label="数量" name="quantity">
@@ -342,8 +334,8 @@
           </a-tag>
         </a-descriptions-item>
         <a-descriptions-item label="试剂名称">{{ detailData.name || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="品牌">{{ detailData.brand?.name || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="规格">{{ detailData.specification?.name || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="品牌">{{ detailData.brand_name || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="规格">{{ detailData.specification_name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="数量">{{ detailData.quantity || '-' }}</a-descriptions-item>
         <a-descriptions-item label="到货日期" :span="2">{{ detailData.delivery_date || '-' }}</a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">{{ detailData.remark || '-' }}</a-descriptions-item>
@@ -388,9 +380,7 @@ import {
   updateReagentOrder,
   auditReagentOrder,
   completeReagentOrder,
-  cancelReagentOrder,
-  getReagentBrandOptions,
-  getReagentSpecificationOptions
+  cancelReagentOrder
 } from '@/api/reagent'
 import { getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
@@ -405,8 +395,8 @@ const route = useRoute()
 const searchForm = reactive({
   order_sn: '',
   name: '',
-  brand_id: undefined,
-  specification_id: undefined,
+  brand_name: '',
+  specification_name: '',
   orderer_name: '',
   contact_phone: '',
   status: undefined
@@ -429,8 +419,8 @@ const handleReset = () => {
   Object.assign(searchForm, {
     order_sn: '',
     name: '',
-    brand_id: undefined,
-    specification_id: undefined,
+    brand_name: '',
+    specification_name: '',
     orderer_name: '',
     contact_phone: '',
     status: undefined
@@ -536,8 +526,8 @@ const formData = reactive({
   id: null,
   user_id: undefined,
   name: '',
-  brand_id: undefined,
-  specification_id: undefined,
+  brand_name: '',
+  specification_name: '',
   quantity: 1,
   orderer_name: '',
   contact_phone: '',
@@ -553,8 +543,8 @@ const formData = reactive({
 const formRules = {
   user_id: [{ required: true, message: '请选择用户', trigger: 'change' }],
   name: [{ required: true, message: '请输入试剂名称', trigger: 'blur' }],
-  brand_id: [{ required: true, message: '请选择品牌', trigger: 'change' }],
-  specification_id: [{ required: true, message: '请选择规格', trigger: 'change' }],
+  brand_name: [{ required: true, message: '请输入品牌名称', trigger: 'blur' }],
+  specification_name: [{ required: true, message: '请输入规格名称', trigger: 'blur' }],
   quantity: [{ required: true, message: '请输入数量', trigger: 'blur' }],
   orderer_name: [{ required: true, message: '请输入订购人姓名', trigger: 'blur' }],
   contact_phone: [
@@ -588,9 +578,6 @@ const formRules = {
   address: [{ required: true, message: '请输入详细地址', trigger: 'blur' }]
 }
 
-// 选项数据
-const brandOptions = ref([])
-const specificationOptions = ref([])
 const userOptions = ref([])
 
 /**
@@ -604,8 +591,8 @@ const handleAdd = () => {
     id: null,
     user_id: undefined,
     name: '',
-    brand_id: undefined,
-    specification_id: undefined,
+    brand_name: '',
+    specification_name: '',
     quantity: 1,
     orderer_name: '',
     contact_phone: '',
@@ -628,8 +615,8 @@ const handleEdit = (record) => {
     id: record.id,
     user_id: record.user?.id,
     name: record.name,
-    brand_id: record.brand?.id,
-    specification_id: record.specification?.id,
+    brand_name: record.brand_name,
+    specification_name: record.specification_name,
     quantity: record.quantity,
     orderer_name: record.orderer_name,
     contact_phone: record.contact_phone,
@@ -656,8 +643,8 @@ const handleSubmit = async () => {
     const data = {
       user_id: formData.user_id,
       name: formData.name,
-      brand_id: formData.brand_id,
-      specification_id: formData.specification_id,
+      brand_name: formData.brand_name,
+      specification_name: formData.specification_name,
       quantity: formData.quantity,
       orderer_name: formData.orderer_name,
       contact_phone: formData.contact_phone,
@@ -870,14 +857,9 @@ const handleView = async (record) => {
  */
 const loadOptions = async () => {
   try {
-    const [brands, specifications, handlers] = await Promise.all([
-      getReagentBrandOptions(),
-      getReagentSpecificationOptions(),
+    const [handlers] = await Promise.all([
       getHandlerOptions()
     ])
-    
-    brandOptions.value = brands.data
-    specificationOptions.value = specifications.data
     handlerOptions.value = handlers.data
   } catch (error) {
     console.error('加载选项数据失败：', error)

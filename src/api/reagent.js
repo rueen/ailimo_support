@@ -1,3 +1,11 @@
+/*
+ * @Author: diaochan diaochan@seatent.com
+ * @Date: 2026-01-11 16:51:22
+ * @LastEditors: diaochan diaochan@seatent.com
+ * @LastEditTime: 2026-01-25 20:21:06
+ * @FilePath: /ailimo_support/src/api/reagent.js
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 /**
  * 试剂耗材管理接口
  */
@@ -85,147 +93,5 @@ export function cancelReagentOrder(id) {
   return request({
     url: `/support/reagent-orders/${id}/cancel`,
     method: 'PUT'
-  })
-}
-
-// ========== 试剂耗材品牌管理 ==========
-
-/**
- * 获取品牌列表
- * @param {Object} params - 查询参数
- */
-export function getReagentBrandList(params) {
-  return request({
-    url: '/support/reagent-brands',
-    method: 'GET',
-    params
-  })
-}
-
-/**
- * 获取品牌详情
- * @param {number} id - 品牌ID
- */
-export function getReagentBrandDetail(id) {
-  return request({
-    url: `/support/reagent-brands/${id}`,
-    method: 'GET'
-  })
-}
-
-/**
- * 创建品牌
- * @param {Object} data - 品牌信息
- */
-export function createReagentBrand(data) {
-  return request({
-    url: '/support/reagent-brands',
-    method: 'POST',
-    data
-  })
-}
-
-/**
- * 更新品牌
- * @param {number} id - 品牌ID
- * @param {Object} data - 品牌信息
- */
-export function updateReagentBrand(id, data) {
-  return request({
-    url: `/support/reagent-brands/${id}`,
-    method: 'PUT',
-    data
-  })
-}
-
-/**
- * 删除品牌
- * @param {number} id - 品牌ID
- */
-export function deleteReagentBrand(id) {
-  return request({
-    url: `/support/reagent-brands/${id}`,
-    method: 'DELETE'
-  })
-}
-
-/**
- * 获取品牌选项列表
- */
-export function getReagentBrandOptions() {
-  return request({
-    url: '/support/reagent-brands/options',
-    method: 'GET'
-  })
-}
-
-// ========== 试剂耗材规格管理 ==========
-
-/**
- * 获取规格列表
- * @param {Object} params - 查询参数
- */
-export function getReagentSpecificationList(params) {
-  return request({
-    url: '/support/reagent-specifications',
-    method: 'GET',
-    params
-  })
-}
-
-/**
- * 获取规格详情
- * @param {number} id - 规格ID
- */
-export function getReagentSpecificationDetail(id) {
-  return request({
-    url: `/support/reagent-specifications/${id}`,
-    method: 'GET'
-  })
-}
-
-/**
- * 创建规格
- * @param {Object} data - 规格信息
- */
-export function createReagentSpecification(data) {
-  return request({
-    url: '/support/reagent-specifications',
-    method: 'POST',
-    data
-  })
-}
-
-/**
- * 更新规格
- * @param {number} id - 规格ID
- * @param {Object} data - 规格信息
- */
-export function updateReagentSpecification(id, data) {
-  return request({
-    url: `/support/reagent-specifications/${id}`,
-    method: 'PUT',
-    data
-  })
-}
-
-/**
- * 删除规格
- * @param {number} id - 规格ID
- */
-export function deleteReagentSpecification(id) {
-  return request({
-    url: `/support/reagent-specifications/${id}`,
-    method: 'DELETE'
-  })
-}
-
-/**
- * 获取规格选项列表
- */
-export function getReagentSpecificationOptions() {
-  return request({
-    url: '/support/reagent-specifications/options',
-    method: 'GET'
   })
 }
