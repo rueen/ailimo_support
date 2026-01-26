@@ -131,6 +131,13 @@
         <a-form-item label="课题组名称" name="name">
           <a-input v-model:value="formData.name" placeholder="请输入课题组名称" />
         </a-form-item>
+        <a-form-item label="备注" name="remark">
+          <a-textarea
+            v-model:value="formData.remark"
+            :rows="3"
+            placeholder="请输入备注信息"
+          />
+        </a-form-item>
       </a-form>
     </a-modal>
   </div>
@@ -211,6 +218,7 @@ const pagination = reactive({
  */
 const columns = [
   { title: '课题组名称', dataIndex: 'name' },
+  { title: '备注', dataIndex: 'remark' },
   {
     title: '学院',
     dataIndex: ['department', 'name'],
@@ -270,7 +278,8 @@ const formData = reactive({
   id: null,
   name: '',
   organization_id: undefined,
-  department_id: undefined
+  department_id: undefined,
+  remark: ''
 })
 
 const formRules = {
@@ -294,7 +303,8 @@ const handleAdd = () => {
     id: null,
     name: '',
     organization_id: undefined,
-    department_id: undefined
+    department_id: undefined,
+    remark: ''
   })
   // 清空选项列表
   departmentOptions.value = []
@@ -310,7 +320,8 @@ const handleEdit = async (record) => {
     id: record.id,
     name: record.name,
     organization_id: record.organization?.id,
-    department_id: record.department?.id
+    department_id: record.department?.id,
+    remark: record.remark
   })
   // 加载学院选项
   if (record.organization?.id) {
@@ -326,7 +337,8 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     const data = {
       name: formData.name,
-      department_id: formData.department_id
+      department_id: formData.department_id,
+      remark: formData.remark
     }
     
     if (formData.id) {
