@@ -213,20 +213,20 @@ const formRules = {
   config_key: [{ required: true, message: '请输入配置键', trigger: 'blur' }],
   config_value: [
     { required: true, message: '请输入配置值', trigger: 'blur' },
-    {
-      validator: (rule, value) => {
-        if (!value) {
-          return Promise.resolve()
-        }
-        try {
-          JSON.parse(value)
-          return Promise.resolve()
-        } catch (e) {
-          return Promise.reject('配置值必须是有效的JSON字符串格式')
-        }
-      },
-      trigger: 'blur'
-    }
+    // {
+    //   validator: (rule, value) => {
+    //     if (!value) {
+    //       return Promise.resolve()
+    //     }
+    //     try {
+    //       JSON.parse(value)
+    //       return Promise.resolve()
+    //     } catch (e) {
+    //       return Promise.reject('配置值必须是有效的JSON字符串格式')
+    //     }
+    //   },
+    //   trigger: 'blur'
+    // }
   ]
 }
 
