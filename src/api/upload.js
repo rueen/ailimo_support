@@ -113,3 +113,69 @@ export async function uploadImage(file, options = {}) {
 export function uploadImages(files, options = {}) {
   return Promise.all(files.map(file => uploadImage(file, options)))
 }
+
+/**
+ * 上传文档
+ * @param {File} file - 文档文件
+ * @param {Object} options - 上传选项
+ * @param {string} options.directory - 上传目录，如 'contracts'、'reports'、'price-list' 等
+ * @param {Function} options.onProgress - 上传进度回调
+ * @param {number} options.maxSize - 最大文件大小（MB），默认 20MB
+ * @returns {Promise}
+ */
+export async function uploadDocument(file, options = {}) {
+  const {
+    directory = '',
+    onProgress,
+    maxSize = 20
+  } = options
+  
+  // 校验文件类型
+  const allowedTypes = [
+    'application/msword', // .doc
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+    'application/vnd.ms-excel', // .xls
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+    'application/vnd.ms-powerpoint', // .ppt
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+    'application/pdf', // .pdf
+    'text/plain' // .txt
+  ]
+  
+  // 校验文件扩展名
+  const allowedExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf', 'txt']
+  const fileExtension = file.name.split('.').pop()?.toLowerCase()
+  
+  if (!allowedExtensions.includes(fileExtension)) {
+    throw new Error('不支持的文件类型，仅支持 doc, docx, txt, pdf, xls, xlsx, ppt, pptx 格式')
+  }
+  
+  // 校验文件大小
+  const fileSizeMB = file.size / 1024 / 1024
+  if (fileSizeMB > maxSize) {
+    throw new Error(`文件大小不能超过 ${maxSize}MB`)
+  }
+  
+  // 构建表单数据
+  const formData = new FormData()
+  formData.append('file', file)
+  if (directory) {
+    formData.append('directory', directory)
+  }
+  
+  // 上传文件
+  return request({
+    url: '/support/upload/document',
+    method: 'POST',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    onUploadProgress: (progressEvent) => {
+      if (onProgress && progressEvent.total) {
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        onProgress(percent)
+      }
+    }
+  })
+}
