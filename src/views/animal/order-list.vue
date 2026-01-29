@@ -164,6 +164,7 @@
           <div>品系：{{ record.variety?.name }}</div>
           <div>规格：{{ record.specification?.name }}</div>
           <div>性别：{{ record.genderText || getGenderText(record.gender) }}</div>
+          <div>数量：{{ record.quantity ?? '-' }}</div>
           <div>是否打耳标：{{ record.need_ear_tag ? '是' : '否' }}</div>
         </template>
         <template v-if="column.key === 'orderer_info'">
@@ -325,6 +326,15 @@
             :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
+        <a-form-item label="数量" name="quantity">
+          <a-input-number
+            v-model:value="formData.quantity"
+            :min="1"
+            :max="99999"
+            placeholder="请输入数量"
+            style="width: 100%"
+          />
+        </a-form-item>
         <a-form-item label="是否打耳标" name="need_ear_tag">
           <a-radio-group v-model:value="formData.need_ear_tag">
             <a-radio :value="true">是</a-radio>
@@ -432,11 +442,12 @@
         <a-descriptions-item label="性别">
           {{ detailData.genderText || getGenderText(detailData.gender) }}
         </a-descriptions-item>
+        <a-descriptions-item label="环境">{{ detailData.environment?.name || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="要求">{{ detailData.requirement?.name || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="数量">{{ detailData.quantity ?? '-' }}</a-descriptions-item>
         <a-descriptions-item label="是否打耳标">
           {{ detailData.need_ear_tag ? '是' : '否' }}
         </a-descriptions-item>
-        <a-descriptions-item label="环境">{{ detailData.environment?.name || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="要求">{{ detailData.requirement?.name || '-' }}</a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">{{ detailData.remark || '-' }}</a-descriptions-item>
         <a-descriptions-item label="到货日期">{{ detailData.delivery_date || '-' }}</a-descriptions-item>
         <a-descriptions-item label="导师姓名">{{ detailData.supervisor_name || '-' }}</a-descriptions-item>
@@ -670,6 +681,7 @@ const formData = reactive({
   specification_id: undefined,
   gender: undefined,
   need_ear_tag: false,
+  quantity: 1,
   supervisor_name: '',
   orderer_name: '',
   contact_phone: '',
@@ -690,6 +702,10 @@ const formRules = {
   variety_id: [{ required: true, message: '请选择品系', trigger: 'change' }],
   specification_id: [{ required: true, message: '请选择规格', trigger: 'change' }],
   gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
+  quantity: [
+    { required: true, message: '请输入数量', trigger: 'blur' },
+    { type: 'number', min: 1, max: 99999, message: '数量范围为 1-99999', trigger: 'blur' }
+  ],
   supervisor_name: [{ required: true, message: '请输入导师姓名', trigger: 'blur' }],
   orderer_name: [{ required: true, message: '请输入订购人姓名', trigger: 'blur' }],
   contact_phone: [
@@ -755,6 +771,7 @@ const handleAdd = () => {
     specification_id: undefined,
     gender: undefined,
     need_ear_tag: false,
+    quantity: 1,
     supervisor_name: '',
     orderer_name: '',
     contact_phone: '',
@@ -784,6 +801,7 @@ const handleEdit = (record) => {
     specification_id: record.specification?.id,
     gender: record.gender,
     need_ear_tag: !!record.need_ear_tag,
+    quantity: record.quantity ?? 1,
     supervisor_name: record.supervisor_name,
     orderer_name: record.orderer_name,
     contact_phone: record.contact_phone,
@@ -820,6 +838,7 @@ const handleSubmit = async () => {
       specification_id: formData.specification_id,
       gender: formData.gender,
       need_ear_tag: formData.need_ear_tag,
+      quantity: formData.quantity,
       supervisor_name: formData.supervisor_name,
       orderer_name: formData.orderer_name,
       contact_phone: formData.contact_phone,
