@@ -116,6 +116,12 @@ const routes = [
             meta: { title: '笼位管理', permission: 'cage:list' }
           },
           {
+            path: 'rooms',
+            name: 'CageRoomList',
+            component: () => import('@/views/cage/room.vue'),
+            meta: { title: '房间管理', permission: 'cage_room:list' }
+          },
+          {
             path: 'purposes',
             name: 'CagePurposeList',
             component: () => import('@/views/cage/purpose.vue'),

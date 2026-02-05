@@ -115,6 +115,7 @@
         <template v-if="column.key === 'cage_info'">
           <div>动物类型：{{ record.animal_type?.name }}</div>
           <div>环境类型：{{ record.environment?.name }}</div>
+          <div>房间：{{ record.room?.name || '-' }}</div>
           <div>笼位数量：{{ record.quantity }}</div>
         </template>
         <template v-if="column.key === 'date_range'">
@@ -236,6 +237,18 @@
             @change="handleEnvironmentChange"
           />
         </a-form-item>
+        <a-form-item label="房间" name="room_id">
+          <a-select
+            v-model:value="formData.room_id"
+            placeholder="请选择房间"
+            allow-clear
+            :options="roomOptions"
+            :field-names="{ label: 'name', value: 'id' }"
+            :disabled="!formData.animal_type_id || !formData.environment_id"
+            :not-found-content="formData.animal_type_id && formData.environment_id ? '该条件下暂无可用房间' : '请先选择动物类型和环境类型'"
+            @change="handleRoomChange"
+          />
+        </a-form-item>
         <a-form-item label="用途" name="purpose_id">
           <a-select
             v-model:value="formData.purpose_id"
@@ -354,6 +367,9 @@
         <a-descriptions-item label="环境">
           {{ detailData.environment?.name || '-' }}
         </a-descriptions-item>
+        <a-descriptions-item label="房间">
+          {{ detailData.room?.name || detailData.cage?.room?.name || '-' }}
+        </a-descriptions-item>
         <a-descriptions-item label="笼位数量">
           {{ detailData.quantity }}
         </a-descriptions-item>
@@ -419,7 +435,8 @@ import {
   cancelCageReservation,
   getCagePurposeOptions,
   getEnvironmentsByAnimalType,
-  getCageAvailableQuantity
+  getCageAvailableQuantity,
+  getRoomsByAnimalTypeAndEnvironment
 } from '@/api/cage'
 import { debounce } from 'lodash-es'
 import { getAnimalTypeOptions, getEnvironmentTypeOptions, getHandlerOptions } from '@/api/config'
@@ -551,6 +568,7 @@ const formData = reactive({
   user_id: undefined,
   animal_type_id: undefined,
   environment_id: undefined,
+  room_id: undefined,
   quantity: 1,
   purpose_id: undefined,
   start_date: null,
@@ -563,6 +581,7 @@ const formRules = {
   user_id: [{ required: true, message: '请选择用户', trigger: 'change' }],
   animal_type_id: [{ required: true, message: '请选择动物类型', trigger: 'change' }],
   environment_id: [{ required: true, message: '请选择环境类型', trigger: 'change' }],
+  room_id: [{ required: true, message: '请选择房间', trigger: 'change' }],
   quantity: [
     { required: true, message: '请输入数量', trigger: 'blur' },
     {
@@ -600,6 +619,7 @@ const formRules = {
 const animalTypeOptions = ref([])
 const environmentTypeOptions = ref([]) // 所有环境类型（用于搜索）
 const dynamicEnvironmentOptions = ref([]) // 动态环境类型（根据动物类型筛选）
+const roomOptions = ref([]) // 根据动物类型+环境类型获取的房间选项
 const purposeOptions = ref([])
 const userOptions = ref([])
 
@@ -619,6 +639,7 @@ const handleAdd = () => {
     user_id: undefined,
     animal_type_id: undefined,
     environment_id: undefined,
+    room_id: undefined,
     quantity: 1,
     purpose_id: undefined,
     start_date: null,
@@ -629,6 +650,7 @@ const handleAdd = () => {
   // 重置动态数据
   userOptions.value = []
   dynamicEnvironmentOptions.value = []
+  roomOptions.value = []
   availableQuantityInfo.total = null
   availableQuantityInfo.available = null
   availableQuantityLoading.value = false
@@ -645,6 +667,7 @@ const handleEdit = async (record) => {
     user_id: record.user?.id,
     animal_type_id: record.animal_type?.id,
     environment_id: record.environment?.id,
+    room_id: record.room?.id,
     quantity: record.quantity,
     purpose_id: record.purpose?.id,
     start_date: record.start_date,
@@ -663,8 +686,13 @@ const handleEdit = async (record) => {
     await loadEnvironmentsByAnimalType()
   }
   
+  // 加载房间选项
+  if (formData.animal_type_id && formData.environment_id) {
+    await loadRoomOptions()
+  }
+  
   // 查询可用数量
-  if (formData.animal_type_id && formData.environment_id && formData.start_date) {
+  if (formData.animal_type_id && formData.environment_id && formData.room_id && formData.start_date) {
     await fetchAvailableQuantity()
   }
 }
@@ -677,6 +705,7 @@ const handleSubmit = async () => {
       user_id: formData.user_id,
       animal_type_id: formData.animal_type_id,
       environment_id: formData.environment_id,
+      room_id: formData.room_id,
       quantity: formData.quantity,
       purpose_id: formData.purpose_id,
       start_date: formData.start_date,
@@ -730,9 +759,11 @@ const handleUserChange = () => {
  * 动物类型改变
  */
 const handleAnimalTypeChange = async () => {
-  // 重置环境类型和可用数量
+  // 重置环境类型、房间和可用数量
   formData.environment_id = undefined
+  formData.room_id = undefined
   dynamicEnvironmentOptions.value = []
+  roomOptions.value = []
   availableQuantityInfo.total = null
   availableQuantityInfo.available = null
   
@@ -746,10 +777,22 @@ const handleAnimalTypeChange = async () => {
  * 环境类型改变
  */
 const handleEnvironmentChange = async () => {
-  // 重置可用数量
+  // 重置房间和可用数量
+  formData.room_id = undefined
+  roomOptions.value = []
   availableQuantityInfo.total = null
   availableQuantityInfo.available = null
   
+  // 加载房间选项
+  if (formData.animal_type_id && formData.environment_id) {
+    await loadRoomOptions()
+  }
+}
+
+/**
+ * 房间改变
+ */
+const handleRoomChange = () => {
   // 触发可用数量查询
   debouncedFetchAvailableQuantity()
 }
@@ -998,11 +1041,31 @@ const loadEnvironmentsByAnimalType = async () => {
 }
 
 /**
+ * 根据动物类型和环境类型加载房间选项
+ */
+const loadRoomOptions = async () => {
+  if (!formData.animal_type_id || !formData.environment_id) {
+    roomOptions.value = []
+    return
+  }
+  try {
+    const res = await getRoomsByAnimalTypeAndEnvironment({
+      animal_type_id: formData.animal_type_id,
+      environment_id: formData.environment_id
+    })
+    roomOptions.value = res.data || []
+  } catch (error) {
+    console.error('获取房间选项失败：', error)
+    roomOptions.value = []
+  }
+}
+
+/**
  * 查询可用数量
  */
 const fetchAvailableQuantity = async () => {
   // 检查必要条件
-  if (!formData.animal_type_id || !formData.environment_id || !formData.start_date) {
+  if (!formData.animal_type_id || !formData.environment_id || !formData.room_id || !formData.start_date) {
     availableQuantityInfo.total = null
     availableQuantityInfo.available = null
     return
@@ -1021,6 +1084,7 @@ const fetchAvailableQuantity = async () => {
     const params = {
       animal_type_id: formData.animal_type_id,
       environment_id: formData.environment_id,
+      room_id: formData.room_id,
       start_date: formData.start_date
     }
     

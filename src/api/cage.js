@@ -163,13 +163,75 @@ export function deleteCage(id) {
 
 /**
  * 查询笼位可用数量
- * @param {Object} params - 查询参数
+ * @param {Object} params - 查询参数（含 room_id 可选）
  */
 export function getCageAvailableQuantity(params) {
   return request({
     url: '/support/cages/available-quantity',
     method: 'GET',
     params
+  })
+}
+
+/**
+ * 根据动物类型和环境类型获取房间选项
+ * @param {Object} params - { animal_type_id, environment_id }
+ */
+export function getRoomsByAnimalTypeAndEnvironment(params) {
+  return request({
+    url: '/support/cages/rooms-by-animal-type-and-environment',
+    method: 'GET',
+    params
+  })
+}
+
+// ========== 笼位房间管理 ==========
+
+/**
+ * 获取笼位房间列表
+ * @param {Object} params - 查询参数（分页、name 模糊）
+ */
+export function getCageRoomList(params) {
+  return request({
+    url: '/support/cage-rooms',
+    method: 'GET',
+    params
+  })
+}
+
+/**
+ * 创建笼位房间
+ * @param {Object} data - { name }
+ */
+export function createCageRoom(data) {
+  return request({
+    url: '/support/cage-rooms',
+    method: 'POST',
+    data
+  })
+}
+
+/**
+ * 更新笼位房间
+ * @param {number} id - 房间ID
+ * @param {Object} data - { name }
+ */
+export function updateCageRoom(id, data) {
+  return request({
+    url: `/support/cage-rooms/${id}`,
+    method: 'PUT',
+    data
+  })
+}
+
+/**
+ * 删除笼位房间
+ * @param {number} id - 房间ID
+ */
+export function deleteCageRoom(id) {
+  return request({
+    url: `/support/cage-rooms/${id}`,
+    method: 'DELETE'
   })
 }
 

@@ -132,6 +132,15 @@
             :field-names="{ label: 'name', value: 'id' }"
           />
         </a-form-item>
+        <a-form-item label="房间" name="room_id">
+          <a-select
+            v-model:value="formData.room_id"
+            placeholder="请选择房间"
+            allow-clear
+            :options="roomOptions"
+            :field-names="{ label: 'name', value: 'id' }"
+          />
+        </a-form-item>
         <a-form-item label="笼位数量" name="quantity">
           <a-input-number
             v-model:value="formData.quantity"
@@ -164,7 +173,8 @@ import {
   getCageList,
   createCage,
   updateCage,
-  deleteCage
+  deleteCage,
+  getCageRoomList
 } from '@/api/cage'
 import { getAnimalTypeOptions, getEnvironmentTypeOptions } from '@/api/config'
 import { useUserStore } from '@/store'
@@ -208,6 +218,7 @@ const pagination = reactive({
 const columns = [
   { title: '动物类型', dataIndex: ['animal_type', 'name'], width: 150 },
   { title: '环境类型', dataIndex: ['environment', 'name'], width: 150 },
+  { title: '房间', dataIndex: ['room', 'name'], width: 120, ellipsis: true },
   { title: '笼位数量', dataIndex: 'quantity', width: 150 },
   { title: '状态', key: 'status', width: 100 },
   { title: '创建时间', dataIndex: 'created_at', width: 180 },
@@ -248,6 +259,7 @@ const formData = reactive({
   id: null,
   animal_type_id: undefined,
   environment_id: undefined,
+  room_id: undefined,
   quantity: 100,
   status: 1
 })
@@ -255,11 +267,13 @@ const formData = reactive({
 const formRules = {
   animal_type_id: [{ required: true, message: '请选择动物类型', trigger: 'change' }],
   environment_id: [{ required: true, message: '请选择环境类型', trigger: 'change' }],
+  room_id: [{ required: true, message: '请选择房间', trigger: 'change' }],
   quantity: [{ required: true, message: '请输入笼位数量', trigger: 'blur' }]
 }
 
 const animalTypeOptions = ref([])
 const environmentTypeOptions = ref([])
+const roomOptions = ref([])
 
 const handleAdd = () => {
   modalTitle.value = '新增笼位'
@@ -269,6 +283,7 @@ const handleAdd = () => {
     id: null,
     animal_type_id: undefined,
     environment_id: undefined,
+    room_id: undefined,
     quantity: 100,
     status: 1
   })
@@ -281,6 +296,7 @@ const handleEdit = (record) => {
     id: record.id,
     animal_type_id: record.animal_type?.id,
     environment_id: record.environment?.id,
+    room_id: record.room?.id,
     quantity: record.quantity,
     status: record.status
   })
@@ -292,6 +308,7 @@ const handleSubmit = async () => {
     const data = {
       animal_type_id: formData.animal_type_id,
       environment_id: formData.environment_id,
+      room_id: formData.room_id,
       quantity: formData.quantity,
       status: formData.status
     }
@@ -329,13 +346,15 @@ const handleDelete = async (record) => {
 
 const loadOptions = async () => {
   try {
-    const [animalTypes, environmentTypes] = await Promise.all([
+    const [animalTypes, environmentTypes, roomsRes] = await Promise.all([
       getAnimalTypeOptions(),
-      getEnvironmentTypeOptions()
+      getEnvironmentTypeOptions(),
+      getCageRoomList({ page: 1, pageSize: 500 })
     ])
     
     animalTypeOptions.value = animalTypes.data
     environmentTypeOptions.value = environmentTypes.data
+    roomOptions.value = roomsRes.data?.list || []
   } catch (error) {
     console.error('加载选项数据失败：', error)
   }
