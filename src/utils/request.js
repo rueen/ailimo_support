@@ -46,6 +46,12 @@ request.interceptors.response.use(
     if (res.code === 200) {
       return res
     }
+    if(res.code === 401) {
+      message.error('登录已过期，请重新登录')
+      clearAuth()
+      router.push('/login')
+      return Promise.reject(new Error(res.message || '请求失败'))
+    }
 
     // 处理业务错误
     message.error(res.message || '请求失败')
