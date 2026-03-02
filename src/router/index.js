@@ -2,7 +2,7 @@
  * Vue Router 配置
  */
 import { createRouter, createWebHistory } from 'vue-router'
-import { getToken } from '@/utils/storage'
+import { getToken, clearAuth } from '@/utils/storage'
 import { message } from 'ant-design-vue'
 
 /**
@@ -334,6 +334,13 @@ router.beforeEach((to, from, next) => {
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} - 艾力默管理端` : '艾力默管理端'
 
+  // 访问登录页时，始终清除当前登录状态并进入登录页
+  if (to.path === '/login') {
+    clearAuth()
+    next()
+    return
+  }
+
   // 检查是否需要登录
   if (to.meta.requiresAuth !== false) {
     const token = getToken()
@@ -342,12 +349,6 @@ router.beforeEach((to, from, next) => {
       next({ path: '/login', query: { redirect: to.fullPath } })
       return
     }
-  }
-
-  // 如果已登录访问登录页，跳转到首页
-  if (to.path === '/login' && getToken()) {
-    next({ path: '/' })
-    return
   }
 
   // 权限检查
