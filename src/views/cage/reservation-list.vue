@@ -137,7 +137,7 @@
               详情
             </a-button>
             <a-button
-              v-if="record.status === 0 && userStore.hasPermission('cage_reservation:update')"
+              v-if="userStore.hasPermission('cage_reservation:update')"
               type="link"
               size="small"
               @click="handleEdit(record)"
@@ -393,7 +393,7 @@
           {{ detailData.reject_reason }}
         </a-descriptions-item>
         <a-descriptions-item v-if="detailData.audit_by" label="审核人">
-          {{ detailData.audit_by?.username || '-' }}
+          {{ detailData.auditBy?.username || '-' }}
         </a-descriptions-item>
         <a-descriptions-item v-if="detailData.audit_time" label="审核时间">
           {{ detailData.audit_time || '-' }}

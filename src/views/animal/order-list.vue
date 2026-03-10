@@ -194,7 +194,7 @@
               详情
             </a-button>
             <a-button
-              v-if="record.status === 0 && userStore.hasPermission('animal_order:update')"
+              v-if="userStore.hasPermission('animal_order:update')"
               type="link"
               size="small"
               @click="handleEdit(record)"
@@ -223,7 +223,7 @@
               title="确定完成该订单吗？"
               @confirm="handleComplete(record)"
             >
-              <a-button type="link" danger size="small">
+              <a-button type="link" size="small">
                 完成
               </a-button>
             </a-popconfirm>

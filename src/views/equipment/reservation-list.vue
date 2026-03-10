@@ -140,7 +140,7 @@
               详情
             </a-button>
             <a-button
-              v-if="(record.status === 0 || record.status === 1) && userStore.hasPermission('equipment_reservation:update')"
+              v-if="userStore.hasPermission('equipment_reservation:update')"
               type="link"
               size="small"
               @click="handleEdit(record)"
@@ -399,7 +399,7 @@
             v-if="orderDetail.audit_by"
             label="审核人"
           >
-            {{ orderDetail.audit_by?.username || '-' }}
+            {{ orderDetail.auditBy?.username || '-' }}
           </a-descriptions-item>
           <a-descriptions-item
             v-if="orderDetail.completed_time"
@@ -645,9 +645,11 @@ const handleRemoveDate = (index) => {
 /**
  * 日期变化 - 加载可用时间段
  */
-const handleDateChangeNew = async (index) => {
-  const dateItem = formData.selectedDates[index]
-  dateItem.slots = []
+const handleDateChangeNew = async (index, isClearSlots = true) => {
+  const dateItem = formData.selectedDates[index];
+  if(isClearSlots) {
+    dateItem.slots = []
+  }
   
   if (!formData.equipment_id || !dateItem.date) {
     dateItem.availableSlots = []
@@ -797,7 +799,7 @@ const handleEdit = async (record) => {
   
   // 加载每个日期的可用时间段
   for (let i = 0; i < formData.selectedDates.length; i++) {
-    await handleDateChangeNew(i)
+    await handleDateChangeNew(i, false)
   }
 }
 

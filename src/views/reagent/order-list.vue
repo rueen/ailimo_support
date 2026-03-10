@@ -139,7 +139,7 @@
               详情
             </a-button>
             <a-button
-              v-if="record.status === 0 && userStore.hasPermission('reagent_order:update')"
+              v-if="userStore.hasPermission('reagent_order:update')"
               type="link"
               size="small"
               @click="handleEdit(record)"
@@ -163,14 +163,15 @@
             >
               审核拒绝
             </a-button>
-            <a-button
+            <a-popconfirm
               v-if="record.status === 1 && userStore.hasPermission('reagent_order:complete')"
-              type="link"
-              size="small"
-              @click="handleComplete(record)"
+              title="确定完成该订单吗？"
+              @confirm="handleComplete(record)"
             >
-              完成
-            </a-button>
+              <a-button type="link" size="small">
+                完成
+              </a-button>
+            </a-popconfirm>
             <a-popconfirm
               v-if="record.status === 1 && userStore.hasPermission('reagent_order:cancel')"
               title="确定取消该订单吗？"
