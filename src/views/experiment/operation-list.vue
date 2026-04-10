@@ -103,6 +103,14 @@
           <BarChartOutlined />
           代操作统计
         </a-button>
+        <a-button
+          v-if="userStore.hasPermission('experiment_operation:list')"
+          :loading="exportLoading"
+          @click="handleExport"
+        >
+          <DownloadOutlined />
+          导出
+        </a-button>
       </a-space>
     </div>
 
@@ -452,7 +460,8 @@ import {
   SearchOutlined,
   ReloadOutlined,
   PlusOutlined,
-  BarChartOutlined
+  BarChartOutlined,
+  DownloadOutlined
 } from '@ant-design/icons-vue'
 import {
   getExperimentOperationList,
@@ -463,8 +472,10 @@ import {
   completeExperimentOperation,
   cancelExperimentOperation,
   getOperationContentOptions,
-  getExperimentTimeSlotOptions
+  getExperimentTimeSlotOptions,
+  exportExperimentOperations
 } from '@/api/experiment'
+import { exportToExcel, ORDER_STATUS_MAP } from '@/utils/export'
 import { getAnimalTypeOptions, getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
 import { getAdvanceDays } from '@/api/content'
@@ -1059,6 +1070,47 @@ const loadOptions = async () => {
     handlerOptions.value = handlers.data
   } catch (error) {
     console.error('加载选项数据失败：', error)
+  }
+}
+
+// ========== 导出 ==========
+
+const exportLoading = ref(false)
+
+/**
+ * 导出实验代操作订单为 Excel
+ */
+const handleExport = async () => {
+  try {
+    exportLoading.value = true
+    const params = { ...searchForm }
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.start_date = dateRange.value[0]
+      params.end_date = dateRange.value[1]
+    }
+    const res = await exportExperimentOperations(params)
+    const columns = [
+      { header: '订单号', key: 'order_sn', width: 20 },
+      { header: '用户姓名', render: (r) => r.user?.name || '', width: 15 },
+      { header: '用户手机号', render: (r) => r.user?.phone || '', width: 15 },
+      { header: '动物类型', render: (r) => r.animal_type?.name || '', width: 12 },
+      { header: '操作内容', render: (r) => r.operation_content?.name || '', width: 12 },
+      { header: '动物数量', key: 'quantity', width: 10 },
+      { header: '预约时段', render: (r) => (r.time_slots || []).join('，'), width: 40 },
+      { header: '备注', key: 'remark', width: 20 },
+      { header: '订单状态', render: (r) => ORDER_STATUS_MAP[r.status] || '', width: 12 },
+      { header: '负责人', render: (r) => r.handler?.name || '', width: 12 },
+      { header: '创建时间', key: 'created_at', width: 20 }
+    ]
+    const ok = await exportToExcel(res.data, columns, `实验代操作订单_${dayjs().format('YYYY-MM-DD')}`)
+    if (!ok) {
+      message.warning('暂无可导出的数据')
+    }
+  } catch (error) {
+    console.error('导出失败：', error)
+    message.error('导出失败')
+  } finally {
+    exportLoading.value = false
   }
 }
 

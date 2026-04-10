@@ -172,6 +172,20 @@ export function getEquipmentAvailableSlots(id, params) {
   })
 }
 
+// ========== 导出接口 ==========
+
+/**
+ * 导出设备预约订单
+ * @param {Object} params - 与列表相同的查询参数（无需传 page/pageSize）
+ */
+export function exportEquipmentReservations(params) {
+  return request({
+    url: '/support/equipment-reservations/export',
+    method: 'GET',
+    params
+  })
+}
+
 // ========== 时间段管理接口 ==========
 
 /**

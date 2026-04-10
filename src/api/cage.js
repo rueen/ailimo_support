@@ -317,3 +317,17 @@ export function deleteCagePurpose(id) {
     method: 'DELETE'
   })
 }
+
+// ========== 导出接口 ==========
+
+/**
+ * 导出笼位预约订单
+ * @param {Object} params - 与列表相同的查询参数（无需传 page/pageSize）
+ */
+export function exportCageReservations(params) {
+  return request({
+    url: '/support/cage-reservations/export',
+    method: 'GET',
+    params
+  })
+}

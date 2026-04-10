@@ -87,14 +87,24 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button
-        v-if="userStore.hasPermission('cage_reservation:create')"
-        type="primary"
-        @click="handleAdd"
-      >
-        <PlusOutlined />
-        新增订单
-      </a-button>
+      <a-space>
+        <a-button
+          v-if="userStore.hasPermission('cage_reservation:create')"
+          type="primary"
+          @click="handleAdd"
+        >
+          <PlusOutlined />
+          新增订单
+        </a-button>
+        <a-button
+          v-if="userStore.hasPermission('cage_reservation:list')"
+          :loading="exportLoading"
+          @click="handleExport"
+        >
+          <DownloadOutlined />
+          导出
+        </a-button>
+      </a-space>
     </div>
 
     <!-- 数据表格 -->
@@ -423,7 +433,8 @@ import dayjs from 'dayjs'
 import {
   SearchOutlined,
   ReloadOutlined,
-  PlusOutlined
+  PlusOutlined,
+  DownloadOutlined
 } from '@ant-design/icons-vue'
 import {
   getCageReservationList,
@@ -436,8 +447,10 @@ import {
   getCagePurposeOptions,
   getEnvironmentsByAnimalType,
   getCageAvailableQuantity,
-  getRoomsByAnimalTypeAndEnvironment
+  getRoomsByAnimalTypeAndEnvironment,
+  exportCageReservations
 } from '@/api/cage'
+import { exportToExcel, ORDER_STATUS_MAP } from '@/utils/export'
 import { debounce } from 'lodash-es'
 import { getAnimalTypeOptions, getEnvironmentTypeOptions, getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
@@ -1140,6 +1153,49 @@ const formatDateRange = (startDate, endDate) => {
   const days = end.diff(start, 'day') + 1
   
   return `${startDate} 至 ${endDate} (${days}天)`
+}
+
+// ========== 导出 ==========
+
+const exportLoading = ref(false)
+
+/**
+ * 导出笼位预约订单为 Excel
+ */
+const handleExport = async () => {
+  try {
+    exportLoading.value = true
+    const params = { ...searchForm }
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.start_date = dateRange.value[0]
+      params.end_date = dateRange.value[1]
+    }
+    const res = await exportCageReservations(params)
+    const columns = [
+      { header: '订单号', key: 'order_sn', width: 20 },
+      { header: '用户姓名', render: (r) => r.user?.name || '', width: 15 },
+      { header: '用户手机号', render: (r) => r.user?.phone || '', width: 15 },
+      { header: '动物类型', render: (r) => r.animal_type?.name || '', width: 12 },
+      { header: '环境类型', render: (r) => r.environment?.name || '', width: 12 },
+      { header: '房间', render: (r) => r.room?.name || '', width: 12 },
+      { header: '笼位数量', key: 'quantity', width: 10 },
+      { header: '用途', render: (r) => r.purpose?.name || '', width: 12 },
+      { header: '预约开始日期', key: 'start_date', width: 15 },
+      { header: '预约结束日期', render: (r) => r.end_date || '长期', width: 15 },
+      { header: '备注', key: 'remark', width: 20 },
+      { header: '订单状态', render: (r) => ORDER_STATUS_MAP[r.status] || '', width: 12 },
+      { header: '创建时间', key: 'created_at', width: 20 }
+    ]
+    const ok = await exportToExcel(res.data, columns, `笼位预约订单_${dayjs().format('YYYY-MM-DD')}`)
+    if (!ok) {
+      message.warning('暂无可导出的数据')
+    }
+  } catch (error) {
+    console.error('导出失败：', error)
+    message.error('导出失败')
+  } finally {
+    exportLoading.value = false
+  }
 }
 
 // ========== 初始化 ==========

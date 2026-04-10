@@ -240,3 +240,17 @@ export function deleteExperimentTimeSlot(id) {
   })
 }
 
+// ========== 导出接口 ==========
+
+/**
+ * 导出实验代操作订单
+ * @param {Object} params - 与列表相同的查询参数（无需传 page/pageSize）
+ */
+export function exportExperimentOperations(params) {
+  return request({
+    url: '/support/experiment-operations/export',
+    method: 'GET',
+    params
+  })
+}
+

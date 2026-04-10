@@ -91,14 +91,24 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button
-        v-if="userStore.hasPermission('reagent_order:create')"
-        type="primary"
-        @click="handleAdd"
-      >
-        <PlusOutlined />
-        新增订单
-      </a-button>
+      <a-space>
+        <a-button
+          v-if="userStore.hasPermission('reagent_order:create')"
+          type="primary"
+          @click="handleAdd"
+        >
+          <PlusOutlined />
+          新增订单
+        </a-button>
+        <a-button
+          v-if="userStore.hasPermission('reagent_order:list')"
+          :loading="exportLoading"
+          @click="handleExport"
+        >
+          <DownloadOutlined />
+          导出
+        </a-button>
+      </a-space>
     </div>
 
     <!-- 数据表格 -->
@@ -372,7 +382,8 @@ import dayjs from 'dayjs'
 import {
   SearchOutlined,
   ReloadOutlined,
-  PlusOutlined
+  PlusOutlined,
+  DownloadOutlined
 } from '@ant-design/icons-vue'
 import {
   getReagentOrderList,
@@ -381,8 +392,10 @@ import {
   updateReagentOrder,
   auditReagentOrder,
   completeReagentOrder,
-  cancelReagentOrder
+  cancelReagentOrder,
+  exportReagentOrders
 } from '@/api/reagent'
+import { exportToExcel, ORDER_STATUS_MAP } from '@/utils/export'
 import { getHandlerOptions } from '@/api/config'
 import { getUserList } from '@/api/user'
 import { useUserStore } from '@/store'
@@ -864,6 +877,62 @@ const loadOptions = async () => {
     handlerOptions.value = handlers.data
   } catch (error) {
     console.error('加载选项数据失败：', error)
+  }
+}
+
+// ========== 导出 ==========
+
+const exportLoading = ref(false)
+
+/**
+ * 导出试剂耗材订购订单为 Excel
+ */
+const handleExport = async () => {
+  try {
+    exportLoading.value = true
+    const params = {
+      order_sn: searchForm.order_sn,
+      keyword: searchForm.name,
+      brand_name: searchForm.brand_name,
+      specification_name: searchForm.specification_name,
+      status: searchForm.status
+    }
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.start_date = dateRange.value[0]
+      params.end_date = dateRange.value[1]
+    }
+    const res = await exportReagentOrders(params)
+    const columns = [
+      { header: '订单号', key: 'order_sn', width: 20 },
+      { header: '下单用户', render: (r) => r.user?.name || '', width: 12 },
+      { header: '用户手机号', render: (r) => r.user?.phone || '', width: 15 },
+      { header: '试剂名称', key: 'name', width: 20 },
+      { header: '品牌', key: 'brand_name', width: 15 },
+      { header: '规格', key: 'specification_name', width: 15 },
+      { header: '数量', key: 'quantity', width: 8 },
+      { header: '订购人', key: 'orderer_name', width: 12 },
+      { header: '联系电话', key: 'contact_phone', width: 15 },
+      {
+        header: '收货地址',
+        render: (r) =>
+          [r.province?.name, r.city?.name, r.district?.name, r.address].filter(Boolean).join(' '),
+        width: 30
+      },
+      { header: '到货日期', key: 'delivery_date', width: 15 },
+      { header: '备注', key: 'remark', width: 20 },
+      { header: '订单状态', render: (r) => ORDER_STATUS_MAP[r.status] || '', width: 12 },
+      { header: '负责人', render: (r) => r.handler?.name || '', width: 12 },
+      { header: '创建时间', key: 'created_at', width: 20 }
+    ]
+    const ok = await exportToExcel(res.data, columns, `试剂耗材订购订单_${dayjs().format('YYYY-MM-DD')}`)
+    if (!ok) {
+      message.warning('暂无可导出的数据')
+    }
+  } catch (error) {
+    console.error('导出失败：', error)
+    message.error('导出失败')
+  } finally {
+    exportLoading.value = false
   }
 }
 

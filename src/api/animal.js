@@ -361,3 +361,17 @@ export function getAnimalOrderStatistics(params) {
     params
   })
 }
+
+// ========== 导出接口 ==========
+
+/**
+ * 导出动物订购订单
+ * @param {Object} params - 与列表相同的查询参数（无需传 page/pageSize）
+ */
+export function exportAnimalOrders(params) {
+  return request({
+    url: '/support/animal-orders/export',
+    method: 'GET',
+    params
+  })
+}

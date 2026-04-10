@@ -80,14 +80,24 @@
 
     <!-- 操作栏 -->
     <div class="action-bar">
-      <a-button
-        v-if="userStore.hasPermission('equipment_reservation:create')"
-        type="primary"
-        @click="handleAdd"
-      >
-        <PlusOutlined />
-        新增订单
-      </a-button>
+      <a-space>
+        <a-button
+          v-if="userStore.hasPermission('equipment_reservation:create')"
+          type="primary"
+          @click="handleAdd"
+        >
+          <PlusOutlined />
+          新增订单
+        </a-button>
+        <a-button
+          v-if="userStore.hasPermission('equipment_reservation:list')"
+          :loading="exportLoading"
+          @click="handleExport"
+        >
+          <DownloadOutlined />
+          导出
+        </a-button>
+      </a-space>
     </div>
 
     <!-- 数据表格 -->
@@ -430,8 +440,10 @@ import dayjs from 'dayjs'
 import {
   SearchOutlined,
   ReloadOutlined,
-  PlusOutlined
+  PlusOutlined,
+  DownloadOutlined
 } from '@ant-design/icons-vue'
+import { exportToExcel, ORDER_STATUS_MAP } from '@/utils/export'
 import {
   getEquipmentReservationList,
   getEquipmentReservationDetail,
@@ -441,7 +453,8 @@ import {
   completeEquipmentReservation,
   cancelEquipmentReservation,
   getEquipmentOptions,
-  getEquipmentAvailableSlots
+  getEquipmentAvailableSlots,
+  exportEquipmentReservations
 } from '@/api/equipment'
 import { getUserList } from '@/api/user'
 import { getHandlerOptions } from '@/api/config'
@@ -1045,6 +1058,51 @@ const handleView = async (record) => {
     detailModalVisible.value = false
   } finally {
     detailLoading.value = false
+  }
+}
+
+// ========== 导出 ==========
+
+const exportLoading = ref(false)
+
+/**
+ * 导出设备预约订单为 Excel
+ */
+const handleExport = async () => {
+  try {
+    exportLoading.value = true
+    const params = {
+      order_sn: searchForm.order_sn,
+      equipment_id: searchForm.equipment_id,
+      user_name: searchForm.user_name,
+      user_phone: searchForm.user_phone,
+      status: searchForm.status
+    }
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.start_date = dateRange.value[0]
+      params.end_date = dateRange.value[1]
+    }
+    const res = await exportEquipmentReservations(params)
+    const columns = [
+      { header: '订单号', key: 'order_sn', width: 20 },
+      { header: '设备名称', render: (r) => r.equipment?.name || '', width: 20 },
+      { header: '用户姓名', render: (r) => r.user?.name || '', width: 15 },
+      { header: '用户手机号', render: (r) => r.user?.phone || '', width: 15 },
+      { header: '预约时段', render: (r) => (r.time_slots || []).join('，'), width: 40 },
+      { header: '备注', key: 'remark', width: 20 },
+      { header: '订单状态', render: (r) => ORDER_STATUS_MAP[r.status] || '', width: 12 },
+      { header: '负责人', render: (r) => r.handler?.name || '', width: 12 },
+      { header: '创建时间', key: 'created_at', width: 20 }
+    ]
+    const ok = await exportToExcel(res.data, columns, `设备预约订单_${dayjs().format('YYYY-MM-DD')}`)
+    if (!ok) {
+      message.warning('暂无可导出的数据')
+    }
+  } catch (error) {
+    console.error('导出失败：', error)
+    message.error('导出失败')
+  } finally {
+    exportLoading.value = false
   }
 }
 

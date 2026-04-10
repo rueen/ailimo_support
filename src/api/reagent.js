@@ -95,3 +95,17 @@ export function cancelReagentOrder(id) {
     method: 'PUT'
   })
 }
+
+// ========== 导出接口 ==========
+
+/**
+ * 导出试剂耗材订购订单
+ * @param {Object} params - 与列表相同的查询参数（无需传 page/pageSize）
+ */
+export function exportReagentOrders(params) {
+  return request({
+    url: '/support/reagent-orders/export',
+    method: 'GET',
+    params
+  })
+}
