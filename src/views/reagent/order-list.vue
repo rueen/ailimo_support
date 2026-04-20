@@ -728,7 +728,8 @@ const handleRegionChange = () => {
  * 禁用日期（不能选择过去的日期）
  */
 const disabledDate = (current) => {
-  return current && current < dayjs().startOf('day')
+  // return current && current < dayjs().startOf('day')
+  return false; // 不限制
 }
 
 /**

@@ -854,7 +854,8 @@ const disabledStartDate = (current) => {
   const maxDate = today.add(advanceDays.value.cage_advance_days, 'day')
   
   // 不能选择今天之前的日期，也不能选择超过最大提前预约天数的日期
-  return current < today || current > maxDate
+  // return current < today || current > maxDate
+  return false; // 不限制
 }
 
 /**
@@ -868,7 +869,8 @@ const disabledEndDate = (current) => {
   
   // 不能选择今天之前的日期，不能选择早于开始日期的日期，也不能选择超过最大提前预约天数的日期
   const minDate = formData.start_date ? dayjs(formData.start_date).startOf('day') : today
-  return current < minDate || current > maxDate
+  // return current < minDate || current > maxDate
+  return false; // 不限制
 }
 
 /**
