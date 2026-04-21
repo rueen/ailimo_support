@@ -148,6 +148,14 @@
           <PlusOutlined />
           新增订单
         </a-button>
+        <template v-if="userStore.hasPermission('animal_order:audit') && selectedRowKeys.length > 0">
+          <a-button type="primary" @click="handleBatchApprove">
+            批量审核通过（{{ selectedRowKeys.length }}）
+          </a-button>
+          <a-button danger @click="handleBatchReject">
+            批量审核拒绝（{{ selectedRowKeys.length }}）
+          </a-button>
+        </template>
         <a-button
           v-if="userStore.hasPermission('animal_order:list')"
           :loading="exportLoading"
@@ -165,6 +173,7 @@
       :data-source="tableData"
       :loading="loading"
       :pagination="pagination"
+      :row-selection="userStore.hasPermission('animal_order:audit') ? rowSelection : null"
       row-key="id"
       @change="handleTableChange"
     >
@@ -505,6 +514,7 @@ import {
   createAnimalOrder,
   updateAnimalOrder,
   auditAnimalOrder,
+  batchAuditAnimalOrder,
   completeAnimalOrder,
   cancelAnimalOrder,
   getAnimalBrandOptions,
@@ -951,26 +961,50 @@ const loadHandlerOptions = async () => {
   }
 }
 
+// ========== 多选 ==========
+
+const selectedRowKeys = ref([])
+
+/**
+ * 表格行选择配置，仅允许选择待审核（status=0）的行
+ */
+const rowSelection = {
+  selectedRowKeys,
+  onChange: (keys) => { selectedRowKeys.value = keys },
+  getCheckboxProps: (record) => ({ disabled: record.status !== 0 })
+}
+
 // ========== 审核 ==========
 
 const approveModalVisible = ref(false)
 const handler_id = ref(undefined)
 const handlerOptions = ref([])
 const currentRecord = ref(null)
+const isBatchAudit = ref(false)
 
 /**
- * 审核通过
+ * 单条审核通过
  */
 const handleApprove = (record) => {
+  isBatchAudit.value = false
   currentRecord.value = record
   handler_id.value = undefined
   approveModalVisible.value = true
-  // 加载负责人选项
   loadHandlerOptions()
 }
 
 /**
- * 提交审核通过
+ * 批量审核通过
+ */
+const handleBatchApprove = () => {
+  isBatchAudit.value = true
+  handler_id.value = undefined
+  approveModalVisible.value = true
+  loadHandlerOptions()
+}
+
+/**
+ * 提交审核通过（单条或批量）
  */
 const handleApproveSubmit = async () => {
   if (!handler_id.value) {
@@ -978,11 +1012,21 @@ const handleApproveSubmit = async () => {
     return
   }
   try {
-    await auditAnimalOrder(currentRecord.value.id, {
-      status: 1,
-      handler_id: handler_id.value
-    })
-    message.success('审核通过')
+    if (isBatchAudit.value) {
+      const res = await batchAuditAnimalOrder({
+        ids: selectedRowKeys.value,
+        status: 1,
+        handler_id: handler_id.value
+      })
+      message.success(`批量审核通过，成功 ${res.data?.success_count ?? selectedRowKeys.value.length} 条`)
+      selectedRowKeys.value = []
+    } else {
+      await auditAnimalOrder(currentRecord.value.id, {
+        status: 1,
+        handler_id: handler_id.value
+      })
+      message.success('审核通过')
+    }
     approveModalVisible.value = false
     fetchTableData()
   } catch (error) {
@@ -994,16 +1038,26 @@ const rejectModalVisible = ref(false)
 const reject_reason = ref('')
 
 /**
- * 审核拒绝
+ * 单条审核拒绝
  */
 const handleReject = (record) => {
+  isBatchAudit.value = false
   currentRecord.value = record
   reject_reason.value = ''
   rejectModalVisible.value = true
 }
 
 /**
- * 提交审核拒绝
+ * 批量审核拒绝
+ */
+const handleBatchReject = () => {
+  isBatchAudit.value = true
+  reject_reason.value = ''
+  rejectModalVisible.value = true
+}
+
+/**
+ * 提交审核拒绝（单条或批量）
  */
 const handleRejectSubmit = async () => {
   if (!reject_reason.value) {
@@ -1011,11 +1065,21 @@ const handleRejectSubmit = async () => {
     return
   }
   try {
-    await auditAnimalOrder(currentRecord.value.id, {
-      status: 2,
-      reject_reason: reject_reason.value
-    })
-    message.success('已拒绝')
+    if (isBatchAudit.value) {
+      const res = await batchAuditAnimalOrder({
+        ids: selectedRowKeys.value,
+        status: 2,
+        reject_reason: reject_reason.value
+      })
+      message.success(`批量审核拒绝，成功 ${res.data?.success_count ?? selectedRowKeys.value.length} 条`)
+      selectedRowKeys.value = []
+    } else {
+      await auditAnimalOrder(currentRecord.value.id, {
+        status: 2,
+        reject_reason: reject_reason.value
+      })
+      message.success('已拒绝')
+    }
     rejectModalVisible.value = false
     fetchTableData()
   } catch (error) {

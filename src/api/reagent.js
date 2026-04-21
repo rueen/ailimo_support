@@ -75,6 +75,22 @@ export function auditReagentOrder(id, data) {
 }
 
 /**
+ * 批量审核试剂耗材订购订单
+ * @param {Object} data - 批量审核信息
+ * @param {number[]} data.ids - 订单ID列表
+ * @param {number} data.status - 审核状态（1-通过 2-拒绝）
+ * @param {number} [data.handler_id] - 负责人ID（审核通过时必须）
+ * @param {string} [data.reject_reason] - 拒绝原因（审核拒绝时必须）
+ */
+export function batchAuditReagentOrder(data) {
+  return request({
+    url: '/support/reagent-orders/batch-audit',
+    method: 'POST',
+    data
+  })
+}
+
+/**
  * 完成试剂耗材订购订单
  * @param {number} id - 订单ID
  */
