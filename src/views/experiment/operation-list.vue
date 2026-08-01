@@ -257,8 +257,10 @@
           <a-select
             v-model:value="formData.operation_content_id"
             placeholder="请选择操作内容"
+            show-search
             :options="operationContentOptions"
             :field-names="{ label: 'name', value: 'id' }"
+            :filter-option="filterOperationContentOption"
           />
         </a-form-item>
         <a-form-item label="动物类型" name="animal_type_id">
@@ -687,6 +689,13 @@ const animalTypeOptions = ref([])
 const operationContentOptions = ref([])
 const timeSlotOptions = ref([])
 const userOptions = ref([])
+
+/**
+ * 操作内容筛选（按名称模糊匹配）
+ */
+const filterOperationContentOption = (input, option) => {
+  return (option.name || '').toLowerCase().includes(input.toLowerCase())
+}
 
 /**
  * 添加日期
