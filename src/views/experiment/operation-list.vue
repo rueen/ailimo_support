@@ -256,7 +256,7 @@
         <a-form-item label="操作内容" name="operation_content_id">
           <a-select
             v-model:value="formData.operation_content_id"
-            placeholder="请选择操作内容"
+            placeholder="请选择操作内容（输入关键字搜索）"
             show-search
             :options="operationContentOptions"
             :field-names="{ label: 'name', value: 'id' }"
